@@ -102,6 +102,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
     <PackageReference Include="SQLiteNetExtensions.Async" Version="2.1.0" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.4" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2545" />
