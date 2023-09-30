@@ -215,8 +215,8 @@
                 </Grid>
             </Grid>
 
-            <!-- MKRobotSection -->
-            <Grid x:Name="MKRobotSection">
+            <!-- MK_Robot_Section -->
+            <Grid x:Name="MK_Robot_Section">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -224,8 +224,8 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0">
-                    <controls:ChannelSelectorRadioButton x:Name="MKRobotChannel0" DeviceType="MK_Robot" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
-                    <controls:ChannelSelectorRadioButton x:Name="MKRobotChannel1" DeviceType="MK_Robot" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MK_Robot_Channel0" DeviceType="MK_Robot" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MK_Robot_Channel1" DeviceType="MK_Robot" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
                 </Grid>
 
                 <Image Grid.Column="1" Source="{extensions:ImageResource Source=mk_robot_image.png}" WidthRequest="150" HeightRequest="120"/>
@@ -234,8 +234,8 @@
                 </Grid>
             </Grid>
 
-            <!-- MKRobotSection -->
-            <Grid x:Name="HKRobotSection">
+            <!-- HK_Robot_Section -->
+            <Grid x:Name="HK_Robot_Section">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -243,8 +243,8 @@
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0">
-                    <controls:ChannelSelectorRadioButton x:Name="HKRobotChannel0" DeviceType="HK_Robot" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
-                    <controls:ChannelSelectorRadioButton x:Name="HKRobotChannel1" DeviceType="HK_Robot" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="HK_Robot_Channel0" DeviceType="HK_Robot" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="HK_Robot_Channel1" DeviceType="HK_Robot" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
                 </Grid>
 
                 <Image Grid.Column="1" Source="{extensions:ImageResource Source=mk_robot_image.png}" WidthRequest="150" HeightRequest="120"/>
@@ -253,6 +253,25 @@
                 </Grid>
             </Grid>
 
-    </Grid>
+            <!-- Cada_RC_C51072W_Section -->
+            <Grid x:Name="Cada_RC_C51072W_Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="Cada_RC_C51072W_Channel0" DeviceType="Cada_RC_C51072W" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="Cada_RC_C51072W_Channel1" DeviceType="Cada_RC_C51072W" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
+                </Grid>
+
+                <Image Grid.Column="1" Source="{extensions:ImageResource Source=mk_robot_image.png}" WidthRequest="150" HeightRequest="120"/>
+
+                <Grid Grid.Column="2">
+                </Grid>
+            </Grid>
+
+        </Grid>
     </ContentView.Content>
 </ContentView>
