@@ -30,6 +30,9 @@ namespace BrickController2.DeviceManagement.DI
             // Hogokids
             builder.RegisterType<HK_Robot>().Keyed<Device>(DeviceType.HK_Robot);
 
+            // Cada
+            builder.RegisterType<Cada_RC_C51072W>().Keyed<Device>(DeviceType.Cada_RC_C51072W);
+
             builder.Register<DeviceFactory>(c =>
             {
                 IComponentContext ctx = c.Resolve<IComponentContext>();

@@ -46,6 +46,7 @@ namespace BrickController2.UI.Converters
 
                 case DeviceType.MK_Robot:
                 case DeviceType.HK_Robot:
+                case DeviceType.Cada_RC_C51072W:
                     return ResourceHelper.GetImageResource("mk_robot_image_small.png");
 
                 default:
