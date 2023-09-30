@@ -14,5 +14,14 @@
         BuWizz3,
         CircuitCubes,
         WeDo2,
+
+        // MouldKing
+        MK_Robot,
+
+        // Hogokids
+        HK_Robot,
+
+        // Cada
+        Cada_RC_C51072W
     }
 }

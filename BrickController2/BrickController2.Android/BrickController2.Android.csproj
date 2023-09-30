@@ -60,7 +60,7 @@
     <EnableLLVM>false</EnableLLVM>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
-    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
@@ -93,6 +93,7 @@
     <Compile Include="PlatformServices\BluetoothLE\BluetoothLENewScanner.cs" />
     <Compile Include="PlatformServices\BluetoothLE\BluetoothLEOldScanner.cs" />
     <Compile Include="PlatformServices\BluetoothLE\BluetoothLEService.cs" />
+    <Compile Include="PlatformServices\BluetoothLE\BluetoothLEAdvertiserDevice.cs" />
     <Compile Include="PlatformServices\BluetoothLE\GattCharacteristic.cs" />
     <Compile Include="PlatformServices\BluetoothLE\GattService.cs" />
     <Compile Include="PlatformServices\BluetoothLE\Helper.cs" />
