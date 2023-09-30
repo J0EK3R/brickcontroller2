@@ -46,12 +46,16 @@ namespace BrickController2.UI.Controls
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
             // MouldKing
-            MKRobotChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            MKRobotChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MK_Robot_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MK_Robot_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
             // Hogokids
-            HKRobotChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            HKRobotChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            HK_Robot_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            HK_Robot_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
+            // Cada_RC_C51072W
+            Cada_RC_C51072W_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            Cada_RC_C51072W_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
         }
 
         public static BindableProperty DeviceTypeProperty = BindableProperty.Create(nameof(DeviceType), typeof(DeviceType), typeof(DeviceChannelSelector), default(DeviceType), BindingMode.OneWay, null, OnDeviceTypeChanged);
@@ -86,10 +90,13 @@ namespace BrickController2.UI.Controls
                 dcs.Wedo2Section.IsVisible = deviceType == DeviceType.WeDo2;
 
                 // MouldKing
-                dcs.MKRobotSection.IsVisible = deviceType == DeviceType.MK_Robot;
+                dcs.MK_Robot_Section.IsVisible = deviceType == DeviceType.MK_Robot;
 
                 // Hogokids
-                dcs.HKRobotSection.IsVisible = deviceType == DeviceType.HK_Robot;
+                dcs.HK_Robot_Section.IsVisible = deviceType == DeviceType.HK_Robot;
+
+                // Cada
+                dcs.Cada_RC_C51072W_Section.IsVisible = deviceType == DeviceType.Cada_RC_C51072W;
             }
         }
 
@@ -132,12 +139,16 @@ namespace BrickController2.UI.Controls
                 dcs.WedoChannel1.SelectedChannel = selectedChannel;
 
                 // MouldKing
-                dcs.MKRobotChannel0.SelectedChannel = selectedChannel;
-                dcs.MKRobotChannel1.SelectedChannel = selectedChannel;
+                dcs.MK_Robot_Channel0.SelectedChannel = selectedChannel;
+                dcs.MK_Robot_Channel1.SelectedChannel = selectedChannel;
 
                 // Hogokids
-                dcs.HKRobotChannel0.SelectedChannel = selectedChannel;
-                dcs.HKRobotChannel1.SelectedChannel = selectedChannel;
+                dcs.HK_Robot_Channel0.SelectedChannel = selectedChannel;
+                dcs.HK_Robot_Channel1.SelectedChannel = selectedChannel;
+
+                // Cada RC
+                dcs.Cada_RC_C51072W_Channel0.SelectedChannel = selectedChannel;
+                dcs.Cada_RC_C51072W_Channel1.SelectedChannel = selectedChannel;
             }
         }
     }
