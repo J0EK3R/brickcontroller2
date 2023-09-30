@@ -119,7 +119,7 @@ namespace BrickController2.DeviceManagement
         private float _Channel1_Value = 0.0f;
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.Cada_RC_C51072WK_Robot;
+        public override DeviceType DeviceType => DeviceType.Cada_RC_C51072W;
 
         public override int NumberOfChannels => 2;
 
