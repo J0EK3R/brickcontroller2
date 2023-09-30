@@ -25,7 +25,7 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
                 .SetLegacyMode(true)
                 .SetConnectable(true)
                 .SetScannable(true)
-                .SetInterval(AdvertisingSetParameters.IntervalMedium)
+                .SetInterval(AdvertisingSetParameters.IntervalMin)
                 .SetTxPowerLevel(AdvertiseTxPower.Max)
                 .Build();
 
