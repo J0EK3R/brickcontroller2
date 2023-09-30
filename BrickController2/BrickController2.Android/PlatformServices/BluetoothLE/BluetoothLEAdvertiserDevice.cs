@@ -46,7 +46,7 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
             #region convert txPowerLevel
             AdvertiseTxPower advertiseTxPower;
             switch (txPowerLevel)
-            {
+        {
                 case TxPowerLevel.UltraLow:
                     advertiseTxPower = AdvertiseTxPower.UltraLow;
                     break;
