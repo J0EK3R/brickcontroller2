@@ -215,6 +215,44 @@
                 </Grid>
             </Grid>
 
-        </Grid>
+            <!-- MKRobotSection -->
+            <Grid x:Name="MKRobotSection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="MKRobotChannel0" DeviceType="MK_Robot" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MKRobotChannel1" DeviceType="MK_Robot" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
+                </Grid>
+
+                <Image Grid.Column="1" Source="{extensions:ImageResource Source=mk_robot_image.png}" WidthRequest="150" HeightRequest="120"/>
+
+                <Grid Grid.Column="2">
+                </Grid>
+            </Grid>
+
+            <!-- MKRobotSection -->
+            <Grid x:Name="HKRobotSection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="HKRobotChannel0" DeviceType="HK_Robot" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="HKRobotChannel1" DeviceType="HK_Robot" Channel="0" HorizontalOptions="End" VerticalOptions="End"/>
+                </Grid>
+
+                <Image Grid.Column="1" Source="{extensions:ImageResource Source=mk_robot_image.png}" WidthRequest="150" HeightRequest="120"/>
+
+                <Grid Grid.Column="2">
+                </Grid>
+            </Grid>
+
+    </Grid>
     </ContentView.Content>
 </ContentView>
