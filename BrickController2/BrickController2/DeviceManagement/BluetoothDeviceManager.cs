@@ -36,6 +36,9 @@ namespace BrickController2.DeviceManagement
                 // Hogokids
                 await deviceFoundCallback(DeviceType.HK_Robot, "Hogokids Robot", "Hogokids Robot", BitConverter.GetBytes(0x6CBC));
 
+                // Cada
+                await deviceFoundCallback(DeviceType.Cada_RC_C51072W, "Cada C51072W RaceCar", "Cada_RC_C51072W", BitConverter.GetBytes(0xC200));
+
                 try
                 {
                     return await _bleService.ScanDevicesAsync(
