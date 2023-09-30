@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BrickController2.PlatformServices.BluetoothLE
@@ -51,7 +53,7 @@ namespace BrickController2.PlatformServices.BluetoothLE
     }
 
     public interface IBluetoothLEAdvertiserDevice :
-            IDisposable
+        IDisposable
     {
         Task<bool> StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, int manufacturerId, byte[] rawData);
 
