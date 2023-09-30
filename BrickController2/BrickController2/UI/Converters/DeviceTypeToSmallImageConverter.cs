@@ -44,6 +44,10 @@ namespace BrickController2.UI.Converters
                 case DeviceType.WeDo2:
                     return ResourceHelper.GetImageResource("wedo2hub_image_small.png");
 
+                case DeviceType.MK_Robot:
+                case DeviceType.HK_Robot:
+                    return ResourceHelper.GetImageResource("mk_robot_image_small.png");
+
                 default:
                     return null;
             }

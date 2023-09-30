@@ -18,11 +18,13 @@ namespace BrickController2.Droid.PlatformServices.Permission
                     permissions.Add((Android.Manifest.Permission.BluetoothAdmin, true));
                     permissions.Add((Android.Manifest.Permission.AccessFineLocation, true));
                     permissions.Add((Android.Manifest.Permission.AccessCoarseLocation, true));
+                    permissions.Add((Android.Manifest.Permission.BluetoothAdvertise, true));
                 }
                 else
                 {
                     permissions.Add((Android.Manifest.Permission.BluetoothConnect, true));
                     permissions.Add((Android.Manifest.Permission.BluetoothScan, true));
+                    permissions.Add((Android.Manifest.Permission.BluetoothAdvertise, true));
                 }
 
                 return permissions.ToArray();

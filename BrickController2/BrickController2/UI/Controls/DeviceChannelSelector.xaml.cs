@@ -44,6 +44,14 @@ namespace BrickController2.UI.Controls
             CircuitCubesC.Command = new SafeCommand(() => SelectedChannel = 2);
             WedoChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
+            // MouldKing
+            MKRobotChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MKRobotChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
+            // Hogokids
+            HKRobotChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            HKRobotChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
         }
 
         public static BindableProperty DeviceTypeProperty = BindableProperty.Create(nameof(DeviceType), typeof(DeviceType), typeof(DeviceChannelSelector), default(DeviceType), BindingMode.OneWay, null, OnDeviceTypeChanged);
@@ -76,6 +84,12 @@ namespace BrickController2.UI.Controls
                 dcs.DuploTrainHubSection.IsVisible = deviceType == DeviceType.DuploTrainHub;
                 dcs.CircuitCubes.IsVisible = deviceType == DeviceType.CircuitCubes;
                 dcs.Wedo2Section.IsVisible = deviceType == DeviceType.WeDo2;
+
+                // MouldKing
+                dcs.MKRobotSection.IsVisible = deviceType == DeviceType.MK_Robot;
+
+                // Hogokids
+                dcs.HKRobotSection.IsVisible = deviceType == DeviceType.HK_Robot;
             }
         }
 
@@ -116,6 +130,14 @@ namespace BrickController2.UI.Controls
                 dcs.CircuitCubesC.SelectedChannel = selectedChannel;
                 dcs.WedoChannel0.SelectedChannel = selectedChannel;
                 dcs.WedoChannel1.SelectedChannel = selectedChannel;
+
+                // MouldKing
+                dcs.MKRobotChannel0.SelectedChannel = selectedChannel;
+                dcs.MKRobotChannel1.SelectedChannel = selectedChannel;
+
+                // Hogokids
+                dcs.HKRobotChannel0.SelectedChannel = selectedChannel;
+                dcs.HKRobotChannel1.SelectedChannel = selectedChannel;
             }
         }
     }
