@@ -31,13 +31,13 @@ namespace BrickController2.DeviceManagement
                 }
 
                 // MouldKing
-                await deviceFoundCallback(DeviceType.MouldKing_15059_Robot, "MouldKing Robot", "15059", BitConverter.GetBytes(0xFFF0));
+                await deviceFoundCallback(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(0xFFF0));
 
                 // Hogokids
                 await deviceFoundCallback(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(0x6CBC));
 
                 // Cada
-                await deviceFoundCallback(DeviceType.Cada_C51072W_RaceCar, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(0xC200));
+                await deviceFoundCallback(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(0xC200));
 
                 try
                 {

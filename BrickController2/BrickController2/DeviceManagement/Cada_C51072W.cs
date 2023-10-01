@@ -7,7 +7,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/gp/product/B0B6P9JG2J/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1
     /// </summary>
-    internal class Cada_C51072W_RaceCar : BluetoothAdvertisingDevice<Cada_C51072W_RaceCar.Telegram>
+    internal class Cada_C51072W : BluetoothAdvertisingDevice<Cada_C51072W.Telegram>
     {
         #region Definitions
         internal enum Telegram
@@ -207,7 +207,7 @@ namespace BrickController2.DeviceManagement
         #endregion
         #endregion
         #region static Constructor
-        static Cada_C51072W_RaceCar()
+        static Cada_C51072W()
         {
             Telegrams.Add(Telegram.Connect, Telegram_Connect);
             Telegrams.Add(Telegram.Stopp, Telegram_Stop);
@@ -227,7 +227,7 @@ namespace BrickController2.DeviceManagement
         private float _Channel1_Value = 0.0f;
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.Cada_C51072W_RaceCar;
+        public override DeviceType DeviceType => DeviceType.Cada_C51072W;
 
         public override int NumberOfChannels => 2;
 
@@ -235,7 +235,7 @@ namespace BrickController2.DeviceManagement
         #endregion
 
         #region Constructor
-        public Cada_C51072W_RaceCar(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        public Cada_C51072W(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
         }
