@@ -27,6 +27,10 @@ namespace BrickController2.DeviceManagement
 
         protected _TelegramType _currentTelegram;
         #endregion
+        #region Properties
+        public virtual AdvertisingInterval AdvertisingInterval => AdvertisingInterval.Min;
+        public virtual TxPowerLevel TxPowerLevel => TxPowerLevel.Max;
+        #endregion
 
         #region Constructor
         protected BluetoothAdvertisingDevice(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
@@ -162,7 +166,7 @@ namespace BrickController2.DeviceManagement
                     byte[] currentData;
                     if (Telegrams.TryGetValue(_currentTelegram, out currentData))
                     {
-                        await this._bleAdvertiserDevice?.StartAdvertiseAsync(_manufacturerId, currentData);
+                        await this._bleAdvertiserDevice?.StartAdvertiseAsync(this.AdvertisingInterval, this.TxPowerLevel, _manufacturerId, currentData);
                     }
 
                     await ProcessOutputsAsync(token).ConfigureAwait(false);
