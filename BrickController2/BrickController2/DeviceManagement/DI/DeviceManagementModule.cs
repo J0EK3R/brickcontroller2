@@ -25,7 +25,7 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<Wedo2Device>().Keyed<Device>(DeviceType.WeDo2);
 
             // MouldKing
-            builder.RegisterType<MK_Robot>().Keyed<Device>(DeviceType.MK_Robot);
+            builder.RegisterType<MouldKing_15059_Robot>().Keyed<Device>(DeviceType.MouldKing_15059_Robot);
 
             // Hogokids
             builder.RegisterType<HK_Robot>().Keyed<Device>(DeviceType.HK_Robot);
