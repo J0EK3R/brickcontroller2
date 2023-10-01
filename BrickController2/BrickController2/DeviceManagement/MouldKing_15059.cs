@@ -13,7 +13,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/dp/B09TPHJ5L7?psc=1&ref=ppx_yo2ov_dt_b_product_details
     /// </summary>
-    internal class MouldKing_15059_Robot : BluetoothAdvertisingDevice<MouldKing_15059_Robot.Telegram>
+    internal class MouldKing_15059 : BluetoothAdvertisingDevice<MouldKing_15059.Telegram>
     {
         #region Definitions
         internal enum Telegram
@@ -105,7 +105,7 @@ namespace BrickController2.DeviceManagement
             0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
         #endregion
         #region static Constructor
-        static MouldKing_15059_Robot()
+        static MouldKing_15059()
         {
             Telegrams.Add(Telegram.Connect, Telegram_Connect);
             Telegrams.Add(Telegram.Stopp, Telegram_Stopp);
@@ -125,7 +125,7 @@ namespace BrickController2.DeviceManagement
         private float _Channel1_Value = 0.0f;
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.MouldKing_15059_Robot;
+        public override DeviceType DeviceType => DeviceType.MouldKing_15059;
 
         public override int NumberOfChannels => 2;
 
@@ -133,7 +133,7 @@ namespace BrickController2.DeviceManagement
         #endregion
 
         #region Constructor
-        public MouldKing_15059_Robot(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        public MouldKing_15059(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
         }
