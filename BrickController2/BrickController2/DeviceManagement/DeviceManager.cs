@@ -110,15 +110,22 @@ namespace BrickController2.DeviceManagement
 
         public Device GetDeviceById(string Id)
         {
-            if (string.IsNullOrEmpty(Id))
+            try
+            {
+                if (string.IsNullOrEmpty(Id))
+                {
+                    return null;
+                }
+
+                var deviceTypeAndAddress = Id.Split('#');
+                var deviceType = (DeviceType)Enum.Parse(typeof(DeviceType), deviceTypeAndAddress[0]);
+                var deviceAddress = deviceTypeAndAddress[1];
+                return Devices.FirstOrDefault(d => d.DeviceType == deviceType && d.Address == deviceAddress);
+            }
+            catch
             {
                 return null;
             }
-
-            var deviceTypeAndAddress = Id.Split('#');
-            var deviceType = (DeviceType)Enum.Parse(typeof(DeviceType), deviceTypeAndAddress[0]);
-            var deviceAddress = deviceTypeAndAddress[1];
-            return Devices.FirstOrDefault(d => d.DeviceType == deviceType && d.Address == deviceAddress);
         }
 
         public async Task DeleteDeviceAsync(Device device)
