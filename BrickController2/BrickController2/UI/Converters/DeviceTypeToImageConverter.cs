@@ -50,9 +50,13 @@ namespace BrickController2.UI.Converters
                     return ResourceHelper.GetImageResource("wedo2hub_image.png");
 
                 case DeviceType.MouldKing_15059_Robot:
-                case DeviceType.HK_Robot:
-                case DeviceType.Cada_RC_C51072W:
-                    return ResourceHelper.GetImageResource("mouldking_15059_robot_image.png");
+                    return ResourceHelper.GetImageResource("mouldking_15059_image.png");
+
+                case DeviceType.HOGOKIDS_8051:
+                    return ResourceHelper.GetImageResource("hogokids_8051_image.png");
+
+                case DeviceType.Cada_C51072W_RaceCar:
+                    return ResourceHelper.GetImageResource("cada_c51072w_image.png");
 
                 default:
                     return null;

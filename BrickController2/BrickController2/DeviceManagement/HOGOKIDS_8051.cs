@@ -13,7 +13,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/dp/B0C9Q61RJ2?ref=ppx_yo2ov_dt_b_product_details&th=1
     /// </summary>
-    internal class HK_Robot : BluetoothAdvertisingDevice<HK_Robot.Telegram>
+    internal class HOGOKIDS_8051 : BluetoothAdvertisingDevice<HOGOKIDS_8051.Telegram>
     {
         #region Definitions
         internal enum Telegram
@@ -160,7 +160,7 @@ namespace BrickController2.DeviceManagement
 
         #endregion
         #region static Constructor
-        static HK_Robot()
+        static HOGOKIDS_8051()
         {
             Telegrams.Add(Telegram.Connect, Telegram_Connect);
             Telegrams.Add(Telegram.Stopp, Telegram_Stopp);
@@ -180,7 +180,7 @@ namespace BrickController2.DeviceManagement
         private float _Channel1_Value = 0.0f;
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.HK_Robot;
+        public override DeviceType DeviceType => DeviceType.HOGOKIDS_8051;
 
         public override int NumberOfChannels => 2;
 
@@ -188,7 +188,7 @@ namespace BrickController2.DeviceManagement
         #endregion
 
         #region Constructor
-        public HK_Robot(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        public HOGOKIDS_8051(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
             : base(name, address, deviceData, deviceRepository, bleService)
         {
         }

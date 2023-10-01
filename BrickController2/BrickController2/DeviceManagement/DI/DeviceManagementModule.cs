@@ -28,10 +28,10 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<MouldKing_15059_Robot>().Keyed<Device>(DeviceType.MouldKing_15059_Robot);
 
             // Hogokids
-            builder.RegisterType<HK_Robot>().Keyed<Device>(DeviceType.HK_Robot);
+            builder.RegisterType<HOGOKIDS_8051>().Keyed<Device>(DeviceType.HOGOKIDS_8051);
 
             // Cada
-            builder.RegisterType<Cada_RC_C51072W>().Keyed<Device>(DeviceType.Cada_RC_C51072W);
+            builder.RegisterType<Cada_C51072W_RaceCar>().Keyed<Device>(DeviceType.Cada_C51072W_RaceCar);
 
             builder.Register<DeviceFactory>(c =>
             {
