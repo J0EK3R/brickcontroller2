@@ -16,7 +16,7 @@
         WeDo2,
 
         // MouldKing
-        MK_Robot,
+        MouldKing_15059_Robot,
 
         // Hogokids
         HK_Robot,
