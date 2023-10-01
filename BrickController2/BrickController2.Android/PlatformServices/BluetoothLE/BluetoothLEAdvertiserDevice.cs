@@ -19,14 +19,62 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
             this._advertiser = advertiser;
         }
 
-        public async Task<bool> StartAdvertiseAsync(int manufacturerId, byte[] rawData)
+        public async Task<bool> StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, int manufacturerId, byte[] rawData)
         {
+            #region convert advertisingIterval
+            int advertisingIterval_value = AdvertisingSetParameters.IntervalMax;
+            switch (advertisingIterval)
+            {
+                case AdvertisingInterval.Min:
+                    advertisingIterval_value = AdvertisingSetParameters.IntervalMin;
+                    break;
+                case AdvertisingInterval.High:
+                    advertisingIterval_value = AdvertisingSetParameters.IntervalHigh;
+                    break;
+                case AdvertisingInterval.Medium:
+                    advertisingIterval_value = AdvertisingSetParameters.IntervalMedium;
+                    break;
+                case AdvertisingInterval.Low:
+                    advertisingIterval_value = AdvertisingSetParameters.IntervalLow;
+                    break;
+                case AdvertisingInterval.Max:
+                default:
+                    advertisingIterval_value = AdvertisingSetParameters.IntervalMax; 
+                    break;
+            }
+            #endregion
+            #region convert txPowerLevel
+            AdvertiseTxPower advertiseTxPower;
+            switch (txPowerLevel)
+            {
+                case TxPowerLevel.UltraLow:
+                    advertiseTxPower = AdvertiseTxPower.UltraLow;
+                    break;
+                case TxPowerLevel.Low:
+                    advertiseTxPower = AdvertiseTxPower.Low;
+                    break;
+                case TxPowerLevel.Medium:
+                    advertiseTxPower = AdvertiseTxPower.Medium;
+                    break;
+                case TxPowerLevel.High:
+                    advertiseTxPower = AdvertiseTxPower.High;
+                    break;
+                case TxPowerLevel.Max:
+                    advertiseTxPower = AdvertiseTxPower.Max;
+                    break;
+                case TxPowerLevel.Min:
+                default:
+                    advertiseTxPower = AdvertiseTxPower.Min;
+                    break;
+            }
+            #endregion
+
             AdvertisingSetParameters settings = new AdvertisingSetParameters.Builder()
                 .SetLegacyMode(true)
                 .SetConnectable(true)
                 .SetScannable(true)
-                .SetInterval(AdvertisingSetParameters.IntervalMin)
-                .SetTxPowerLevel(AdvertiseTxPower.Max)
+                .SetInterval(advertisingIterval_value)
+                .SetTxPowerLevel(advertiseTxPower)
                 .Build();
 
             AdvertiseData data = new AdvertiseData.Builder()
