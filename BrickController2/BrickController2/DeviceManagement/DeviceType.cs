@@ -18,10 +18,10 @@
         // MouldKing
         MouldKing_15059_Robot,
 
-        // Hogokids
-        HK_Robot,
+        // HOGOKIDS
+        HOGOKIDS_8051,
 
         // Cada
-        Cada_RC_C51072W
+        Cada_C51072W_RaceCar
     }
 }
