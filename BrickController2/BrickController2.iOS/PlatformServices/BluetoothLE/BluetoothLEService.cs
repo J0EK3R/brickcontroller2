@@ -143,5 +143,10 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
 
             return null;
         }
+
+        public IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice()
+        {
+            return new BluetoothLEAdvertiserDevice(null);
+        }
     }
 }
