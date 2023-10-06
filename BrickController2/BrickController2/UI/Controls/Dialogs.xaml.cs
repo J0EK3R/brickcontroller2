@@ -241,7 +241,7 @@ namespace BrickController2.UI.Controls
                 GameControllerEventDialogCancelButton.Clicked -= buttonHandler;
                 GameControllerService.GameControllerEvent -= gameControllerEventHandler;
                 HideViewImmediately(GameControllerEventDialog);
-                tcs.TrySetResult(new GameControllerEventDialogResult(false, GameControllerEventType.Axis, string.Empty));
+                tcs.TrySetResult(new GameControllerEventDialogResult(false, GameControllerEventDialogResult.NoControllerDeviceId, GameControllerEventType.Axis, string.Empty));
             }))
             {
                 await ShowView(GameControllerEventDialog);
@@ -256,7 +256,7 @@ namespace BrickController2.UI.Controls
                 GameControllerEventDialogCancelButton.Clicked -= buttonHandler;
                 GameControllerService.GameControllerEvent -= gameControllerEventHandler;
                 await HideView(GameControllerEventDialog);
-                tcs.TrySetResult(new GameControllerEventDialogResult(false, GameControllerEventType.Axis, string.Empty));
+                tcs.TrySetResult(new GameControllerEventDialogResult(false, GameControllerEventDialogResult.NoControllerDeviceId, GameControllerEventType.Axis, string.Empty));
             }
 
             async void gameControllerEventHandler(object sender, GameControllerEventArgs args)
@@ -277,7 +277,7 @@ namespace BrickController2.UI.Controls
 
                         var gameControllerEventType = controllerEvent.Key.EventType;
                         var gameControllerEventCode = controllerEvent.Key.EventCode;
-                        tcs.TrySetResult(new GameControllerEventDialogResult(true, gameControllerEventType, gameControllerEventCode));
+                        tcs.TrySetResult(new GameControllerEventDialogResult(true, args.ControllerDeviceId, gameControllerEventType, gameControllerEventCode));
                         return;
                     }
                 }

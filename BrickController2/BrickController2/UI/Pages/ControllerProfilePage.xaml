@@ -66,6 +66,7 @@
                                     </Grid.ColumnDefinitions>
                                     <controls:ColorImage Grid.Column="0" Source="{Binding ControllerEvent.EventType, Converter={StaticResource EventTypeToImage}}" Color="{DynamicResource PrimaryColor}" WidthRequest="30" HeightRequest="30" VerticalOptions="Center"/>
                                     <StackLayout Grid.Column="1" Orientation="Horizontal" VerticalOptions="Center">
+                                        <Label Text="{Binding ControllerEvent.ControllerDeviceId}" FontSize="Large" FontAttributes="Bold"/>
                                         <Label Text="{Binding ControllerEvent.EventCode}" FontSize="Large" FontAttributes="Bold"/>
                                     </StackLayout>
                                 </Grid>
