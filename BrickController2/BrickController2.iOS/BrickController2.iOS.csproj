@@ -131,6 +131,7 @@
     <AppExtensionDebugBundleId />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="PlatformServices\BluetoothLE\BluetoothLEAdvertiserDevice.cs" />
     <Compile Include="PlatformServices\BluetoothLE\BluetoothLEDevice.cs" />
     <Compile Include="PlatformServices\BluetoothLE\BluetoothLEService.cs" />
     <Compile Include="PlatformServices\BluetoothLE\GattCharacteristic.cs" />
