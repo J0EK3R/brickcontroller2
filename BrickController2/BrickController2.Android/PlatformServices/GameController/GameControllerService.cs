@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using Android.Runtime;
 using Android.Views;
 using BrickController2.PlatformServices.GameController;
-using Java.Util.Logging;
-using Kotlin.Contracts;
-using static Android.Graphics.Paint;
-using static Android.Service.Notification.NotificationListenerService;
-using static Android.Telephony.CarrierConfigManager;
-using Xamarin.Forms;
 
 namespace BrickController2.Droid.PlatformServices.GameController
 {
