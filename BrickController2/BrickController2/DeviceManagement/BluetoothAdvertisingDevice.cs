@@ -40,7 +40,7 @@ namespace BrickController2.DeviceManagement
 
             try
             {
-                this._manufacturerId = BitConverter.ToInt32(deviceData);
+                this._manufacturerId = BitConverter.ToInt32(deviceData, 0);
             }
             catch
             {

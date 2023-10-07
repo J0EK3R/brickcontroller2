@@ -33,9 +33,6 @@ namespace BrickController2.DeviceManagement.DI
             // Cada
             builder.RegisterType<Cada_C51072W>().Keyed<Device>(DeviceType.Cada_C51072W);
 
-            // Cada
-            builder.RegisterType<Cada_C51072W_RaceCar>().Keyed<Device>(DeviceType.Cada_C51072W_RaceCar);
-
             builder.Register<DeviceFactory>(c =>
             {
                 IComponentContext ctx = c.Resolve<IComponentContext>();
