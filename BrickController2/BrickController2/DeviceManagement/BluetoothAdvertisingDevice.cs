@@ -15,7 +15,7 @@ namespace BrickController2.DeviceManagement
         #endregion
         #region Fields
         protected readonly IBluetoothLEService _bleService;
-        protected readonly int _manufacturerId;
+        protected readonly ushort _manufacturerId;
         protected readonly object _outputLock = new object();
 
         private Task _outputTask;
@@ -40,7 +40,7 @@ namespace BrickController2.DeviceManagement
 
             try
             {
-                this._manufacturerId = BitConverter.ToInt32(deviceData, 0);
+                this._manufacturerId = BitConverter.ToUInt16(deviceData, 0);
             }
             catch
             {
