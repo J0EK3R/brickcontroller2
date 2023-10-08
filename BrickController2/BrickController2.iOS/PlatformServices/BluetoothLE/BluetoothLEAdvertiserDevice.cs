@@ -19,7 +19,7 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
 
         }
 
-        public async Task<bool> StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, int manufacturerId, byte[] rawData)
+        public async Task<bool> StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, ushort manufacturerId, byte[] rawData)
         {
             #region convert advertisingIterval
             //int advertisingIterval_value = AdvertisingSetParameters.IntervalMax;
@@ -100,7 +100,7 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
             return await Task.FromResult(false);
         }
 
-        public bool ChangeAdvertiseAsync(int manufacturerId, byte[] rawData)
+        public bool ChangeAdvertiseAsync(ushort manufacturerId, byte[] rawData)
         {
             //if(this._advertisingSet != null)
             //{
