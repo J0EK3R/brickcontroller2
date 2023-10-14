@@ -6,7 +6,8 @@ using Windows.Devices.Bluetooth;
 
 namespace BrickController2.Windows.PlatformServices.BluetoothLE
 {
-    public class BleService : IBluetoothLEService
+    public class BleService : 
+        IBluetoothLEService
     {
         [Flags]
         private enum BluetoothStatus
@@ -103,7 +104,7 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
 
         public IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice()
         {
-            return new BluetoothLEAdvertiserDevice(null);
+            return new BluetoothLEAdvertiserDevice();
         }
     }
 }

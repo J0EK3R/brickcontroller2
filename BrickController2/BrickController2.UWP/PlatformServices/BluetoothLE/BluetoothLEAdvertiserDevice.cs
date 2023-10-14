@@ -1,25 +1,49 @@
-﻿using System;
+﻿using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using BrickController2.PlatformServices.BluetoothLE;
+using Windows.Devices.Bluetooth.Advertisement;
+using Windows.Foundation.Metadata;
 
 namespace BrickController2.Windows.PlatformServices.BluetoothLE
 {
     internal class BluetoothLEAdvertiserDevice :
         IBluetoothLEAdvertiserDevice
     {
-        private readonly object _advertiser;
+        #region Fields
+        private readonly BluetoothLEAdvertisementPublisher publisher;
 
-        public BluetoothLEAdvertiserDevice(object advertiser)
+        private BluetoothLEManufacturerData bluetoothLEManufacturerData = new BluetoothLEManufacturerData();
+        #endregion
+
+        #region Constructor
+        /// <summary>
+        /// 
+        /// </summary>
+        public BluetoothLEAdvertiserDevice()
         {
-            this._advertiser = advertiser;
+            this.publisher = new BluetoothLEAdvertisementPublisher();
         }
+        #endregion
 
+        #region Dispose
+        /// <summary>
+        /// 
+        /// </summary>
         public void Dispose()
         {
-
         }
+        #endregion
 
-        public async Task<bool> StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, int manufacturerId, byte[] rawData)
+        #region StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, ushort manufacturerId, byte[] rawData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="advertisingIterval"></param>
+        /// <param name="txPowerLevel"></param>
+        /// <param name="manufacturerId"></param>
+        /// <param name="rawData"></param>
+        /// <returns></returns>
+        public async Task<bool> StartAdvertiseAsync(AdvertisingInterval advertisingIterval, TxPowerLevel txPowerLevel, ushort manufacturerId, byte[] rawData)
         {
             #region convert advertisingIterval
             //int advertisingIterval_value = AdvertisingSetParameters.IntervalMax;
@@ -69,53 +93,115 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
             //}
             #endregion
 
-            //AdvertisingSetParameters settings = new AdvertisingSetParameters.Builder()
-            //    .SetLegacyMode(true)
-            //    .SetConnectable(true)
-            //    .SetScannable(true)
-            //    .SetInterval(advertisingIterval_value)
-            //    .SetTxPowerLevel(advertiseTxPower)
-            //    .Build();
+            this.CreateData(manufacturerId, rawData);
 
-            //AdvertiseData data = new AdvertiseData.Builder()
-            //    .AddManufacturerData(manufacturerId, rawData)
-            //    .Build();
 
-            //this._advertiser.StartAdvertisingSet(
-            //    settings,
-            //    data,
-            //    null,
-            //    null,
-            //    null,
-            //    this);
+            if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 10))
+            {
+                //publisher.UseExtendedAdvertisement = true;
+                //publisher.IsAnonymous = true;
+                //publisher.IncludeTransmitPowerLevel = includeTxPower;
+                //publisher.PreferredTransmitPowerLevelInDBm = txPower;
+            }
+
+
+            //this.publisher.UseExtendedAdvertisement = true;
+            //this.publisher.IsAnonymous = true;
+
+            //this.publisher.Advertisement.Flags = BluetoothLEAdvertisementFlags.None;
+            //this.publisher.Advertisement.ManufacturerData.Add(this.bluetoothLEManufacturerData);
+
+            // From old code (Which is not commented)
+            var data = new BluetoothLEAdvertisementDataSection
+            {
+                DataType = 0x02,
+                Data = new byte[] { 0x01, 0x02 }.AsBuffer()
+            };
+            this.publisher.Advertisement.DataSections.Add(data);
+
+            this.publisher.Start();
 
             return await Task.FromResult(false);
         }
-
+        #endregion
+        #region StopAdvertiseAsync()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> StopAdvertiseAsync()
         {
-            //this._advertiser.StopAdvertisingSet(this);
-
+            this.publisher?.Advertisement?.ManufacturerData?.Remove(this.bluetoothLEManufacturerData);
+            this.publisher.Stop();
 
             return await Task.FromResult(false);
         }
+        #endregion
 
-        public bool ChangeAdvertiseAsync(int manufacturerId, byte[] rawData)
+        #region ChangeAdvertiseAsync(ushort manufacturerId, byte[] rawData)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="manufacturerId"></param>
+        /// <param name="rawData"></param>
+        /// <returns></returns>
+        public bool ChangeAdvertiseAsync(ushort manufacturerId, byte[] rawData)
         {
-            //if(this._advertisingSet != null)
-            //{
-            //    AdvertiseData data = new AdvertiseData.Builder()
-            //        .AddManufacturerData(manufacturerId, rawData)
-            //        .Build();
+            if (this.bluetoothLEManufacturerData != null)
+            {
+                //this.publisher?.Advertisement?.ManufacturerData?.Remove(this.bluetoothLEManufacturerData);
 
-            //    this._advertisingSet.SetAdvertisingData(data);
+                this.CreateData(manufacturerId, rawData);
 
-            //    return true;
-            //}
-            //else
+                //this.publisher?.Advertisement?.ManufacturerData?.Add(this.bluetoothLEManufacturerData);
+
+                return true;
+            }
+            else
             {
                 return false;
             }
         }
+        #endregion
+        #region CreateData(ushort manufacturerId, byte[] sourceArray)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="manufacturerId"></param>
+        /// <param name="sourceArray"></param>
+        private void CreateData(ushort manufacturerId, byte[] sourceArray)
+        {
+            //byte[] preinsertArray = new byte[]
+            //{
+            //    0x02,
+            //    0x01,
+            //    0x02
+            //};
+
+            //byte[] targetArray = new byte[preinsertArray.Length + sourceArray.Length];
+            //preinsertArray.CopyTo(targetArray, 0);
+            //sourceArray.CopyTo(targetArray, preinsertArray.Length);
+
+            //byte[] dataArray = new byte[] 
+            //{
+            //    // last 2 bytes of Apple's iBeacon
+            //    0x02, 0x15,
+            //    // UUID e2 c5 6d b5 df fb 48 d2 b0 60 d0 f5 a7 10 96 e0
+            //    0xe2, 0xc5, 0x6d, 0xb5,
+            //    0xdf, 0xfb, 0x48, 0xd2,
+            //    0xb0, 0x60, 0xd0, 0xf5,
+            //    0xa7, 0x10, 0x96, 0xe0,
+            //    // Major
+            //    0x00, 0x00,
+            //    // Minor
+            //    0x00, 0x01,
+            //    // TX power
+            //    0xc5
+            //};
+
+            this.bluetoothLEManufacturerData.CompanyId = manufacturerId;
+            this.bluetoothLEManufacturerData.Data = sourceArray.AsBuffer();
+        }
+        #endregion
     }
 }
