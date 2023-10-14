@@ -103,7 +103,7 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
 
         public IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice()
         {
-            return new BluetoothLEAdvertiserDevice(null);
+            return new BluetoothLEAdvertiserDevice();
         }
     }
 }
