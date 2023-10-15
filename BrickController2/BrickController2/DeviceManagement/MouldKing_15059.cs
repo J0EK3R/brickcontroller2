@@ -34,6 +34,13 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
         #region Constants
+        /// <summary>
+        /// ManufacturerID for BLEAdvertisments
+        /// hex: 0xFFF0
+        /// dec: 65520
+        /// </summary>
+        public const ushort ManufacturerID = 0xFFF0;
+
         private static readonly byte[] Telegram_Connect = new byte[] { 0x6d, 0xb6, 0x43, 0xcf, 0x7e, 0x8f, 0x47, 0x11,
             0x4f, 0x66, 0x59,
             0xb8, 0x51,

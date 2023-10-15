@@ -72,13 +72,13 @@ namespace BrickController2.DeviceManagement
                 try
                 {
                     // MouldKing
-                    await FoundDevice(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(0xFFF0));
+                    await FoundDevice(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(MouldKing_15059.ManufacturerID));
 
                     // Hogokids
-                    await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(0x6CBC));
+                    await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(HOGOKIDS_8051.ManufacturerID));
 
                     // Cada
-                    await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(0xC200));
+                    await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(Cada_C51072W.ManufacturerID));
 
                     var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice, token);
                     var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice, token);

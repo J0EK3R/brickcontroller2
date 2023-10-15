@@ -34,6 +34,13 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
         #region Constants
+        /// <summary>
+        /// ManufacturerID for BLEAdvertisments
+        /// hex: 0x6CBC
+        /// dec: 27836
+        /// </summary>
+        public const ushort ManufacturerID = 0x6CBC;
+
         // byte[10]
         //
         // ss00 bbaa
