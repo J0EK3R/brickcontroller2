@@ -166,7 +166,8 @@ namespace BrickController2.DeviceManagement
                     byte[] currentData;
                     if (Telegrams.TryGetValue(_currentTelegram, out currentData))
                     {
-                        await this._bleAdvertiserDevice?.StartAdvertiseAsync(this.AdvertisingInterval, this.TxPowerLevel, _manufacturerId, currentData);
+                        byte[] cryptedData = Crypt(currentData);
+                        await this._bleAdvertiserDevice?.StartAdvertiseAsync(this.AdvertisingInterval, this.TxPowerLevel, _manufacturerId, cryptedData);
                     }
 
                     await ProcessOutputsAsync(token).ConfigureAwait(false);
@@ -233,7 +234,8 @@ namespace BrickController2.DeviceManagement
                             _lastSend = _currentTelegram;
                             isInitialized = true;
 
-                            bool result = this._bleAdvertiserDevice.ChangeAdvertiseAsync(_manufacturerId, currentData);
+                            byte[] cryptedData = Crypt(currentData);
+                            bool result = this._bleAdvertiserDevice.ChangeAdvertiseAsync(_manufacturerId, cryptedData);
 
                             counter++;
                             FirmwareVersion = $"{counter}";
@@ -249,5 +251,10 @@ namespace BrickController2.DeviceManagement
             }
         }
         #endregion
+
+        protected virtual byte[] Crypt(byte[] data) 
+        {
+            return data;
+        }
     }
 }
