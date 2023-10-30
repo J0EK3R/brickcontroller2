@@ -13,16 +13,16 @@ namespace BrickController2.DeviceManagement
             Connect,
             Stopp,
 
-            C0_F1__C1_F1,
-            C0_F1__C1_S,
-            C0_F1__C1_B1,
+            CA_F1__CB_F1,
+            CA_F1__CB_S,
+            CA_F1__CB_B1,
 
-            C0_S__C1_B1,
-            C0_S__C1_F1,
+            CA_S__CB_B1,
+            CA_S__CB_F1,
 
-            C0_B1__C1_F1,
-            C0_B1__C1_S,
-            C0_B1__C1_B1,
+            CA_B1__CB_F1,
+            CA_B1__CB_S,
+            CA_B1__CB_B1,
         }
         #endregion
         #region Constants
@@ -46,7 +46,7 @@ namespace BrickController2.DeviceManagement
         //    0x7A, 0xAA, 0x2D,
         //    0x4A, 0xAF,
         //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_F1__C1_F1 = new byte[] { 0x66, 0x7B, 0xA7, 0x80, 0xFF, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_F1__CB_F1 = new byte[] { 0x66, 0x7B, 0xA7, 0x80, 0xFF, 0x80, 0x80, 0x99 };
         #endregion
         #region Telegram_C0_B1__C1_B1
         /// <summary>
@@ -58,7 +58,7 @@ namespace BrickController2.DeviceManagement
         //    0x7A, 0xAA, 0x2D,
         //    0x98, 0x6A,
         //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_B1__C1_B1 = new byte[] { 0x66, 0x7B, 0xA7, 0x80, 0x00, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_B1__CB_B1 = new byte[] { 0x66, 0x7B, 0xA7, 0x80, 0x00, 0x80, 0x80, 0x99 };
         #endregion
         #region Telegram_C0_F1__C1_B1
         /// <summary>
@@ -70,31 +70,19 @@ namespace BrickController2.DeviceManagement
         //    0x7A, 0xAA, 0x2D,
         //    0xA3, 0xCD,
         //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_F1__C1_B1 = new byte[] { 0x66, 0x7B, 0xA7, 0x00, 0x80, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_F1__CB_B1 = new byte[] { 0x66, 0x7B, 0xA7, 0x00, 0x80, 0x80, 0x80, 0x99 };
         #endregion
-        #region Telegram_C0_F1__C1_S
+        #region Telegram_CA_F1__CB_S
         /// <summary>
-        /// Length: 8 - 0x66, 0x7B, 0xA7, 0x00, 0xFF, 0x80, 0x80, 0x99, 
+        /// Channel A Forward max
         /// </summary>
-        //private static readonly byte[] Telegram_C0_F1__C1_S = new byte[] { 0x6D, 0xB6, 0x43, 0xCF, 0x7E, 0x8F, 0x47,
-        //    0x11, 0x83, 0x66, 0x59,
-        //    0xB8, 0xAE,
-        //    0x7A, 0xAA, 0x2D,
-        //    0x1F, 0x25,
-        //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_F1__C1_S = new byte[] { 0x66, 0x7B, 0xA7, 0x00, 0xFF, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_F1__CB_S = new byte[] { 0x61, 0x7B, 0xA7, 0x01, 0x80, 0x80, 0x80, 0x80, 0x80, 0x9E, };
         #endregion
-        #region Telegram_C0_B1__C1_S
+        #region Telegram_CA_B1__CB_S
         /// <summary>
-        /// Length: 8 - 0x66, 0x7B, 0xA7, 0x00, 0x00, 0x80, 0x80, 0x99, 
+        /// Channel A Backward max
         /// </summary>
-        //private static readonly byte[] Telegram_C0_B1__C1_S = new byte[] { 0x6D, 0xB6, 0x43, 0xCF, 0x7E, 0x8F, 0x47,
-        //    0x11, 0x83, 0x66, 0x59,
-        //    0xB8, 0x51,
-        //    0x7A, 0xAA, 0x2D,
-        //    0xCD, 0xE0,
-        //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_B1__C1_S = new byte[] { 0x66, 0x7B, 0xA7, 0x00, 0x00, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_B1__CB_S = new byte[] { 0x61, 0x7B, 0xA7, 0xFF, 0x80, 0x80, 0x80, 0x80, 0x80, 0x9E, };
         #endregion
         #region Telegram_C0_B1__C1_F1
         /// <summary>
@@ -106,31 +94,19 @@ namespace BrickController2.DeviceManagement
         //    0x7A, 0xAA, 0x2D,
         //    0xF9, 0x38,
         //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_B1__C1_F1 = new byte[] { 0x66, 0x7B, 0xA7, 0xFF, 0x80, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_C0AB1__CB_F1 = new byte[] { 0x66, 0x7B, 0xA7, 0xFF, 0x80, 0x80, 0x80, 0x99 };
         #endregion
-        #region Telegram_C0_S__C1_F1
+        #region Telegram_CA_S__CB_F1
         /// <summary>
-        /// Length: 8 - 0x66, 0x7B, 0xA7, 0xFF, 0xFF, 0x80, 0x80, 0x99,
+        /// Channel B Forward max
         /// </summary>
-        //private static readonly byte[] Telegram_C0_S__C1_F1 = new byte[] { 0x6D, 0xB6, 0x43, 0xCF, 0x7E, 0x8F, 0x47,
-        //    0x11, 0x83, 0x66, 0x59,
-        //    0x47, 0xAE,
-        //    0x7A, 0xAA, 0x2D,
-        //    0x45, 0xD0,
-        //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_S__C1_F1 = new byte[] { 0x66, 0x7B, 0xA7, 0xFF, 0xFF, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_S__CB_F1 = new byte[] { 0x61, 0x7B, 0xA7, 0x80, 0x01, 0x80, 0x80, 0x80, 0x80, 0x9E, };
         #endregion
-        #region Telegram_C0_S__C1_B1
+        #region Telegram_CA_S__CB_B1
         /// <summary>
-        /// Length: 8 - 0x66, 0x7B, 0xA7, 0xFF, 0x00, 0x80, 0x80, 0x99, 
+        /// Channel B Backward max
         /// </summary>
-        //private static readonly byte[] Telegram_C0_S__C1_B1 = new byte[] { 0x6D, 0xB6, 0x43, 0xCF, 0x7E, 0x8F, 0x47,
-        //    0x11, 0x83, 0x66, 0x59,
-        //    0x47, 0x51,
-        //    0x7A, 0xAA, 0x2D,
-        //    0x97, 0x15,
-        //    0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-        private static readonly byte[] Telegram_C0_S__C1_B1 = new byte[] { 0x66, 0x7B, 0xA7, 0xFF, 0x00, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_CA_S__CB_B1 = new byte[] { 0x61, 0x7B, 0xA7, 0x80, 0xFF, 0x80, 0x80, 0x80, 0x80, 0x9E, };
         #endregion
         #endregion
         #region static Constructor
@@ -138,20 +114,21 @@ namespace BrickController2.DeviceManagement
         {
             Telegrams.Add(Telegram.Connect, Telegram_Connect);
             Telegrams.Add(Telegram.Stopp, Telegram_Stopp);
-            Telegrams.Add(Telegram.C0_F1__C1_F1, Telegram_C0_F1__C1_F1);
-            Telegrams.Add(Telegram.C0_F1__C1_S, Telegram_C0_F1__C1_S);
-            Telegrams.Add(Telegram.C0_F1__C1_B1, Telegram_C0_F1__C1_B1);
-            Telegrams.Add(Telegram.C0_S__C1_B1, Telegram_C0_S__C1_B1);
-            Telegrams.Add(Telegram.C0_S__C1_F1, Telegram_C0_S__C1_F1);
-            Telegrams.Add(Telegram.C0_B1__C1_F1, Telegram_C0_B1__C1_F1);
-            Telegrams.Add(Telegram.C0_B1__C1_S, Telegram_C0_B1__C1_S);
-            Telegrams.Add(Telegram.C0_B1__C1_B1, Telegram_C0_B1__C1_B1);
+            Telegrams.Add(Telegram.CA_F1__CB_F1, Telegram_CA_F1__CB_F1);
+            Telegrams.Add(Telegram.CA_F1__CB_S, Telegram_CA_F1__CB_S);
+            Telegrams.Add(Telegram.CA_F1__CB_B1, Telegram_CA_F1__CB_B1);
+            Telegrams.Add(Telegram.CA_S__CB_B1, Telegram_CA_S__CB_B1);
+
+            Telegrams.Add(Telegram.CA_S__CB_F1, Telegram_CA_S__CB_F1);
+            Telegrams.Add(Telegram.CA_B1__CB_F1, Telegram_C0AB1__CB_F1);
+            Telegrams.Add(Telegram.CA_B1__CB_S, Telegram_CA_B1__CB_S);
+            Telegrams.Add(Telegram.CA_B1__CB_B1, Telegram_CA_B1__CB_B1);
         }
         #endregion
 
         #region Fields
-        private float _Channel0_Value = 0.0f;
-        private float _Channel1_Value = 0.0f;
+        private float _Channel_A_Value = 0.0f;
+        private float _Channel_B_Value = 0.0f;
         #endregion
         #region Properties
         public override DeviceType DeviceType => DeviceType.MouldKing_6_0_Modul;
@@ -181,23 +158,23 @@ namespace BrickController2.DeviceManagement
             switch (channel)
             {
                 case 0:
-                    if (this._Channel0_Value == value)
+                    if (this._Channel_A_Value == value)
                     {
                         return;
                     }
                     else
                     {
-                        this._Channel0_Value = value;
+                        this._Channel_A_Value = value;
                     }
                     break;
                 case 1:
-                    if (this._Channel1_Value == value)
+                    if (this._Channel_B_Value == value)
                     {
                         return;
                     }
                     else
                     {
-                        this._Channel1_Value = value;
+                        this._Channel_B_Value = value;
                     }
                     break;
                 default:
@@ -206,49 +183,49 @@ namespace BrickController2.DeviceManagement
 
             lock (_outputLock)
             {
-                if (this._Channel0_Value == 0)
+                if (this._Channel_A_Value == 0)
                 {
-                    if (this._Channel1_Value == 0) // Stopp
+                    if (this._Channel_B_Value == 0) // Stopp
                     {
                         _currentTelegram = Telegram.Stopp;
                     }
-                    else if (this._Channel1_Value > 0) // C0_S C1_F1
+                    else if (this._Channel_B_Value > 0) // C0_S C1_F1
                     {
-                        _currentTelegram = Telegram.C0_S__C1_F1;
+                        _currentTelegram = Telegram.CA_S__CB_F1;
                     }
                     else /*if (this._Channel1_Value < 0)*/ // C0_S C1_B1
                     {
-                        _currentTelegram = Telegram.C0_S__C1_B1;
+                        _currentTelegram = Telegram.CA_S__CB_B1;
                     }
                 }
-                else if (this._Channel0_Value > 0)
+                else if (this._Channel_A_Value > 0)
                 {
-                    if (this._Channel1_Value == 0) // C0_F1 C1_S
+                    if (this._Channel_B_Value == 0) // C0_F1 C1_S
                     {
-                        _currentTelegram = Telegram.C0_F1__C1_S;
+                        _currentTelegram = Telegram.CA_F1__CB_S;
                     }
-                    else if (this._Channel1_Value > 0) // C0_F1 C1_F1
+                    else if (this._Channel_B_Value > 0) // C0_F1 C1_F1
                     {
-                        _currentTelegram = Telegram.C0_F1__C1_F1;
+                        _currentTelegram = Telegram.CA_F1__CB_F1;
                     }
                     else /*if (this._Channel1_Value < 0)*/ // C0_F1 C1_B1
                     {
-                        _currentTelegram = Telegram.C0_F1__C1_B1;
+                        _currentTelegram = Telegram.CA_F1__CB_B1;
                     }
                 }
-                else if (this._Channel0_Value < 0)
+                else if (this._Channel_A_Value < 0)
                 {
-                    if (this._Channel1_Value == 0) // C0_B1 C1_S
+                    if (this._Channel_B_Value == 0) // C0_B1 C1_S
                     {
-                        _currentTelegram = Telegram.C0_B1__C1_S;
+                        _currentTelegram = Telegram.CA_B1__CB_S;
                     }
-                    else if (this._Channel1_Value > 0) // C0_B1 C1_F1
+                    else if (this._Channel_B_Value > 0) // C0_B1 C1_F1
                     {
-                        _currentTelegram = Telegram.C0_B1__C1_F1;
+                        _currentTelegram = Telegram.CA_B1__CB_F1;
                     }
                     else /*if (this._Channel1_Value < 0)*/ // C0_B1 C1_B1
                     {
-                        _currentTelegram = Telegram.C0_B1__C1_B1;
+                        _currentTelegram = Telegram.CA_B1__CB_B1;
                     }
                 }
             }
