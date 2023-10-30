@@ -21,6 +21,11 @@
         /// </summary>
         MouldKing_15059,
 
+        /// <summary>
+        /// 6.0 Modul
+        /// </summary>
+        MouldKing_6_0_Modul,
+
         // HOGOKIDS
         HOGOKIDS_8051,
 

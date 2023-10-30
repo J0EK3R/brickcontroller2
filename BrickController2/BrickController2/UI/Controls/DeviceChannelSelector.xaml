@@ -234,6 +234,29 @@
                 </Grid>
             </Grid>
 
+            <!-- MouldKing_6_0_Module_Section -->
+            <Grid x:Name="MouldKing_6_0_Module_Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_Module_Channel5" DeviceType="MouldKing_6_0_Modul" Channel="1" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_Module_Channel4" DeviceType="MouldKing_6_0_Modul" Channel="1" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_Module_Channel3" DeviceType="MouldKing_6_0_Modul" Channel="1" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_Module_Channel2" DeviceType="MouldKing_6_0_Modul" Channel="1" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_Module_Channel1" DeviceType="MouldKing_6_0_Modul" Channel="1" HorizontalOptions="End" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_Module_Channel0" DeviceType="MouldKing_6_0_Modul" Channel="0" HorizontalOptions="End" VerticalOptions="Start"/>
+                </Grid>
+
+                <Image Grid.Column="1" Source="{extensions:ImageResource Source=mouldking_15059_image.png}" WidthRequest="150" HeightRequest="120"/>
+
+                <Grid Grid.Column="2">
+                </Grid>
+            </Grid>
+
             <!-- HOGOKIDS_8051_Section -->
             <Grid x:Name="HOGOKIDS_8051_Section">
                 <Grid.ColumnDefinitions>

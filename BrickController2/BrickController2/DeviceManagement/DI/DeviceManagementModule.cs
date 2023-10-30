@@ -26,6 +26,7 @@ namespace BrickController2.DeviceManagement.DI
 
             // MouldKing
             builder.RegisterType<MouldKing_15059>().Keyed<Device>(DeviceType.MouldKing_15059);
+            builder.RegisterType<MouldKing_6_0_Modul>().Keyed<Device>(DeviceType.MouldKing_6_0_Modul);
 
             // Hogokids
             builder.RegisterType<HOGOKIDS_8051>().Keyed<Device>(DeviceType.HOGOKIDS_8051);
