@@ -45,11 +45,19 @@ namespace BrickController2.UI.Controls
             WedoChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
-            // MouldKing
+            // MouldKing_15059
             MouldKing_15059_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             MouldKing_15059_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
-            // Hogokids
+            // MouldKing_15059
+            MouldKing_6_0_Module_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_6_0_Module_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_6_0_Module_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_6_0_Module_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_6_0_Module_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_6_0_Module_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            // HOGOKIDS_8051
             HOGOKIDS_8051_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             HOGOKIDS_8051_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
@@ -139,11 +147,19 @@ namespace BrickController2.UI.Controls
                 dcs.WedoChannel0.SelectedChannel = selectedChannel;
                 dcs.WedoChannel1.SelectedChannel = selectedChannel;
 
-                // MouldKing
+                // MouldKing_15059
                 dcs.MouldKing_15059_Channel0.SelectedChannel = selectedChannel;
                 dcs.MouldKing_15059_Channel1.SelectedChannel = selectedChannel;
 
-                // Hogokids
+                // MouldKing_6_0
+                dcs.MouldKing_6_0_Module_Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_Module_Channel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_Module_Channel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_Module_Channel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_Module_Channel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_Module_Channel5.SelectedChannel = selectedChannel;
+
+                // HOGOKIDS_8051
                 dcs.HOGOKIDS_8051_Channel0.SelectedChannel = selectedChannel;
                 dcs.HOGOKIDS_8051_Channel1.SelectedChannel = selectedChannel;
 
