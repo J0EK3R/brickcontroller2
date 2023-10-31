@@ -1,35 +1,22 @@
 ﻿using BrickController2.PlatformServices.BluetoothLE;
+using System;
+using System.Diagnostics;
+using System.Linq;
 
 namespace BrickController2.DeviceManagement
 {
     /// <summary>
     /// Mould King 6.0 Modul
     /// </summary>
-    internal class MouldKing_6_0_Modul : MouldKing<MouldKing_6_0_Modul.Telegram>
+    internal class MouldKing_6_0_Modul : BluetoothAdvertisingDevice
     {
-        #region Definitions
-        internal enum Telegram
-        {
-            Connect,
-            Stopp,
-
-            CA_F1__CB_F1,
-            CA_F1__CB_S,
-            CA_F1__CB_B1,
-
-            CA_S__CB_B1,
-            CA_S__CB_F1,
-
-            CA_B1__CB_F1,
-            CA_B1__CB_S,
-            CA_B1__CB_B1,
-        }
-        #endregion
         #region Constants
+        public const ushort ManufacturerID = 0xFFF0;
+
         #region Telegram_Connect
         /// <summary>
         /// </summary>
-        private static readonly byte[] Telegram_Connect = new byte[] { 0x61, 0x7B, 0xA7, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x9E };
+        private static readonly byte[] Telegram_Connect = new byte[] { 0x6D, 0x7B, 0xA7, 0x80, 0x80, 0x80, 0x80, 0x92, };
         #endregion
         #region Telegram_Stopp
         /// <summary>
@@ -109,26 +96,18 @@ namespace BrickController2.DeviceManagement
         private static readonly byte[] Telegram_CA_S__CB_B1 = new byte[] { 0x61, 0x7B, 0xA7, 0x80, 0xFF, 0x80, 0x80, 0x80, 0x80, 0x9E, };
         #endregion
         #endregion
-        #region static Constructor
-        static MouldKing_6_0_Modul()
-        {
-            Telegrams.Add(Telegram.Connect, Telegram_Connect);
-            Telegrams.Add(Telegram.Stopp, Telegram_Stopp);
-            Telegrams.Add(Telegram.CA_F1__CB_F1, Telegram_CA_F1__CB_F1);
-            Telegrams.Add(Telegram.CA_F1__CB_S, Telegram_CA_F1__CB_S);
-            Telegrams.Add(Telegram.CA_F1__CB_B1, Telegram_CA_F1__CB_B1);
-            Telegrams.Add(Telegram.CA_S__CB_B1, Telegram_CA_S__CB_B1);
-
-            Telegrams.Add(Telegram.CA_S__CB_F1, Telegram_CA_S__CB_F1);
-            Telegrams.Add(Telegram.CA_B1__CB_F1, Telegram_C0AB1__CB_F1);
-            Telegrams.Add(Telegram.CA_B1__CB_S, Telegram_CA_B1__CB_S);
-            Telegrams.Add(Telegram.CA_B1__CB_B1, Telegram_CA_B1__CB_B1);
-        }
-        #endregion
 
         #region Fields
+        private readonly Stopwatch allZeroStopwatch = Stopwatch.StartNew();
+
         private float _Channel_A_Value = 0.0f;
         private float _Channel_B_Value = 0.0f;
+        private float _Channel_C_Value = 0.0f;
+        private float _Channel_D_Value = 0.0f;
+        private float _Channel_E_Value = 0.0f;
+        private float _Channel_F_Value = 0.0f;
+
+        private bool isInitialized = false;
         #endregion
         #region Properties
         public override DeviceType DeviceType => DeviceType.MouldKing_6_0_Modul;
@@ -145,90 +124,234 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
 
-        #region InitFirstTelegram()
-        protected override Telegram InitFirstTelegram()
+        #region InitOutputTask()()
+        /// <summary>
+        /// This method sets the device to initial state before advertising starts
+        /// </summary>
+        protected override void InitOutputTask()
         {
-            return Telegram.Connect;
+            this.isInitialized = false;
         }
         #endregion
 
         #region SetOutput(int channel, float value)
-        public override void SetOutput(int channel, float value)
+        protected override bool SetChannel(int channel, float value)
         {
             switch (channel)
             {
+                #region Channel A
                 case 0:
                     if (this._Channel_A_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
                         this._Channel_A_Value = value;
                     }
                     break;
+                #endregion
+                #region Channel B
                 case 1:
                     if (this._Channel_B_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
                         this._Channel_B_Value = value;
                     }
                     break;
+                #endregion
+                #region Channel C
+                case 2:
+                    if (this._Channel_C_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_C_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel D
+                case 3:
+                    if (this._Channel_D_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_D_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel E
+                case 4:
+                    if (this._Channel_E_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_E_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel F
+                case 5:
+                    if (this._Channel_F_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_F_Value = value;
+                    }
+                    break;
+                #endregion
                 default:
-                    return;
+                    return false;
             }
 
-            lock (_outputLock)
+            lock (this._outputLock)
             {
-                if (this._Channel_A_Value == 0)
-                {
-                    if (this._Channel_B_Value == 0) // Stopp
-                    {
-                        _currentTelegram = Telegram.Stopp;
-                    }
-                    else if (this._Channel_B_Value > 0) // C0_S C1_F1
-                    {
-                        _currentTelegram = Telegram.CA_S__CB_F1;
-                    }
-                    else /*if (this._Channel1_Value < 0)*/ // C0_S C1_B1
-                    {
-                        _currentTelegram = Telegram.CA_S__CB_B1;
-                    }
-                }
-                else if (this._Channel_A_Value > 0)
-                {
-                    if (this._Channel_B_Value == 0) // C0_F1 C1_S
-                    {
-                        _currentTelegram = Telegram.CA_F1__CB_S;
-                    }
-                    else if (this._Channel_B_Value > 0) // C0_F1 C1_F1
-                    {
-                        _currentTelegram = Telegram.CA_F1__CB_F1;
-                    }
-                    else /*if (this._Channel1_Value < 0)*/ // C0_F1 C1_B1
-                    {
-                        _currentTelegram = Telegram.CA_F1__CB_B1;
-                    }
-                }
-                else if (this._Channel_A_Value < 0)
-                {
-                    if (this._Channel_B_Value == 0) // C0_B1 C1_S
-                    {
-                        _currentTelegram = Telegram.CA_B1__CB_S;
-                    }
-                    else if (this._Channel_B_Value > 0) // C0_B1 C1_F1
-                    {
-                        _currentTelegram = Telegram.CA_B1__CB_F1;
-                    }
-                    else /*if (this._Channel1_Value < 0)*/ // C0_B1 C1_B1
-                    {
-                        _currentTelegram = Telegram.CA_B1__CB_B1;
-                    }
-                }
+
             }
+
+            return true;
+        }
+        #endregion
+        #region TryGetTelegram(out byte[] currentData)
+        public override bool TryGetTelegram(out byte[] currentData)
+        {
+            currentData = Telegram_Stopp.ToArray(); // copy
+            bool allZero = true;
+
+            #region Channel A
+            if (this._Channel_A_Value < 0)
+            {
+                // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
+                currentData[3] = (byte)(0x80 - Math.Min(-this._Channel_A_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else if (this._Channel_A_Value > 0)
+            {
+                // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
+                currentData[3] = (byte)(0x80 + Math.Min(this._Channel_A_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else
+            {
+                currentData[3] = 0x80;
+            }
+            #endregion
+            #region Channel B
+            if (this._Channel_B_Value < 0)
+            {
+                // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
+                currentData[4] = (byte)(0x80 - Math.Min(-this._Channel_B_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else if (this._Channel_B_Value > 0)
+            {
+                // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
+                currentData[4] = (byte)(0x80 + Math.Min(this._Channel_B_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else
+            {
+                currentData[4] = 0x80;
+            }
+            #endregion
+            #region Channel C
+            if (this._Channel_C_Value < 0)
+            {
+                // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
+                currentData[5] = (byte)(0x80 - Math.Min(-this._Channel_C_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else if (this._Channel_C_Value > 0)
+            {
+                // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
+                currentData[5] = (byte)(0x80 + Math.Min(this._Channel_C_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else
+            {
+                currentData[5] = 0x80;
+            }
+            #endregion
+            #region Channel D
+            if (this._Channel_D_Value < 0)
+            {
+                // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
+                currentData[6] = (byte)(0x80 - Math.Min(-this._Channel_D_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else if (this._Channel_D_Value > 0)
+            {
+                // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
+                currentData[6] = (byte)(0x80 + Math.Min(this._Channel_D_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else
+            {
+                currentData[6] = 0x80;
+            }
+            #endregion
+            #region Channel E
+            if (this._Channel_E_Value < 0)
+            {
+                // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
+                currentData[7] = (byte)(0x80 - Math.Min(-this._Channel_E_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else if (this._Channel_E_Value > 0)
+            {
+                // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
+                currentData[7] = (byte)(0x80 + Math.Min(this._Channel_E_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else
+            {
+                currentData[7] = 0x80;
+            }
+            #endregion
+            #region Channel F
+            if (this._Channel_F_Value < 0)
+            {
+                // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
+                currentData[8] = (byte)(0x80 - Math.Min(-this._Channel_F_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else if (this._Channel_F_Value > 0)
+            {
+                // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
+                currentData[8] = (byte)(0x80 + Math.Min(this._Channel_F_Value * 0x7F, 0x7F));
+                allZero = false;
+            }
+            else
+            {
+                currentData[8] = 0x80;
+            }
+            #endregion
+
+            if (!this.isInitialized ||
+                allZero && this.allZeroStopwatch.Elapsed > TimeSpan.FromSeconds(3))
+            {
+                currentData = Telegram_Connect;
+
+                this.isInitialized = true;
+            }
+            else
+            {
+                this.allZeroStopwatch.Restart();
+            }
+
+            currentData = MouldKingCrypt.Crypt(currentData);
+            return true;
         }
         #endregion
     }
