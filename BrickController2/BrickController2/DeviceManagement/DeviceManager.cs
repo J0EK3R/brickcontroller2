@@ -74,6 +74,7 @@ namespace BrickController2.DeviceManagement
                     // MouldKing
                     await FoundDevice(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(MouldKing_15059.ManufacturerID));
                     await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", "6.0 Module", BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+                    await FoundDevice(DeviceType.MouldKing_Mecanum_Modul, "MouldKing Mecanum Module", "Mecanum Module", BitConverter.GetBytes(MouldKing_Mecanum_Modul.ManufacturerID));
 
                     // Hogokids
                     await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(HOGOKIDS_8051.ManufacturerID));

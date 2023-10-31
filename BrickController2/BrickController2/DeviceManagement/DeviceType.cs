@@ -26,6 +26,11 @@
         /// </summary>
         MouldKing_6_0_Modul,
 
+        /// <summary>
+        /// 6.0 Mecanum
+        /// </summary>
+        MouldKing_Mecanum_Modul,
+
         // HOGOKIDS
         HOGOKIDS_8051,
 
