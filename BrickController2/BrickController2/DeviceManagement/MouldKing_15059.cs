@@ -7,7 +7,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/dp/B09TPHJ5L7?psc=1&ref=ppx_yo2ov_dt_b_product_details
     /// </summary>
-    internal class MouldKing_15059 : MouldKing<MouldKing_15059.Telegram>
+    internal class MouldKing_15059 : BluetoothAdvertisingDeviceEnum<MouldKing_15059.Telegram>
     {
         #region Definitions
         internal enum Telegram
@@ -28,6 +28,8 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
         #region Constants
+        public const ushort ManufacturerID = 0xFFF0;
+
         #region Telegram_Connect
         /// <summary>
         /// Length: 8 - 0xAA, 0x7B, 0xA7, 0x00, 0x00, 0x00, 0x00, 0x55,
@@ -184,22 +186,25 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
 
-        #region InitFirstTelegram()
-        protected override Telegram InitFirstTelegram()
+        #region InitOutputTask()()
+        /// <summary>
+        /// This method sets the device to initial state before advertising starts
+        /// </summary>
+        protected override void InitOutputTask()
         {
-            return Telegram.Connect;
+            this._currentTelegram = Telegram.Connect;
         }
         #endregion
 
         #region SetOutput(int channel, float value)
-        public override void SetOutput(int channel, float value)
+        protected override bool SetChannel(int channel, float value)
         {
             switch (channel)
             {
                 case 0:
                     if (this._Channel0_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -209,7 +214,7 @@ namespace BrickController2.DeviceManagement
                 case 1:
                     if (this._Channel1_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -217,10 +222,10 @@ namespace BrickController2.DeviceManagement
                     }
                     break;
                 default:
-                    return;
+                    return false;
             }
 
-            lock (_outputLock)
+            lock (this._outputLock)
             {
                 if (this._Channel0_Value == 0)
                 {
@@ -268,7 +273,19 @@ namespace BrickController2.DeviceManagement
                     }
                 }
             }
+            return true;
         }
         #endregion
+
+        public override bool TryGetTelegram(out byte[] currentData)
+        {
+            if(!base.TryGetTelegram(out currentData))
+            {
+                return false;
+            }
+
+            currentData = MouldKingCrypt.Crypt(currentData);
+            return true;
+        }
     }
 }
