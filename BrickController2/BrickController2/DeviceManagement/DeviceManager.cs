@@ -82,6 +82,9 @@ namespace BrickController2.DeviceManagement
                     // Cada
                     await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(Cada_C51072W.ManufacturerID));
 
+                    // TestModel
+                    await FoundDevice(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));
+
                     var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice, token);
                     var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice, token);
 
