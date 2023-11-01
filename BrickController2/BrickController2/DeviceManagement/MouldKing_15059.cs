@@ -16,7 +16,7 @@ namespace BrickController2.DeviceManagement
 
         /// <summary>
         /// </summary>
-        private static readonly byte[] Telegram_Stopp = new byte[] { 0x66, 0x7B, 0xA7, 0x80, 0x80, 0x80, 0x80, 0x99 };
+        private static readonly byte[] Telegram_Base = new byte[] { 0x66, 0x7B, 0xA7, 0x80, 0x80, 0x80, 0x80, 0x99 };
         #endregion
 
         #region Fields
@@ -24,12 +24,12 @@ namespace BrickController2.DeviceManagement
         #region Properties
         public override DeviceType DeviceType => DeviceType.MouldKing_15059;
 
-        public override int NumberOfChannels => 2;
+        //public override int NumberOfChannels => 2;
         #endregion
 
         #region Constructor
         public MouldKing_15059(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-                : base(name, address, deviceData, deviceRepository, bleService, Telegram_Connect, Telegram_Stopp)
+                : base(name, address, deviceData, deviceRepository, bleService, Telegram_Connect, Telegram_Base)
         {
         }
         #endregion
