@@ -61,7 +61,7 @@ namespace BrickController2.UI.Converters
                     return ResourceHelper.GetImageResource("cada_c51072w_image.png");
 
                 default:
-                    return null;
+                    return ResourceHelper.GetImageResource("technichub_image.png");
             }
         }
 

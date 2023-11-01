@@ -318,6 +318,28 @@
                 </Grid>
             </Grid>
 
+            <!-- TestModel_Section -->
+            <Grid x:Name="TestModel_Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="TestModel_Channel0" DeviceType="TestModel" Channel="0" HorizontalOptions="Start" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="TestModel_Channel1" DeviceType="TestModel" Channel="1" HorizontalOptions="End" VerticalOptions="Start"/>
+                    <controls:ChannelSelectorRadioButton x:Name="TestModel_Channel2" DeviceType="TestModel" Channel="2" HorizontalOptions="Start" VerticalOptions="Center"/>
+                    <controls:ChannelSelectorRadioButton x:Name="TestModel_Channel3" DeviceType="TestModel" Channel="3" HorizontalOptions="End" VerticalOptions="Center"/>
+                    <controls:ChannelSelectorRadioButton x:Name="TestModel_Channel4" DeviceType="TestModel" Channel="4" HorizontalOptions="Start" VerticalOptions="End"/>
+                    <controls:ChannelSelectorRadioButton x:Name="TestModel_Channel5" DeviceType="TestModel" Channel="5" HorizontalOptions="End" VerticalOptions="End"/>
+                </Grid>
+
+                <Image Grid.Column="1" Source="{extensions:ImageResource Source=mouldking_15059_image.png}" WidthRequest="150" HeightRequest="120"/>
+
+                <Grid Grid.Column="2">
+                </Grid>
+            </Grid>
         </Grid>
     </ContentView.Content>
 </ContentView>

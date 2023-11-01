@@ -72,6 +72,14 @@ namespace BrickController2.UI.Controls
             // Cada_C51072W
             Cada_C51072W_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             Cada_C51072W_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
+            // TestModel
+            TestModel_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            TestModel_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            TestModel_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            TestModel_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            TestModel_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            TestModel_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
         }
 
         public static BindableProperty DeviceTypeProperty = BindableProperty.Create(nameof(DeviceType), typeof(DeviceType), typeof(DeviceChannelSelector), default(DeviceType), BindingMode.OneWay, null, OnDeviceTypeChanged);
@@ -115,6 +123,9 @@ namespace BrickController2.UI.Controls
 
                 // Cada
                 dcs.Cada_C51072W_Section.IsVisible = deviceType == DeviceType.Cada_C51072W;
+
+                // TestModel
+                dcs.TestModel_Section.IsVisible = deviceType == DeviceType.TestModel;
             }
         }
 
@@ -168,7 +179,7 @@ namespace BrickController2.UI.Controls
                 dcs.MouldKing_6_0_Module_Channel4.SelectedChannel = selectedChannel;
                 dcs.MouldKing_6_0_Module_Channel5.SelectedChannel = selectedChannel;
 
-                // MouldKing_6_0
+                // MouldKing_Mecanum_Module
                 dcs.MouldKing_Mecanum_Module_Channel0.SelectedChannel = selectedChannel;
                 dcs.MouldKing_Mecanum_Module_Channel1.SelectedChannel = selectedChannel;
                 dcs.MouldKing_Mecanum_Module_Channel2.SelectedChannel = selectedChannel;
@@ -183,6 +194,14 @@ namespace BrickController2.UI.Controls
                 // Cada RC
                 dcs.Cada_C51072W_Channel0.SelectedChannel = selectedChannel;
                 dcs.Cada_C51072W_Channel1.SelectedChannel = selectedChannel;
+
+                // TestModel
+                dcs.TestModel_Channel0.SelectedChannel = selectedChannel;
+                dcs.TestModel_Channel1.SelectedChannel = selectedChannel;
+                dcs.TestModel_Channel2.SelectedChannel = selectedChannel;
+                dcs.TestModel_Channel3.SelectedChannel = selectedChannel;
+                dcs.TestModel_Channel4.SelectedChannel = selectedChannel;
+                dcs.TestModel_Channel5.SelectedChannel = selectedChannel;
             }
         }
     }
