@@ -35,24 +35,25 @@ namespace BrickController2.DeviceManagement
         /// </summary>
         public const ushort ManufacturerID = 0x6CBC;
 
-        // byte[10]
+        // byte[7]/byte[10]
         //
         // ss00 bbaa
         //
         // ss - speed 
-        //  00: 0
-        //  01: 1
-        //  10: 2
+        //  0000: 0 = 0x00
+        //  0100: 1 = 0x40
+        //  1000: 2 = 0x80
+        //  1100: 4 = 0xC0
         //
         // aa - channel 0
-        //  00: stop
-        //  10: forward
-        //  01: backward
+        //  bb 00: stop      = 0x00
+        //  bb 01: backward  = 0x01
+        //  bb 10: forward   = 0x02
         //
         // bb - channel 1
-        //  00: stop
-        //  10: forward
-        //  01: backward
+        //  00 aa: stop      = 0x00
+        //  01 aa: backward  = 0x04
+        //  10 aa: forward   = 0x08
 
         // Color: byte[8]
         //
