@@ -24,6 +24,11 @@
         /// <summary>
         /// 6.0 Modul
         /// </summary>
+        MouldKing_4_0_Modul,
+
+        /// <summary>
+        /// 6.0 Modul
+        /// </summary>
         MouldKing_6_0_Modul,
 
         /// <summary>
