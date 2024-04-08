@@ -726,6 +726,20 @@ namespace BrickController2.UI.Controls
                 dcs.MouldKing_15059_Channel0.SelectedChannel = selectedChannel;
                 dcs.MouldKing_15059_Channel1.SelectedChannel = selectedChannel;
 
+                // MouldKing_4_0
+                dcs.MouldKing_4_0_Module_Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel5.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel6.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel7.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel8.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel9.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel10.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel11.SelectedChannel = selectedChannel;
+
                 // MouldKing_6_0
                 dcs.MouldKing_6_0_Module_Channel0.SelectedChannel = selectedChannel;
                 dcs.MouldKing_6_0_Module_Channel1.SelectedChannel = selectedChannel;
