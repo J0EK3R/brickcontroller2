@@ -119,7 +119,7 @@ namespace BrickController2.DeviceManagement
                     lowByte = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)(highByte << 4 + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
             }
             #endregion
             #region Channel E + F
