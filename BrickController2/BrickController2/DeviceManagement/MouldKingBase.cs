@@ -1,26 +1,31 @@
 ﻿using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Diagnostics;
-using System.Dynamic;
-using System.Linq;
 
 namespace BrickController2.DeviceManagement
 {
     /// <summary>
-    /// Mould King 6.0 Modul
+    /// MouldKing baseclass
     /// </summary>
     internal abstract class MouldKingBase : BluetoothAdvertisingDevice
     {
         #region Constants
+        /// <summary>
+        /// ManufacturerID for MouldKing
+        /// </summary>
         public const ushort ManufacturerID = 0xFFF0;
 
-        protected const int MaxSupportedChannels = 6;
+        /// <summary>
+        /// Number of max count supported channels
+        /// </summary>
+        protected const int MaxSupportedChannels = 12;
         #endregion
 
         #region Fields
+        /// <summary>
+        /// stopwatch
+        /// </summary>
         protected readonly Stopwatch allZeroStopwatch = Stopwatch.StartNew();
-
-        private readonly int numberOfCahnnels;
 
         /// <summary>
         /// Telegram to connect to the device
@@ -29,24 +34,84 @@ namespace BrickController2.DeviceManagement
         protected readonly byte[] _Telegram_Connect;
 
         /// <summary>
-        /// base telgram
+        /// base telegram
         /// </summary>
         protected readonly byte[] _Telegram_Base;
 
+        /// <summary>
+        /// current value for channel A
+        /// </summary>
         protected float _Channel_A_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel B
+        /// </summary>
         protected float _Channel_B_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel C
+        /// </summary>
         protected float _Channel_C_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel D
+        /// </summary>
         protected float _Channel_D_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel E
+        /// </summary>
         protected float _Channel_E_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel F
+        /// </summary>
         protected float _Channel_F_Value = 0.0f;
 
+        /// <summary>
+        /// current value for channel G
+        /// </summary>
+        protected float _Channel_G_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel H
+        /// </summary>
+        protected float _Channel_H_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel I
+        /// </summary>
+        protected float _Channel_I_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel J
+        /// </summary>
+        protected float _Channel_J_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel K
+        /// </summary>
+        protected float _Channel_K_Value = 0.0f;
+
+        /// <summary>
+        /// current value for channel L
+        /// </summary>
+        protected float _Channel_L_Value = 0.0f;
+
+        /// <summary>
+        /// true if initialized
+        /// </summary>
         protected bool isInitialized = false;
+
         /// <summary>
         /// after this timespan und all channels are zero the connect telegram is sent
         /// </summary>
         protected TimeSpan reconnectTimeSpan = TimeSpan.FromSeconds(3);
         #endregion
         #region Properties
+        /// <summary>
+        /// No voltage
+        /// </summary>
         public override string BatteryVoltageSign => string.Empty;
 
         /// <summary>
@@ -58,27 +123,14 @@ namespace BrickController2.DeviceManagement
         /// offset of last bytes wich can't be used
         /// </summary>
         protected virtual int ChannelEndOffset => 1;
-
-        /// <summary>
-        /// Calculates the number of channels
-        /// </summary>
-        public override int NumberOfChannels
-        {
-            get
-            {
-                return this.numberOfCahnnels;
-            }
-        }
         #endregion
 
         #region Constructor
-        public MouldKingBase(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService, byte[] telegram_Connect, byte[] telegram_Base)
+        protected MouldKingBase(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService, byte[] telegram_Connect, byte[] telegram_Base)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
             this._Telegram_Connect = telegram_Connect;
             this._Telegram_Base = telegram_Base;
-
-            this.numberOfCahnnels = Math.Min(MaxSupportedChannels, Math.Max(0, (this._Telegram_Base?.Length ?? 0) - this.ChannelEndOffset - this.ChannelStartOffset));
         }
         #endregion
 
@@ -169,185 +221,82 @@ namespace BrickController2.DeviceManagement
                     }
                     break;
                 #endregion
+                #region Channel G
+                case 6:
+                    if (this._Channel_G_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_G_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel H
+                case 7:
+                    if (this._Channel_H_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_H_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel I
+                case 8:
+                    if (this._Channel_I_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_I_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel J
+                case 9:
+                    if (this._Channel_J_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_J_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel K
+                case 10:
+                    if (this._Channel_K_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_K_Value = value;
+                    }
+                    break;
+                #endregion
+                #region Channel L
+                case 11:
+                    if (this._Channel_L_Value == value)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        this._Channel_L_Value = value;
+                    }
+                    break;
+                #endregion
                 default:
                     return false;
             }
 
-            return true;
-        }
-        #endregion
-        #region TryGetTelegram(out byte[] currentData)
-        public override bool TryGetTelegram(out byte[] currentData)
-        {
-            currentData = this._Telegram_Base.ToArray(); // copy
-            int channelDataLength = currentData.Length - this.ChannelEndOffset;
-            int currentChannelStartOffset;
-            bool allZero = true;
-
-            #region Channel A
-            currentChannelStartOffset = this.ChannelStartOffset + 0;
-
-            if (this.NumberOfChannels >= 1 &&
-                channelDataLength >= currentChannelStartOffset)
-            {
-                if (this._Channel_A_Value < 0)
-                {
-                    // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_A_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else if (this._Channel_A_Value > 0)
-                {
-                    // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 + Math.Min(this._Channel_A_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else
-                {
-                    currentData[currentChannelStartOffset] = 0x80;
-                }
-            }
-            #endregion
-            #region Channel B
-            currentChannelStartOffset = this.ChannelStartOffset + 1;
-
-            if (this.NumberOfChannels >= 2 &&
-                channelDataLength >= currentChannelStartOffset)
-            {
-                if (this._Channel_B_Value < 0)
-                {
-                    // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_B_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else if (this._Channel_B_Value > 0)
-                {
-                    // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 + Math.Min(this._Channel_B_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else
-                {
-                    currentData[currentChannelStartOffset] = 0x80;
-                }
-            }
-            #endregion
-            #region Channel C
-            currentChannelStartOffset = this.ChannelStartOffset + 2;
-
-            if (this.NumberOfChannels >= 3 &&
-                channelDataLength >= currentChannelStartOffset)
-            {
-                if (this._Channel_C_Value < 0)
-                {
-                    // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_C_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else if (this._Channel_C_Value > 0)
-                {
-                    // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 + Math.Min(this._Channel_C_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else
-                {
-                    currentData[currentChannelStartOffset] = 0x80;
-                }
-            }
-            #endregion
-            #region Channel D
-            currentChannelStartOffset = this.ChannelStartOffset + 3;
-
-            if (this.NumberOfChannels >= 4 &&
-                channelDataLength >= currentChannelStartOffset)
-            {
-                if (this._Channel_D_Value < 0)
-                {
-                    // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_D_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else if (this._Channel_D_Value > 0)
-                {
-                    // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 + Math.Min(this._Channel_D_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else
-                {
-                    currentData[currentChannelStartOffset] = 0x80;
-                }
-            }
-            #endregion
-            #region Channel E
-            currentChannelStartOffset = this.ChannelStartOffset + 4;
-
-            if (this.NumberOfChannels >= 5 &&
-                channelDataLength >= currentChannelStartOffset)
-            {
-                if (this._Channel_E_Value < 0)
-                {
-                    // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_E_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else if (this._Channel_E_Value > 0)
-                {
-                    // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 + Math.Min(this._Channel_E_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else
-                {
-                    currentData[currentChannelStartOffset] = 0x80;
-                }
-            }
-            #endregion
-            #region Channel F
-            currentChannelStartOffset = this.ChannelStartOffset + 5;
-
-            if (this.NumberOfChannels >= 6 &&
-                channelDataLength >= currentChannelStartOffset)
-            {
-                if (this._Channel_F_Value < 0)
-                {
-                    // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_F_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else if (this._Channel_F_Value > 0)
-                {
-                    // Range [0..1] -> 0x80 + [0x00 .. 0x7F] = [0x80 .. 0xFF]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 + Math.Min(this._Channel_F_Value * 0x7F, 0x7F));
-                    allZero = false;
-                }
-                else
-                {
-                    currentData[currentChannelStartOffset] = 0x80;
-                }
-            }
-            #endregion
-
-            if (!this.isInitialized ||
-                (allZero && this.allZeroStopwatch.Elapsed > this.reconnectTimeSpan))
-            {
-                currentData = this._Telegram_Connect;
-
-                this.isInitialized = true;
-                this.SetStateText("Connecting");
-            }
-            else if(allZero)
-            {
-                this.SetStateText("Stopp");
-            }
-            else
-            {
-                this.allZeroStopwatch.Restart();
-                this.SetStateText("Connected");
-            }
-
-            currentData = MouldKingCrypt.Crypt(currentData);
             return true;
         }
         #endregion

@@ -7,7 +7,7 @@ namespace BrickController2.DeviceManagement
     /// <summary>
     /// TestModel
     /// </summary>
-    internal class TestModel : MouldKingBase
+    internal class TestModel : MouldKingBaseByte
     {
         #region Constants
         public new const ushort ManufacturerID = 0x6CBC;
