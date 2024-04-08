@@ -35,6 +35,7 @@ namespace BrickController2.DeviceManagement
         protected override int ChannelStartOffset => 7;
 
         protected override int ChannelEndOffset => 2;
+        public override int NumberOfChannels => 6;
         #endregion
 
         #region Constructor
@@ -91,7 +92,7 @@ namespace BrickController2.DeviceManagement
             byte checkByte;
 
             //float s = Math.Max(Math.Abs(this._Channel_A_Value) * 100, Math.Abs(this._Channel_B_Value) * 100);
-            float speed =Math.Abs(this._Channel_A_Value) * 100;
+            float speed = Math.Abs(this._Channel_A_Value) * 100;
             bool forward = this._Channel_A_Value >= 0;
 
             // Stop
@@ -154,7 +155,7 @@ namespace BrickController2.DeviceManagement
 
                     speedByte |= 0x01; // left chain
                     checkByte += 1;
-                    
+
                     speedByte |= 0x08; // right chain
                     checkByte += 1;
 
