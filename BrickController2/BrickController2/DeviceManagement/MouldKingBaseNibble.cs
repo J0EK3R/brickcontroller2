@@ -41,8 +41,8 @@ namespace BrickController2.DeviceManagement
                 byte highByte;
                 if (this._Channel_A_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    highByte = (byte)(0x08 - Math.Min(-this._Channel_A_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    highByte = (byte)Math.Min(-this._Channel_A_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_A_Value > 0)
@@ -59,8 +59,8 @@ namespace BrickController2.DeviceManagement
                 byte lowByte;
                 if (this._Channel_B_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    lowByte = (byte)(0x08 - Math.Min(-this._Channel_B_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    lowByte = (byte)Math.Min(-this._Channel_B_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_B_Value > 0)
@@ -86,8 +86,8 @@ namespace BrickController2.DeviceManagement
                 byte highByte;
                 if (this._Channel_C_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    highByte = (byte)(0x08 - Math.Min(-this._Channel_C_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    highByte = (byte)Math.Min(-this._Channel_C_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_C_Value > 0)
@@ -104,8 +104,8 @@ namespace BrickController2.DeviceManagement
                 byte lowByte;
                 if (this._Channel_D_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    lowByte = (byte)(0x08 - Math.Min(-this._Channel_D_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    lowByte = (byte)Math.Min(-this._Channel_D_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_D_Value > 0)
@@ -131,8 +131,8 @@ namespace BrickController2.DeviceManagement
                 byte highByte;
                 if (this._Channel_E_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    highByte = (byte)(0x08 - Math.Min(-this._Channel_E_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    highByte = (byte)Math.Min(-this._Channel_E_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_E_Value > 0)
@@ -149,8 +149,8 @@ namespace BrickController2.DeviceManagement
                 byte lowByte;
                 if (this._Channel_F_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    lowByte = (byte)(0x08 - Math.Min(-this._Channel_F_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    lowByte = (byte)Math.Min(-this._Channel_F_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_F_Value > 0)
@@ -176,8 +176,8 @@ namespace BrickController2.DeviceManagement
                 byte highByte;
                 if (this._Channel_G_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    highByte = (byte)(0x08 - Math.Min(-this._Channel_G_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    highByte = (byte)Math.Min(-this._Channel_G_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_G_Value > 0)
@@ -194,8 +194,8 @@ namespace BrickController2.DeviceManagement
                 byte lowByte;
                 if (this._Channel_H_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    lowByte = (byte)(0x08 - Math.Min(-this._Channel_H_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    lowByte = (byte)Math.Min(-this._Channel_H_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_H_Value > 0)
@@ -221,8 +221,8 @@ namespace BrickController2.DeviceManagement
                 byte highByte;
                 if (this._Channel_I_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    highByte = (byte)(0x08 - Math.Min(-this._Channel_I_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    highByte = (byte)Math.Min(-this._Channel_I_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_I_Value > 0)
@@ -239,8 +239,8 @@ namespace BrickController2.DeviceManagement
                 byte lowByte;
                 if (this._Channel_J_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    lowByte = (byte)(0x08 - Math.Min(-this._Channel_J_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    lowByte = (byte)Math.Min(-this._Channel_J_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_J_Value > 0)
@@ -266,8 +266,8 @@ namespace BrickController2.DeviceManagement
                 byte highByte;
                 if (this._Channel_K_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    highByte = (byte)(0x08 - Math.Min(-this._Channel_K_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    highByte = (byte)Math.Min(-this._Channel_K_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_K_Value > 0)
@@ -284,8 +284,8 @@ namespace BrickController2.DeviceManagement
                 byte lowByte;
                 if (this._Channel_L_Value < 0)
                 {
-                    // Range [-1..0] -> 0x08 - [0x08 .. 0x00] = [0x00 .. 0x08]
-                    lowByte = (byte)(0x08 - Math.Min(-this._Channel_L_Value * 0x08, 0x08));
+                    // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
+                    lowByte = (byte)Math.Min(-this._Channel_L_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_L_Value > 0)
