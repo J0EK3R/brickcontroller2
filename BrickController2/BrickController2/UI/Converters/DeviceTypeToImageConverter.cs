@@ -49,10 +49,13 @@ namespace BrickController2.UI.Converters
                 case DeviceType.WeDo2:
                     return ResourceHelper.GetImageResource("wedo2hub_image.png");
 
-                case DeviceType.MouldKing_15059:
                 case DeviceType.MouldKing_4_0_Modul:
+                    return ResourceHelper.GetImageResource("mouldking_4_0_image.png");
                 case DeviceType.MouldKing_6_0_Modul:
+                    return ResourceHelper.GetImageResource("mouldking_6_0_image.png");
                 case DeviceType.MouldKing_Mecanum_Modul:
+                    return ResourceHelper.GetImageResource("mouldking_mecanum_image.png");
+                case DeviceType.MouldKing_15059:
                     return ResourceHelper.GetImageResource("mouldking_15059_image.png");
 
                 case DeviceType.HOGOKIDS_8051:
