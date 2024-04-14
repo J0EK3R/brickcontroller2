@@ -37,7 +37,7 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<Cada_C51072W>().Keyed<Device>(DeviceType.Cada_C51072W);
 
             // TestModel
-            builder.RegisterType<TestModel>().Keyed<Device>(DeviceType.TestModel);
+            //builder.RegisterType<TestModel>().Keyed<Device>(DeviceType.TestModel);
 
             builder.Register<DeviceFactory>(c =>
             {
