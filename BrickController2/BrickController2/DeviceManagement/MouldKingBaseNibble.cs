@@ -38,43 +38,43 @@ namespace BrickController2.DeviceManagement
             if (this.NumberOfChannels >= 2 &&
                 channelDataLength >= currentChannelStartOffset)
             {
-                byte highByte;
+                byte highNibble;
                 if (this._Channel_A_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    highByte = (byte)Math.Min(-this._Channel_A_Value * 0x07, 0x07);
+                    highNibble = (byte)Math.Min(-this._Channel_A_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_A_Value > 0)
                 {
                     // Range [0..1] -> 0x80 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    highByte = (byte)(0x08 + Math.Min(this._Channel_A_Value * 0x07, 0x07));
+                    highNibble = (byte)(0x08 + Math.Min(this._Channel_A_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    highByte = 0x08;
+                    highNibble = 0x08;
                 }
 
-                byte lowByte;
+                byte lowNibble;
                 if (this._Channel_B_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    lowByte = (byte)Math.Min(-this._Channel_B_Value * 0x07, 0x07);
+                    lowNibble = (byte)Math.Min(-this._Channel_B_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_B_Value > 0)
                 {
                     // Range [0..1] -> 0x08 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    lowByte = (byte)(0x08 + Math.Min(this._Channel_B_Value * 0x07, 0x07));
+                    lowNibble = (byte)(0x08 + Math.Min(this._Channel_B_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    lowByte = 0x08;
+                    lowNibble = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highNibble << 4) + lowNibble);
             }
             #endregion
             #region Channel C + D
@@ -83,43 +83,43 @@ namespace BrickController2.DeviceManagement
             if (this.NumberOfChannels >= 4 &&
                 channelDataLength >= currentChannelStartOffset)
             {
-                byte highByte;
+                byte highNibble;
                 if (this._Channel_C_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    highByte = (byte)Math.Min(-this._Channel_C_Value * 0x07, 0x07);
+                    highNibble = (byte)Math.Min(-this._Channel_C_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_C_Value > 0)
                 {
                     // Range [0..1] -> 0x80 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    highByte = (byte)(0x08 + Math.Min(this._Channel_C_Value * 0x07, 0x07));
+                    highNibble = (byte)(0x08 + Math.Min(this._Channel_C_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    highByte = 0x08;
+                    highNibble = 0x08;
                 }
 
-                byte lowByte;
+                byte lowNibble;
                 if (this._Channel_D_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    lowByte = (byte)Math.Min(-this._Channel_D_Value * 0x07, 0x07);
+                    lowNibble = (byte)Math.Min(-this._Channel_D_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_D_Value > 0)
                 {
                     // Range [0..1] -> 0x08 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    lowByte = (byte)(0x08 + Math.Min(this._Channel_D_Value * 0x07, 0x07));
+                    lowNibble = (byte)(0x08 + Math.Min(this._Channel_D_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    lowByte = 0x08;
+                    lowNibble = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highNibble << 4) + lowNibble);
             }
             #endregion
             #region Channel E + F
@@ -128,43 +128,43 @@ namespace BrickController2.DeviceManagement
             if (this.NumberOfChannels >= 6 &&
                 channelDataLength >= currentChannelStartOffset)
             {
-                byte highByte;
+                byte highNibble;
                 if (this._Channel_E_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    highByte = (byte)Math.Min(-this._Channel_E_Value * 0x07, 0x07);
+                    highNibble = (byte)Math.Min(-this._Channel_E_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_E_Value > 0)
                 {
                     // Range [0..1] -> 0x80 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    highByte = (byte)(0x08 + Math.Min(this._Channel_E_Value * 0x07, 0x07));
+                    highNibble = (byte)(0x08 + Math.Min(this._Channel_E_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    highByte = 0x08;
+                    highNibble = 0x08;
                 }
 
-                byte lowByte;
+                byte lowNibble;
                 if (this._Channel_F_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    lowByte = (byte)Math.Min(-this._Channel_F_Value * 0x07, 0x07);
+                    lowNibble = (byte)Math.Min(-this._Channel_F_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_F_Value > 0)
                 {
                     // Range [0..1] -> 0x08 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    lowByte = (byte)(0x08 + Math.Min(this._Channel_F_Value * 0x07, 0x07));
+                    lowNibble = (byte)(0x08 + Math.Min(this._Channel_F_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    lowByte = 0x08;
+                    lowNibble = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highNibble << 4) + lowNibble);
             }
             #endregion
             #region Channel G + H
@@ -173,43 +173,43 @@ namespace BrickController2.DeviceManagement
             if (this.NumberOfChannels >= 8 &&
                 channelDataLength >= currentChannelStartOffset)
             {
-                byte highByte;
+                byte highNibble;
                 if (this._Channel_G_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    highByte = (byte)Math.Min(-this._Channel_G_Value * 0x07, 0x07);
+                    highNibble = (byte)Math.Min(-this._Channel_G_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_G_Value > 0)
                 {
                     // Range [0..1] -> 0x80 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    highByte = (byte)(0x08 + Math.Min(this._Channel_G_Value * 0x07, 0x07));
+                    highNibble = (byte)(0x08 + Math.Min(this._Channel_G_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    highByte = 0x08;
+                    highNibble = 0x08;
                 }
 
-                byte lowByte;
+                byte lowNibble;
                 if (this._Channel_H_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    lowByte = (byte)Math.Min(-this._Channel_H_Value * 0x07, 0x07);
+                    lowNibble = (byte)Math.Min(-this._Channel_H_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_H_Value > 0)
                 {
                     // Range [0..1] -> 0x08 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    lowByte = (byte)(0x08 + Math.Min(this._Channel_H_Value * 0x07, 0x07));
+                    lowNibble = (byte)(0x08 + Math.Min(this._Channel_H_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    lowByte = 0x08;
+                    lowNibble = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highNibble << 4) + lowNibble);
             }
             #endregion
             #region Channel I + J
@@ -218,43 +218,43 @@ namespace BrickController2.DeviceManagement
             if (this.NumberOfChannels >= 10 &&
                 channelDataLength >= currentChannelStartOffset)
             {
-                byte highByte;
+                byte highNibble;
                 if (this._Channel_I_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    highByte = (byte)Math.Min(-this._Channel_I_Value * 0x07, 0x07);
+                    highNibble = (byte)Math.Min(-this._Channel_I_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_I_Value > 0)
                 {
                     // Range [0..1] -> 0x80 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    highByte = (byte)(0x08 + Math.Min(this._Channel_I_Value * 0x07, 0x07));
+                    highNibble = (byte)(0x08 + Math.Min(this._Channel_I_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    highByte = 0x08;
+                    highNibble = 0x08;
                 }
 
-                byte lowByte;
+                byte lowNibble;
                 if (this._Channel_J_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    lowByte = (byte)Math.Min(-this._Channel_J_Value * 0x07, 0x07);
+                    lowNibble = (byte)Math.Min(-this._Channel_J_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_J_Value > 0)
                 {
                     // Range [0..1] -> 0x08 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    lowByte = (byte)(0x08 + Math.Min(this._Channel_J_Value * 0x07, 0x07));
+                    lowNibble = (byte)(0x08 + Math.Min(this._Channel_J_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    lowByte = 0x08;
+                    lowNibble = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highNibble << 4) + lowNibble);
             }
             #endregion
             #region Channel K + L
@@ -263,43 +263,43 @@ namespace BrickController2.DeviceManagement
             if (this.NumberOfChannels >= 12 &&
                 channelDataLength >= currentChannelStartOffset)
             {
-                byte highByte;
+                byte highNibble;
                 if (this._Channel_K_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    highByte = (byte)Math.Min(-this._Channel_K_Value * 0x07, 0x07);
+                    highNibble = (byte)Math.Min(-this._Channel_K_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_K_Value > 0)
                 {
                     // Range [0..1] -> 0x80 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    highByte = (byte)(0x08 + Math.Min(this._Channel_K_Value * 0x07, 0x07));
+                    highNibble = (byte)(0x08 + Math.Min(this._Channel_K_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    highByte = 0x08;
+                    highNibble = 0x08;
                 }
 
-                byte lowByte;
+                byte lowNibble;
                 if (this._Channel_L_Value < 0)
                 {
                     // Range [-1..0] -> [0x07 .. 0x00] = [0x07 .. 0x00]
-                    lowByte = (byte)Math.Min(-this._Channel_L_Value * 0x07, 0x07);
+                    lowNibble = (byte)Math.Min(-this._Channel_L_Value * 0x07, 0x07);
                     allZero = false;
                 }
                 else if (this._Channel_L_Value > 0)
                 {
                     // Range [0..1] -> 0x08 + [0x00 .. 0x07] = [0x80 .. 0x0F]
-                    lowByte = (byte)(0x08 + Math.Min(this._Channel_L_Value * 0x07, 0x07));
+                    lowNibble = (byte)(0x08 + Math.Min(this._Channel_L_Value * 0x07, 0x07));
                     allZero = false;
                 }
                 else
                 {
-                    lowByte = 0x08;
+                    lowNibble = 0x08;
                 }
 
-                currentData[currentChannelStartOffset] = (byte)((highByte << 4) + lowByte);
+                currentData[currentChannelStartOffset] = (byte)((highNibble << 4) + lowNibble);
             }
             #endregion
 
@@ -309,16 +309,16 @@ namespace BrickController2.DeviceManagement
                 currentData = this._Telegram_Connect;
 
                 this.isInitialized = true;
-                this.SetStateText("Connecting");
+                this.SetStateText("Sending Connect Data");
             }
             else if (allZero)
             {
-                this.SetStateText("Stopp");
+                this.SetStateText("Sending Stopp");
             }
             else
             {
                 this.allZeroStopwatch.Restart();
-                this.SetStateText("Connected");
+                this.SetStateText("Sending Data");
             }
 
             currentData = MouldKingCrypt.Crypt(currentData);

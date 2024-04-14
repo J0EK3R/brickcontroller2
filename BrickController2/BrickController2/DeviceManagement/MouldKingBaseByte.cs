@@ -327,16 +327,16 @@ namespace BrickController2.DeviceManagement
                 currentData = this._Telegram_Connect;
 
                 this.isInitialized = true;
-                this.SetStateText("Connecting");
+                this.SetStateText("Sending Connect Data");
             }
             else if (allZero)
             {
-                this.SetStateText("Stopp");
+                this.SetStateText("Sending Stopp");
             }
             else
             {
                 this.allZeroStopwatch.Restart();
-                this.SetStateText("Connected");
+                this.SetStateText("Sending Data");
             }
 
             currentData = MouldKingCrypt.Crypt(currentData);
