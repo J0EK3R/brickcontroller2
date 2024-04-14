@@ -54,10 +54,16 @@ namespace BrickController2.DeviceManagement
                 var deviceDTOs = await _deviceRepository.GetDevicesAsync();
                 foreach (var deviceDTO in deviceDTOs)
                 {
-                    var device = _deviceFactory(deviceDTO.DeviceType, deviceDTO.Name, deviceDTO.Address, deviceDTO.DeviceData);
-                    if (device != null)
+                    try
                     {
-                        Devices.Add(device);
+                        var device = _deviceFactory(deviceDTO.DeviceType, deviceDTO.Name, deviceDTO.Address, deviceDTO.DeviceData);
+                        if (device != null)
+                        {
+                            Devices.Add(device);
+                        }
+                    }
+                    catch
+                    {
                     }
                 }
             }
@@ -89,7 +95,7 @@ namespace BrickController2.DeviceManagement
                     await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(Cada_C51072W.ManufacturerID));
 
                     // TestModel
-                    await FoundDevice(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));
+                    //await FoundDevice(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));
 
                     var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice, token);
                     var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice, token);
