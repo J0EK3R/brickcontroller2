@@ -8,7 +8,7 @@
 
   <ContentView.Resources>
     <ResourceDictionary>
-      <converters:DeviceTypeToSmallImageConverter x:Key="DeviceTypeToImage" />
+      <converters:DeviceTypeToImageConverter x:Key="DeviceTypeToImage" />
     </ResourceDictionary>
   </ContentView.Resources>
 
@@ -37,7 +37,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=sbrick_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="130" />
 
@@ -77,7 +77,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=buwizz_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="100" />
 
@@ -124,7 +124,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=buwizz3_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="100" />
 
@@ -166,7 +166,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=infra_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="150" />
 
@@ -201,7 +201,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=poweredup_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -251,9 +251,8 @@
                                              HorizontalOptions="Center"
                                              VerticalOptions="Center" />
 
-        <Image Grid.Column="1"
-               Grid.Row="1"
-               Source="{extensions:ImageResource Source=boost_image.png}"
+        <Image Grid.Column="1" Grid.Row="1"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="80" />
       </Grid>
@@ -280,7 +279,7 @@
         </StackLayout>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=technichub_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="80" />
 
@@ -316,7 +315,7 @@
         </StackLayout>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=duplotrainhub_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="80"
                HorizontalOptions="Center" />
@@ -357,9 +356,8 @@
                                              HorizontalOptions="Start"
                                              VerticalOptions="Center" />
 
-        <Image Grid.Column="1"
-               Grid.Row="0"
-               Source="{extensions:ImageResource Source=circuitcubes_image.png}"
+        <Image Grid.Column="1" Grid.Row="0"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="168"
                HeightRequest="176" />
       </Grid>
@@ -386,7 +384,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=wedo2hub_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -416,7 +414,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=mouldking_15059_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -466,7 +464,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=mouldking_15059_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -550,7 +548,7 @@
         </Grid>
 
         <Image Grid.Column="4"
-               Source="{extensions:ImageResource Source=mouldking_15059_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
       </Grid>
@@ -597,7 +595,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=mouldking_15059_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -627,7 +625,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=hogokids_8051_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -657,7 +655,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=cada_c51072w_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
@@ -707,7 +705,7 @@
         </Grid>
 
         <Image Grid.Column="1"
-               Source="{extensions:ImageResource Source=mouldking_15059_image.png}"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
                WidthRequest="150"
                HeightRequest="120" />
 
