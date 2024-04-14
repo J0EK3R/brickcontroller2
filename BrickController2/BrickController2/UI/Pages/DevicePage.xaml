@@ -18,7 +18,8 @@
             <converters:DeviceTypeToSmallImageConverter x:Key="DeviceTypeToSmallImage"/>
             <converters:DeviceConnectedToBoolConverter x:Key="DeviceConnectedToBool"/>
             <converters:DeviceDisconnectedToBoolConverter x:Key="DeviceDisconnectedToBool"/>
-        </ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBool" />
+    </ResourceDictionary>
     </local:PageBase.Resources>
 
     <NavigationPage.TitleView>
@@ -71,15 +72,19 @@
                                 <Label Grid.Column="1" Grid.Row="1" Text="{Binding Device.DeviceType}" FontSize="Medium" FontAttributes="Bold"/>
 
                                 <Label Grid.Column="0" Grid.Row="2" Text="{extensions:Translate Address}" FontSize="Small"/>
-                                <Label Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding Device.Address}" FontSize="Micro" FontAttributes="Bold"/>
+                                <Label Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding Device.Address}" FontSize="Micro" FontAttributes="Bold" IsVisible="{Binding IsBlueToothAdvertisingDevice, Converter={StaticResource InverseBool}}"/>
+                                <Label Grid.Column="1" Grid.Row="2" Text="{Binding Device.Address}" FontSize="Medium" FontAttributes="Bold" IsVisible="{Binding IsBlueToothAdvertisingDevice}"/>
 
-                                <Label Grid.Column="0" Grid.Row="4" Text="{extensions:Translate Battery}" FontSize="Small"/>
-                                <StackLayout Grid.Column="1" Grid.Row="4" Orientation="Horizontal">
+                                <Label Grid.Column="0" Grid.Row="3" Text="{extensions:Translate Status}" FontSize="Small" IsVisible="{Binding IsBlueToothAdvertisingDevice}"/>
+                                <Label Grid.Column="1" Grid.Row="3" Text="{Binding Device.HardwareVersion}" FontSize="Medium" FontAttributes="Bold" IsVisible="{Binding IsBlueToothAdvertisingDevice}"/>
+                              
+                                <Label Grid.Column="0" Grid.Row="4" Text="{extensions:Translate Battery}" FontSize="Small" IsVisible="{Binding IsBlueToothAdvertisingDevice, Converter={StaticResource InverseBool}}"/>
+                                <StackLayout Grid.Column="1" Grid.Row="4" Orientation="Horizontal" IsVisible="{Binding IsBlueToothAdvertisingDevice, Converter={StaticResource InverseBool}}">
                                     <Label Text="{Binding Device.BatteryVoltage}" FontSize="Medium" FontAttributes="Bold"/>
                                     <Label Text="{Binding Device.BatteryVoltageSign}" FontSize="Medium"/>
                                 </StackLayout>
 
-                                <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="5">
+                                <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="5" IsVisible="{Binding IsBlueToothAdvertisingDevice, Converter={StaticResource InverseBool}}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>

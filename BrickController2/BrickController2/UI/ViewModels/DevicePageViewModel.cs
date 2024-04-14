@@ -51,6 +51,8 @@ namespace BrickController2.UI.ViewModels
         }
 
         public Device Device { get; }
+
+        public bool IsBlueToothAdvertisingDevice => Device is BluetoothAdvertisingDevice;
         public bool IsBuWizzDevice => Device.DeviceType == DeviceType.BuWizz;
         public bool IsBuWizz2Device => Device.DeviceType == DeviceType.BuWizz2;
 
