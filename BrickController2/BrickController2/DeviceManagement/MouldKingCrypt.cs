@@ -251,42 +251,17 @@ namespace BrickController2.DeviceManagement
     }
     #endregion
     #region ShiftArray(int[] iArr)
-    private static int ShiftMagicArray(int[] iArr)
+    private static int ShiftMagicArray(int[] i_arr)
     {
-      //iArr[3] = iArr[2];
-      //iArr[2] = iArr[1];
-      //iArr[1] = iArr[0];
-      //iArr[0] = iArr[6];
-      //iArr[6] = iArr[5];
-      //iArr[5] = iArr[4];
-      //iArr[4] = iArr[3] ^ iArr[6];
-      //return iArr[0];
-
-      int r0 = 3;
-      int r1 = iArr[r0];
-      int r2 = 6;
-      int r3 = iArr[r2];
-      r1 = r1 ^ r3;
-      r3 = 2;
-      int r4 = iArr[r3];
-      iArr[r0] = r4;
-      r0 = 1;
-      r4 = iArr[r0];
-      iArr[r3] = r4;
-      r3 = 0;
-      r4 = iArr[r3];
-      iArr[r0] = r4;
-      r0 = iArr[r2];
-      iArr[r3] = r0;
-      r0 = 5;
-      r4 = iArr[r0];
-      iArr[r2] = r4;
-      r2 = 4;
-      r4 = iArr[r2];
-      iArr[r0] = r4;
-      iArr[r2] = r1;
-      int r6 = iArr[r3];
-      return r6;
+      int r1 = i_arr[3] ^ i_arr[6];
+      i_arr[3] = i_arr[2];
+      i_arr[2] = i_arr[1];
+      i_arr[1] = i_arr[0];
+      i_arr[0] = i_arr[6];
+      i_arr[6] = i_arr[5];
+      i_arr[5] = i_arr[4];
+      i_arr[4] = r1;
+      return i_arr[0];
     }
     #endregion
   }
