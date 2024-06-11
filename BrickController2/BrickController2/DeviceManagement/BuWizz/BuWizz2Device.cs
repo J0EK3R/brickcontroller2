@@ -34,9 +34,9 @@ namespace BrickController2.DeviceManagement
         private volatile int _outputLevelValue;
         private volatile int _sendAttemptsLeft;
 
-        private IGattCharacteristic _characteristic;
-        private IGattCharacteristic _modelNumberCharacteristic;
-        private IGattCharacteristic _firmwareRevisionCharacteristic;
+        private IGattCharacteristic? _characteristic;
+        private IGattCharacteristic? _modelNumberCharacteristic;
+        private IGattCharacteristic? _firmwareRevisionCharacteristic;
 
         public BuWizz2Device(string name, string address, byte[] deviceData, IEnumerable<DeviceSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
             : base(name, address, deviceRepository, bleService)
@@ -84,7 +84,7 @@ namespace BrickController2.DeviceManagement
 
         public override bool CanBePowerSource => true;
 
-        protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService> services, CancellationToken token)
+        protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService>? services, CancellationToken token)
         {
             var service = services?.FirstOrDefault(s => s.Uuid == SERVICE_UUID);
             _characteristic = service?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID);
@@ -93,17 +93,17 @@ namespace BrickController2.DeviceManagement
             _firmwareRevisionCharacteristic = deviceInformationService?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_FIRMWARE_REVISION);
             _modelNumberCharacteristic = deviceInformationService?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_MODEL_NUMBER);
 
-            if (_characteristic != null)
+            if (_characteristic is not null)
             {
-                await _bleDevice?.EnableNotificationAsync(_characteristic, token);
+                await _bleDevice!.EnableNotificationAsync(_characteristic, token);
             }
 
-            return _characteristic != null && _firmwareRevisionCharacteristic != null && _modelNumberCharacteristic != null;
+            return _characteristic is not null && _firmwareRevisionCharacteristic is not null && _modelNumberCharacteristic is not null;
         }
 
         protected override void OnCharacteristicChanged(Guid characteristicGuid, byte[] data)
         {
-            if (characteristicGuid != _characteristic.Uuid || data.Length < 4 || data[0] != 0x00)
+            if (characteristicGuid != _characteristic!.Uuid || data.Length < 4 || data[0] != 0x00)
             {
                 return;
             }
@@ -243,7 +243,7 @@ namespace BrickController2.DeviceManagement
                     sendOutputBuffer[4] = (byte)(v3 / 2);
                 }
 
-                return await _bleDevice?.WriteAsync(_characteristic, sendOutputBuffer, token);
+                return await _bleDevice!.WriteAsync(_characteristic!, sendOutputBuffer, token);
             }
             catch (Exception)
             {
@@ -257,7 +257,7 @@ namespace BrickController2.DeviceManagement
             {
                 var sendOutputLevelBuffer = new byte[] { 0x11, (byte)(outputLevelValue + 1) };
 
-                return await _bleDevice?.WriteAsync(_characteristic, sendOutputLevelBuffer, token);
+                return await _bleDevice!.WriteAsync(_characteristic!, sendOutputLevelBuffer, token);
             }
             catch (Exception)
             {
@@ -267,14 +267,14 @@ namespace BrickController2.DeviceManagement
 
         private async Task ReadDeviceInfo(CancellationToken token)
         {
-            var firmwareData = await _bleDevice?.ReadAsync(_firmwareRevisionCharacteristic, token);
+            var firmwareData = await _bleDevice!.ReadAsync(_firmwareRevisionCharacteristic!, token);
             var firmwareVersion = firmwareData?.ToAsciiStringSafe();
             if (!string.IsNullOrEmpty(firmwareVersion))
             {
                 FirmwareVersion = firmwareVersion;
             }
 
-            var modelNumberData = await _bleDevice?.ReadAsync(_modelNumberCharacteristic, token);
+            var modelNumberData = await _bleDevice!.ReadAsync(_modelNumberCharacteristic!, token);
             var modelNumber = modelNumberData?.ToAsciiStringSafe();
             if (!string.IsNullOrEmpty(modelNumber))
             {

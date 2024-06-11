@@ -14,27 +14,30 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
             _scanCallback = scanCallback;
         }
 
-        public override void OnScanResult([GeneratedEnum] ScanCallbackType callbackType, ScanResult result)
+        public override void OnScanResult([GeneratedEnum] ScanCallbackType callbackType, ScanResult? result)
         {
             //if (string.IsNullOrEmpty(result?.Device?.Name) || string.IsNullOrEmpty(result?.Device?.Address))
             //{
             //    return;
             //}
 
-            var advertismentData = ScanRecordProcessor.GetAdvertismentData(result.ScanRecord.GetBytes());
+            var advertismentData = ScanRecordProcessor.GetAdvertismentData(bytes);
             _scanCallback(new BrickController2.PlatformServices.BluetoothLE.ScanResult(result.Device.Name, result.Device.Address, advertismentData));
         }
 
-        public override void OnBatchScanResults(IList<ScanResult> results)
+        public override void OnBatchScanResults(IList<ScanResult>? results)
         {
-            if (results == null)
+            if (results is null)
             {
                 return;
             }
 
             foreach (var result in results)
             {
-                OnScanResult(ScanCallbackType.AllMatches, result);
+                if (result is not null)
+                {
+                    OnScanResult(ScanCallbackType.AllMatches, result);
+                }
             }
         }
 
