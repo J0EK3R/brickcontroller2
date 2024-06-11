@@ -16,7 +16,7 @@ namespace BrickController2.UI.ViewModels
     {
         private readonly IDialogService _dialogService;
 
-        private CancellationTokenSource _disappearingTokenSource;
+        private CancellationTokenSource? _disappearingTokenSource;
         private bool _isDisappearing = false;
 
         public DeviceListPageViewModel(
@@ -52,7 +52,7 @@ namespace BrickController2.UI.ViewModels
         public override void OnDisappearing()
         {
             _isDisappearing = true;
-            _disappearingTokenSource.Cancel();
+            _disappearingTokenSource?.Cancel();
         }
 
         private async Task DeleteDeviceAsync(Device device)
@@ -64,7 +64,7 @@ namespace BrickController2.UI.ViewModels
                     $"{Translate("AreYouSureToDeleteDevice")} '{device.Name}'?",
                     Translate("Yes"),
                     Translate("No"),
-                    _disappearingTokenSource.Token))
+                    _disappearingTokenSource?.Token ?? default))
                 {
                     await _dialogService.ShowProgressDialogAsync(
                         false,
@@ -85,7 +85,7 @@ namespace BrickController2.UI.ViewModels
                     Translate("Warning"),
                     Translate("BluetoothIsTurnedOff"),
                     Translate("Ok"),
-                    _disappearingTokenSource.Token);
+                    _disappearingTokenSource?.Token ?? default);
             }
 
             var percent = 0;
@@ -97,9 +97,9 @@ namespace BrickController2.UI.ViewModels
                     if (!_isDisappearing)
                     {
                         using (var cts = new CancellationTokenSource())
-                        using (_disappearingTokenSource.Token.Register(() => cts.Cancel()))
+                        using (_disappearingTokenSource?.Token.Register(() => cts.Cancel()))
                         {
-                            Task<bool> scanTask = null;
+                            Task<bool>? scanTask = null;
                             try
                             {
                                 scanTask = DeviceManager.ScanAsync(cts.Token);
@@ -116,7 +116,7 @@ namespace BrickController2.UI.ViewModels
 
                             cts.Cancel();
 
-                            if (scanTask != null)
+                            if (scanTask is not null)
                             {
                                 scanResult = await scanTask;
                             }

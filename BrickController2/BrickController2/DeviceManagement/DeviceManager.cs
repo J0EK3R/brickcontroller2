@@ -77,8 +77,8 @@ namespace BrickController2.DeviceManagement
 
                 try
                 {
-                    var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice, token);
-                    var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice, token);
+                    var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice!, token);
+                    var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice!, token);
 
                     await Task.WhenAll(infraScan, bluetoothScan);
 
@@ -114,7 +114,7 @@ namespace BrickController2.DeviceManagement
             }
         }
 
-        public Device GetDeviceById(string Id)
+        public Device? GetDeviceById(string? Id)
         {
             try
             {

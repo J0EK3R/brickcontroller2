@@ -14,7 +14,7 @@ namespace BrickController2.PlatformServices.BluetoothLE
 
         Task<bool> ScanDevicesAsync(Action<ScanResult> scanCallback, IEnumerable<Tuple<ushort, byte[]>> advertiseList, CancellationToken token);
 
-        IBluetoothLEDevice GetKnownDevice(string address);
+        IBluetoothLEDevice? GetKnownDevice(string address);
 
         IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice();
     }

@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BrickController2.PlatformServices.BluetoothLE;
 using CoreBluetooth;
 using CoreFoundation;
 using Foundation;
-using UIKit;
+using BrickController2.PlatformServices.BluetoothLE;
 
 namespace BrickController2.iOS.PlatformServices.BluetoothLE
 {
@@ -19,16 +18,17 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
         private readonly object _lock = new object();
         private readonly string _DeviceId;
 
-        private Action<ScanResult> _scanCallback;
+        private Action<ScanResult>? _scanCallback;
 
         public BluetoothLEService()
         {
+#pragma warning disable CA1422 // Validate platform compatibility
             _centralManager = new CBCentralManager(this, DispatchQueue.CurrentQueue);
-            this._DeviceId = UIDevice.CurrentDevice.IdentifierForVendor.AsString();
+#pragma warning restore CA1422 // Validate platform compatibility
         }
 
         public bool IsBluetoothLESupported => true;
-        public bool IsBluetoothOn => _centralManager.State == CBCentralManagerState.PoweredOn;
+        public bool IsBluetoothOn => _centralManager.State == CBManagerState.PoweredOn;
         public string DeviceID => _DeviceId;
 
         public async Task<bool> ScanDevicesAsync(Action<ScanResult> scanCallback, IEnumerable<Tuple<ushort, byte[]>> advertiseList, CancellationToken token)
@@ -51,21 +51,21 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
             }))
             {
                 _scanCallback = scanCallback;
-                _centralManager.ScanForPeripherals(null, new PeripheralScanningOptions { AllowDuplicatesKey = true });
+                _centralManager.ScanForPeripherals(Array.Empty<CBUUID>(), new PeripheralScanningOptions { AllowDuplicatesKey = true });
 
                 return await tcs.Task;
             }
         }
 
-        public IBluetoothLEDevice GetKnownDevice(string address)
+        public IBluetoothLEDevice? GetKnownDevice(string address)
         {
             var peripheral = _centralManager?.RetrievePeripheralsWithIdentifiers(new NSUuid(address)).FirstOrDefault();
-            if (peripheral == null)
+            if (peripheral is null)
             {
                 return null;
             }
 
-            var device = new BluetoothLEDevice(_centralManager, peripheral);
+            var device = new BluetoothLEDevice(_centralManager!, peripheral);
             _peripheralMap[peripheral] = device;
 
             return device;
@@ -79,7 +79,7 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
         {
             lock(_lock)
             {
-                if (peripheral == null || peripheral.Identifier == null || string.IsNullOrEmpty(peripheral.Name))
+                if (peripheral is null || peripheral.Identifier is null || string.IsNullOrEmpty(peripheral.Name))
                 {
                     return;
                 }
@@ -95,13 +95,13 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
             device.OnDeviceConnected();
         }
 
-        public override void DisconnectedPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError error)
+        public override void DisconnectedPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError? error)
         {
             var device = _peripheralMap[peripheral];
             device.OnDeviceDisconnected();
         }
 
-        public override void FailedToConnectPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError error)
+        public override void FailedToConnectPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError? error)
         {
             var device = _peripheralMap[peripheral];
             device.OnDeviceDisconnected();
@@ -112,13 +112,13 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
             var result = new Dictionary<byte, byte[]>();
 
             var manufacturerData = GetDataForKey(advertisementData, CBAdvertisement.DataManufacturerDataKey);
-            if (manufacturerData != null)
+            if (manufacturerData is not null)
             {
                 result[0xFF] = manufacturerData;
             }
 
             var completeDeviceName = GetDataForKey(advertisementData, CBAdvertisement.DataLocalNameKey);
-            if (completeDeviceName != null)
+            if (completeDeviceName is not null)
             {
                 result[0x09] = completeDeviceName;
             }
@@ -128,7 +128,7 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
             return result;
         }
 
-        private byte[] GetDataForKey(NSDictionary advertisementData, NSString key)
+        private byte[]? GetDataForKey(NSDictionary advertisementData, NSString key)
         {
             if (advertisementData == null || !advertisementData.ContainsKey(key))
             {

@@ -191,7 +191,7 @@ namespace BrickController2.CreationManagement
             {
                 var parent = controllerProfile.Creation;
                 await _creationRepository.DeleteControllerProfileAsync(controllerProfile);
-                parent.ControllerProfiles.Remove(controllerProfile);
+                parent?.ControllerProfiles.Remove(controllerProfile);
             }
         }
 
@@ -225,7 +225,7 @@ namespace BrickController2.CreationManagement
             {
                 var parent = controllerEvent.ControllerProfile;
                 await _creationRepository.DeleteControllerEventAsync(controllerEvent);
-                parent.ControllerEvents.Remove(controllerEvent);
+                parent?.ControllerEvents.Remove(controllerEvent);
             }
         }
 
@@ -297,7 +297,7 @@ namespace BrickController2.CreationManagement
             {
                 var parent = controllerAction.ControllerEvent;
                 await _creationRepository.DeleteControllerActionAsync(controllerAction);
-                parent.ControllerActions.Remove(controllerAction);
+                parent?.ControllerActions.Remove(controllerAction);
             }
         }
 
@@ -320,12 +320,12 @@ namespace BrickController2.CreationManagement
         {
             using (await _asyncLock.LockAsync())
             {
-                var otherControllerAction = controllerAction.ControllerEvent.ControllerActions.FirstOrDefault(ca => ca.Id != controllerAction.Id && ca.DeviceId == deviceId && ca.Channel == channel);
-                if (otherControllerAction != null)
+                var otherControllerAction = controllerAction.ControllerEvent?.ControllerActions.FirstOrDefault(ca => ca.Id != controllerAction.Id && ca.DeviceId == deviceId && ca.Channel == channel);
+                if (otherControllerAction is not null)
                 {
                     var parent = otherControllerAction.ControllerEvent;
                     await _creationRepository.DeleteControllerActionAsync(otherControllerAction);
-                    parent.ControllerActions.Remove(otherControllerAction);
+                    parent?.ControllerActions.Remove(otherControllerAction);
                 }
 
                 controllerAction.DeviceId = deviceId;

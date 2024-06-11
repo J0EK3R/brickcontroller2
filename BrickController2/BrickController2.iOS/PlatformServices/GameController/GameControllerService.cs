@@ -23,10 +23,10 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
         private readonly IDictionary<string, float> _lastControllerEventValueMap = new Dictionary<string, float>();
 
-        private GCController _gameController;
-        private event EventHandler<GameControllerEventArgs> GameControllerEventInternal;
-        private NSObject _didConnectNotification;
-        private NSObject _didDisconnectNotification;
+        private GCController? _gameController;
+        private event EventHandler<GameControllerEventArgs>? GameControllerEventInternal;
+        private NSObject? _didConnectNotification;
+        private NSObject? _didDisconnectNotification;
 
         public event EventHandler<GameControllerEventArgs> GameControllerEvent
         {
@@ -34,7 +34,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
             {
                 lock (_lockObject)
                 {
-                    if (GameControllerEventInternal == null)
+                    if (GameControllerEventInternal is null)
                     {
                         if (GCController.Controllers.Length == 0)
                         {
@@ -56,7 +56,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
                 {
                     GameControllerEventInternal -= value;
 
-                    if (GameControllerEventInternal == null)
+                    if (GameControllerEventInternal is null)
                     {
                         GCController.StopWirelessControllerDiscovery();
                         _didConnectNotification?.Dispose();
@@ -89,7 +89,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
             {
                 _gameController = GCController.Controllers.FirstOrDefault();
 
-                if (_gameController != null)
+                if (_gameController is not null)
                 {
                     GCController.StopWirelessControllerDiscovery();
                     _didConnectNotification?.Dispose();
@@ -103,15 +103,17 @@ namespace BrickController2.iOS.PlatformServices.GameController
                     switch (GetGameControllerType(_gameController))
                     {
                         case GameControllerType.Micro:
-                            SetupMicroGamePad(_gameController.MicroGamepad);
+                            SetupMicroGamePad(_gameController.MicroGamepad!);
                             break;
 
                         case GameControllerType.Standard:
-                            SetupGamePad(_gameController.Gamepad);
+#pragma warning disable CA1422 // Validate platform compatibility
+                            SetupGamePad(_gameController.Gamepad!);
+#pragma warning restore CA1422 // Validate platform compatibility
                             break;
 
                         case GameControllerType.Extended:
-                            SetupExtendedGamePad(_gameController.ExtendedGamepad);
+                            SetupExtendedGamePad(_gameController.ExtendedGamepad!);
                             break;
                     }
                 }
@@ -122,7 +124,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
         {
             try
             {
-                if (controller.MicroGamepad != null)
+                if (controller.MicroGamepad is not null)
                 {
                     return GameControllerType.Micro;
                 }
@@ -131,16 +133,18 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
             try
             {
-                if (controller.Gamepad != null)
+#pragma warning disable CA1422 // Validate platform compatibility
+                if (controller.Gamepad is not null)
                 {
                     return GameControllerType.Standard;
                 }
+#pragma warning restore CA1422 // Validate platform compatibility
             }
             catch (InvalidCastException) { }
 
             try
             {
-                if (controller.ExtendedGamepad != null)
+                if (controller.ExtendedGamepad is not null)
                 {
                     return GameControllerType.Extended;
                 }
@@ -160,6 +164,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
         private void SetupGamePad(GCGamepad gamePad)
         {
+#pragma warning disable CA1422 // Validate platform compatibility
             SetupDigitalButtonInput(gamePad.ButtonA, "Button_A");
             SetupDigitalButtonInput(gamePad.ButtonB, "Button_B");
             SetupDigitalButtonInput(gamePad.ButtonX, "Button_X");
@@ -169,6 +174,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
             SetupDigitalButtonInput(gamePad.RightShoulder, "RightShoulder");
 
             SetupDPadInput(gamePad.DPad, "DPad");
+#pragma warning restore CA1422 // Validate platform compatibility
         }
 
         private void SetupExtendedGamePad(GCExtendedGamepad gamePad)
