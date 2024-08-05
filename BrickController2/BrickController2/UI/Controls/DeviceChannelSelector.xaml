@@ -392,6 +392,58 @@
         </Grid>
       </Grid>
 
+      <!-- XP Block XC5 -->
+      <Grid x:Name="XP_Block_XC5_Section">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+          <controls:ChannelSelectorRadioButton x:Name="XP_Block_XC5_Channel0"
+                                               DeviceType="XPBlock_XC5"
+                                               Channel="0"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="Start" />
+          <controls:ChannelSelectorRadioButton x:Name="XP_Block_XC5_Channel1"
+                                               DeviceType="XPBlock_XC5"
+                                               Channel="1"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Start" />
+          <controls:ChannelSelectorRadioButton x:Name="XP_Block_XC5_Channel2"
+                                               DeviceType="XPBlock_XC5"
+                                               Channel="2"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="Center" />
+          <controls:ChannelSelectorRadioButton x:Name="XP_Block_XC5_Channel3"
+                                               DeviceType="XPBlock_XC5"
+                                               Channel="3"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Center" />
+          <controls:ChannelSelectorRadioButton x:Name="XP_Block_XC5_Channel4"
+                                               DeviceType="XPBlock_XC5"
+                                               Channel="4"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="End" />
+          <controls:ChannelSelectorRadioButton x:Name="XP_Block_XC5_Channel5"
+                                               DeviceType="XPBlock_XC5"
+                                               Channel="5"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="End" />
+        </Grid>
+
+        <Image Grid.Column="1"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
+               WidthRequest="150"
+               HeightRequest="120" />
+
+        <Grid Grid.Column="2">
+        </Grid>
+      </Grid>
+
+
+
       <!-- MouldKing_15059_Section -->
       <Grid x:Name="MouldKing_15059_Section">
         <Grid.ColumnDefinitions>

@@ -51,7 +51,7 @@ namespace BrickController2.DeviceManagement
 
     public override bool CanBePowerSource => true;
 
-    protected override bool AutoConnectOnFirstConnect => false;
+    protected override bool AutoConnectOnFirstConnect => true;
 
     public override string BatteryVoltageSign => "V";
     #endregion
