@@ -44,4 +44,5 @@ BrickController 2 is a Xamarin.Forms application and can be compiled using Visua
 ## Author
 
 István Murvai
+
 J0EK3R
