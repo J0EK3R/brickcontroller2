@@ -20,6 +20,16 @@ Cross platform mobile application for controlling Lego creations using a bluetoo
 - Lego Technic Hub
 - Lego WeDo 2.0 Smart Hub
 - Circuit Cubes
+- XP Block
+
+## Supported (BLE advertising) devices (Android only)
+
+- MouldKing 4.0 module
+- MouldKing 6.0 module
+- MouldKing Mecanum
+- MouldKing 15059 (Robot)
+- Cada C51072W Race Car
+- HOGOKIDS 8051
 
 ## Project details
 
@@ -34,3 +44,4 @@ BrickController 2 is a Xamarin.Forms application and can be compiled using Visua
 ## Author
 
 István Murvai
+J0EK3R

@@ -15,6 +15,8 @@
         CircuitCubes,
         WeDo2,
 
+        XPBlock_XC5,
+
         // MouldKing
         /// <summary>
         /// Robot
