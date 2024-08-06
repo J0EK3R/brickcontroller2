@@ -16,44 +16,38 @@ namespace BrickController2.DeviceManagement
     #region Constants
     private const int MAX_SEND_ATTEMPTS = 10;
 
-    private static readonly Guid SERVICE_UUID_FFF0_Unknown = new Guid("0000FFF0-0000-1000-8000-00805f9b34fb");
-    private static readonly Guid CHARACTERISTIC_UUID_FFF1 = new Guid("0000FFF1-0000-1000-8000-00805f9b34fb");
-    private static readonly Guid CHARACTERISTIC_UUID_FFF2 = new Guid("0000FFF2-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid SERVICE_UUID_1800_GENERIC_ACCESS = new Guid("00001800-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_2A00_DEVICE_NAME = new Guid("00002a00-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_2A01_APPEARANCE = new Guid("00002a01-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_2A04_PERIPHERAL_PREFERRED_CONNECTION_PARAMETERS = new Guid("00002a04-0000-1000-8000-00805f9b34fb");
 
-    private static readonly Guid SERVICE_UUID_DEVICE_180A_INFORMATION = new Guid("0000180a-0000-1000-8000-00805f9b34fb");
-    private static readonly Guid CHARACTERISTIC_UUID_MODEL_NUMBER = new Guid("00002a24-0000-1000-8000-00805f9b34fb");
-    private static readonly Guid CHARACTERISTIC_UUID_FIRMWARE_REVISION = new Guid("00002a26-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid SERVICE_UUID_1801_GENERIC_ATTRIBUTE = new Guid("00001801-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_2A05_SERVICE_CHANGED = new Guid("00002a05-0000-1000-8000-00805f9b34fb");
 
-    private static readonly TimeSpan VoltageMeasurementTimeout = TimeSpan.FromSeconds(5);
+    private static readonly Guid SERVICE_UUID_180A_DEVICE_INFORMATION = new Guid("0000180a-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_2A50_PNP_ID = new Guid("00002a50-0000-1000-8000-00805f9b34fb");
+
+    private static readonly Guid SERVICE_UUID_FFF0_UNKNOWN_SERVICE = new Guid("0000FFF0-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_FFF1_UNKNOWN_CHARACTERISTIC = new Guid("0000FFF1-0000-1000-8000-00805f9b34fb");
+    private static readonly Guid CHARACTERISTIC_UUID_FFF2_UNKNOWN_CHARACTERISTIC = new Guid("0000FFF2-0000-1000-8000-00805f9b34fb");
     #endregion
     #region Fields
     private readonly int[] _outputValues = new int[6];
     private readonly int[] _lastOutputValues = new int[6];
     private readonly object _outputLock = new object();
 
-    private DateTime _batteryMeasurementTimestamp;
-    private byte _batteryVoltageRaw;
-    private byte _motorVoltageRaw;
-
-    private volatile int _outputLevelValue;
     private volatile int _sendAttemptsLeft;
 
-    private IGattCharacteristic _characteristic;
-    private IGattCharacteristic _characteristic_cmd;
-    private IGattCharacteristic _modelNumberCharacteristic;
-    private IGattCharacteristic _firmwareRevisionCharacteristic;
+    private IGattCharacteristic _characteristic_FFF1_CYCLIC_STATE;
+    private IGattCharacteristic _characteristic_FFF2_CMD;
+    private IGattCharacteristic _characteristic_2A50_PNP_ID;
     #endregion
     #region Properties
     public override DeviceType DeviceType => DeviceType.XPBlock_XC5;
+
     public override int NumberOfChannels => 6;
 
-    public override bool CanSetOutputLevel => true;
-
-    public override bool CanBePowerSource => true;
-
     protected override bool AutoConnectOnFirstConnect => true;
-
-    public override string BatteryVoltageSign => "V";
     #endregion
 
     #region XPBlock_XC5(string name, string address, byte[] deviceData, IEnumerable<DeviceSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
@@ -104,23 +98,21 @@ namespace BrickController2.DeviceManagement
     /// <returns></returns>
     protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService> services, CancellationToken token)
     {
-      var service = services?.FirstOrDefault(s => s.Uuid == SERVICE_UUID_FFF0_Unknown);
-      _characteristic = service?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_FFF1);
-      _characteristic_cmd = service?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_FFF2);
+      var service_FFF0 = services?.FirstOrDefault(s => s.Uuid == SERVICE_UUID_FFF0_UNKNOWN_SERVICE);
+      _characteristic_FFF1_CYCLIC_STATE = service_FFF0?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_FFF1_UNKNOWN_CHARACTERISTIC);
+      _characteristic_FFF2_CMD = service_FFF0?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_FFF2_UNKNOWN_CHARACTERISTIC);
 
-      var deviceInformationService = services?.FirstOrDefault(s => s.Uuid == SERVICE_UUID_DEVICE_180A_INFORMATION);
-      _firmwareRevisionCharacteristic = deviceInformationService?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_FIRMWARE_REVISION);
-      _modelNumberCharacteristic = deviceInformationService?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_MODEL_NUMBER);
+      var service_180A = services?.FirstOrDefault(s => s.Uuid == SERVICE_UUID_180A_DEVICE_INFORMATION);
+      _characteristic_2A50_PNP_ID = service_180A?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_2A50_PNP_ID);
 
-      if (_characteristic != null)
+      if (_characteristic_FFF1_CYCLIC_STATE != null)
       {
-        await _bleDevice?.EnableNotificationAsync(_characteristic, token);
+        await _bleDevice?.EnableNotificationAsync(_characteristic_FFF1_CYCLIC_STATE, token);
       }
 
-      return _characteristic != null; // && _firmwareRevisionCharacteristic != null && _modelNumberCharacteristic != null;
+      return _characteristic_FFF1_CYCLIC_STATE != null && _characteristic_FFF2_CMD != null && _characteristic_2A50_PNP_ID != null;
     }
     #endregion
-
     #region OnCharacteristicChanged(Guid characteristicGuid, byte[] data)
     /// <summary>
     /// 
@@ -129,51 +121,12 @@ namespace BrickController2.DeviceManagement
     /// <param name="data"></param>
     protected override void OnCharacteristicChanged(Guid characteristicGuid, byte[] data)
     {
-      if (characteristicGuid != _characteristic.Uuid) // || data.Length < 4 || data[0] != 0x00)
+      if (characteristicGuid != _characteristic_FFF1_CYCLIC_STATE.Uuid) // || data.Length < 4 || data[0] != 0x00)
       {
         return;
       }
 
-      // Byte 1: Status flags - Bits 3-4 Battery level status (0 - empty, motors disabled; 1 - low; 2 - medium; 3 - full) 
-
-      // do some change filtering as data are comming at 25Hz frequency
-      if (this.GetVoltage(data, out float batteryVoltage, out float motorVoltage))
-      {
-        BatteryVoltage = $"{batteryVoltage:F2} / {motorVoltage:F2}";
-      }
-    }
-    #endregion
-
-    #region GetVoltage(byte[] data, out float batteryVoltage, out float motorVoltage)
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="data"></param>
-    /// <param name="batteryVoltage"></param>
-    /// <param name="motorVoltage"></param>
-    /// <returns></returns>
-    private bool GetVoltage(byte[] data, out float batteryVoltage, out float motorVoltage)
-    {
-      // Byte 2: Battery voltage (3 V + value * 0,01 V) -range 3,00 V - 4,27 V
-      // Byte 3: Output(motor) voltage(4 V + value * 0,05 V) - range 4,00 V - 16,75 V
-      batteryVoltage = 3.0f + data[2] * 0.01f;
-      motorVoltage = 4.0f + data[3] * 0.05f;
-
-      const int delta = 2;
-
-      if (Math.Abs(_batteryVoltageRaw - data[2]) > delta ||
-          Math.Abs(_motorVoltageRaw - data[3]) > delta ||
-          DateTime.Now - _batteryMeasurementTimestamp > VoltageMeasurementTimeout)
-      {
-        _batteryVoltageRaw = data[2];
-        _motorVoltageRaw = data[3];
-
-        _batteryMeasurementTimestamp = DateTime.Now;
-
-        return true;
-      }
-
-      return false;
+      BatteryVoltage = BitConverter.ToString(data, 0);
     }
     #endregion
     #region AfterConnectSetupAsync(bool requestDeviceInformation, CancellationToken token)
@@ -222,59 +175,46 @@ namespace BrickController2.DeviceManagement
           _lastOutputValues[3] = 1;
           _lastOutputValues[4] = 1;
           _lastOutputValues[5] = 1;
-          _outputLevelValue = DefaultOutputLevel;
           _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
         }
 
-        var _lastSentOutputLevelValue = -1;
-
         while (!token.IsCancellationRequested)
         {
-          if (_lastSentOutputLevelValue != _outputLevelValue)
+          int v0, v1, v2, v3, v4, v5, sendAttemptsLeft;
+
+          lock (_outputLock)
           {
-            if (await SendOutputLevelValueAsync(_outputLevelValue, token))
+            v0 = _outputValues[0];
+            v1 = _outputValues[1];
+            v2 = _outputValues[2];
+            v3 = _outputValues[3];
+            v4 = _outputValues[4];
+            v5 = _outputValues[5];
+            sendAttemptsLeft = _sendAttemptsLeft;
+            _sendAttemptsLeft = sendAttemptsLeft > 0 ? sendAttemptsLeft - 1 : 0;
+          }
+
+          if (v0 != _lastOutputValues[0] ||
+            v1 != _lastOutputValues[1] ||
+            v2 != _lastOutputValues[2] ||
+            v3 != _lastOutputValues[3] ||
+            v4 != _lastOutputValues[4] ||
+            v5 != _lastOutputValues[5] ||
+            sendAttemptsLeft > 0)
+          {
+            if (await SendOutputValuesAsync(v0, v1, v2, v3, v4, v5, token).ConfigureAwait(false))
             {
-              _lastSentOutputLevelValue = _outputLevelValue;
+              _lastOutputValues[0] = v0;
+              _lastOutputValues[1] = v1;
+              _lastOutputValues[2] = v2;
+              _lastOutputValues[3] = v3;
+              _lastOutputValues[4] = v4;
+              _lastOutputValues[5] = v5;
             }
           }
           else
           {
-            int v0, v1, v2, v3, v4, v5, sendAttemptsLeft;
-
-            lock (_outputLock)
-            {
-              v0 = _outputValues[0];
-              v1 = _outputValues[1];
-              v2 = _outputValues[2];
-              v3 = _outputValues[3];
-              v4 = _outputValues[4];
-              v5 = _outputValues[5];
-              sendAttemptsLeft = _sendAttemptsLeft;
-              _sendAttemptsLeft = sendAttemptsLeft > 0 ? sendAttemptsLeft - 1 : 0;
-            }
-
-            if (v0 != _lastOutputValues[0] ||
-              v1 != _lastOutputValues[1] ||
-              v2 != _lastOutputValues[2] ||
-              v3 != _lastOutputValues[3] ||
-              v4 != _lastOutputValues[4] ||
-              v5 != _lastOutputValues[5] ||
-              sendAttemptsLeft > 0)
-            {
-              if (await SendOutputValuesAsync(v0, v1, v2, v3, v4, v5, token).ConfigureAwait(false))
-              {
-                _lastOutputValues[0] = v0;
-                _lastOutputValues[1] = v1;
-                _lastOutputValues[2] = v2;
-                _lastOutputValues[3] = v3;
-                _lastOutputValues[4] = v4;
-                _lastOutputValues[5] = v5;
-              }
-            }
-            else
-            {
-              await Task.Delay(10, token).ConfigureAwait(false);
-            }
+            await Task.Delay(10, token).ConfigureAwait(false);
           }
         }
       }
@@ -486,29 +426,7 @@ namespace BrickController2.DeviceManagement
         }
         sendOutputBuffer[lastCalcIndex + 1] = (byte)sum;
 
-        return await _bleDevice?.WriteAsync(_characteristic_cmd, sendOutputBuffer, token);
-      }
-      catch (Exception)
-      {
-        return false;
-      }
-    }
-    #endregion
-
-    #region SendOutputLevelValueAsync(int outputLevelValue, CancellationToken token)
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="outputLevelValue"></param>
-    /// <param name="token"></param>
-    /// <returns></returns>
-    private async Task<bool> SendOutputLevelValueAsync(int outputLevelValue, CancellationToken token)
-    {
-      try
-      {
-        var sendOutputLevelBuffer = new byte[] { 0x11, (byte)(outputLevelValue + 1) };
-
-        return await _bleDevice?.WriteAsync(_characteristic, sendOutputLevelBuffer, token);
+        return await _bleDevice?.WriteAsync(_characteristic_FFF2_CMD, sendOutputBuffer, token);
       }
       catch (Exception)
       {
@@ -525,15 +443,14 @@ namespace BrickController2.DeviceManagement
     /// <returns></returns>
     private async Task ReadDeviceInfo(CancellationToken token)
     {
-      var firmwareData = await _bleDevice?.ReadAsync(_firmwareRevisionCharacteristic, token);
-      var firmwareVersion = firmwareData?.ToAsciiStringSafe();
+      var firmwareData = await _bleDevice?.ReadAsync(_characteristic_2A50_PNP_ID, token);
+      var firmwareVersion = $"{firmwareData?.GetInt16(5)}";
       if (!string.IsNullOrEmpty(firmwareVersion))
       {
         FirmwareVersion = firmwareVersion;
       }
 
-      var modelNumberData = await _bleDevice?.ReadAsync(_modelNumberCharacteristic, token);
-      var modelNumber = modelNumberData?.ToAsciiStringSafe();
+      var modelNumber = $"{(ushort)firmwareData?.GetInt16(3)}";
       if (!string.IsNullOrEmpty(modelNumber))
       {
         HardwareVersion = modelNumber;

@@ -44,6 +44,9 @@ namespace BrickController2.UI.Converters
                 case DeviceType.WeDo2:
                     return ResourceHelper.GetImageResource("wedo2hub_image_small.png");
 
+                case DeviceType.XPBlock_XC5:
+                  return ResourceHelper.GetImageResource("xpblock_xc5_image_small.png");
+
                 case DeviceType.MouldKing_4_0_Modul:
                     return ResourceHelper.GetImageResource("mouldking_4_0_image_small.png");
                 case DeviceType.MouldKing_6_0_Modul:
