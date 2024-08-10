@@ -71,6 +71,7 @@ namespace BrickController2.DeviceManagement
 
       switch (manufacturerId)
       {
+        case "33-ac": return (DeviceType.MouldKing_DIY, manufacturerData);
         case "98-01": return (DeviceType.SBrick, manufacturerData);
         case "48-4d": return (DeviceType.BuWizz, manufacturerData);
         case "4e-05":

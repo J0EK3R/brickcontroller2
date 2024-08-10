@@ -19,6 +19,11 @@
 
         // MouldKing
         /// <summary>
+        /// DIY
+        /// </summary>
+        MouldKing_DIY,
+
+        /// <summary>
         /// Robot
         /// </summary>
         MouldKing_15059,

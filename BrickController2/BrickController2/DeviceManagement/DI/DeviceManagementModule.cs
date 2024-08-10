@@ -28,6 +28,7 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<XPBlock_XC5>().Keyed<Device>(DeviceType.XPBlock_XC5);
 
             // MouldKing
+            builder.RegisterType<MouldKing_DIY>().Keyed<Device>(DeviceType.MouldKing_DIY);
             builder.RegisterType<MouldKing_15059>().Keyed<Device>(DeviceType.MouldKing_15059);
             builder.RegisterType<MouldKing_4_0_Modul>().Keyed<Device>(DeviceType.MouldKing_4_0_Modul);
             builder.RegisterType<MouldKing_6_0_Modul>().Keyed<Device>(DeviceType.MouldKing_6_0_Modul);

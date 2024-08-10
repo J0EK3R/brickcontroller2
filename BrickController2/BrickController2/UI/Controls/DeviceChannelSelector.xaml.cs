@@ -20,28 +20,36 @@ namespace BrickController2.UI.Controls
             BuWizzChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
             BuWizzChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
             BuWizzChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+
             BuWizz3Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             BuWizz3Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
             BuWizz3Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
             BuWizz3Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
             BuWizz3Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
             BuWizz3Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
             InfraredChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             InfraredChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
             PoweredUpChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             PoweredUpChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
             BoostChannelA.Command = new SafeCommand(() => SelectedChannel = 0);
             BoostChannelB.Command = new SafeCommand(() => SelectedChannel = 1);
             BoostChannelC.Command = new SafeCommand(() => SelectedChannel = 2);
             BoostChannelD.Command = new SafeCommand(() => SelectedChannel = 3);
+
             TechnicHubChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             TechnicHubChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
             TechnicHubChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
             TechnicHubChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+
             DuploTrainHubChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+
             CircuitCubesA.Command = new SafeCommand(() => SelectedChannel = 0);
             CircuitCubesB.Command = new SafeCommand(() => SelectedChannel = 1);
             CircuitCubesC.Command = new SafeCommand(() => SelectedChannel = 2);
+
             WedoChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
@@ -53,6 +61,11 @@ namespace BrickController2.UI.Controls
             XP_Block_XC5_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
             XP_Block_XC5_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
 
+            // MouldKing_DIY
+            MouldKing_DIY_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_DIY_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_DIY_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_DIY_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
 
             // MouldKing_15059
             MouldKing_15059_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
@@ -217,6 +230,11 @@ namespace BrickController2.UI.Controls
                         break;
                     #endregion
 
+                    #region MouldKing DIY
+                    case DeviceType.MouldKing_DIY:
+                      dcs.MouldKing_DIY_Section.IsVisible = true;
+                      break;
+                    #endregion
                     #region MouldKing 15059
                     case DeviceType.MouldKing_15059:
                         dcs.MouldKing_15059_Section.IsVisible = true;
@@ -325,6 +343,12 @@ namespace BrickController2.UI.Controls
                 dcs.XP_Block_XC5_Channel3.SelectedChannel = selectedChannel;
                 dcs.XP_Block_XC5_Channel4.SelectedChannel = selectedChannel;
                 dcs.XP_Block_XC5_Channel5.SelectedChannel = selectedChannel;
+
+                // MouldKing_DIY
+                dcs.MouldKing_DIY_Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIY_Channel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIY_Channel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIY_Channel3.SelectedChannel = selectedChannel;
 
                 // MouldKing_15059
                 dcs.MouldKing_15059_Channel0.SelectedChannel = selectedChannel;
