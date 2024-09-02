@@ -154,6 +154,8 @@ namespace BrickController2.UI.Controls
 
                 dcs.XP_Block_XC5_Section.IsVisible = false;
 
+                dcs.MouldKing_DIY_Section.IsVisible = false;
+
                 // MouldKing
                 dcs.MouldKing_15059_Section.IsVisible = false;
                 dcs.MouldKing_4_0_Module_Section.IsVisible = false;
@@ -286,7 +288,7 @@ namespace BrickController2.UI.Controls
                     #region TestModel
                     case DeviceType.TestModel:
                         // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
+                        dcs.TestModel_Section.IsVisible = false;
                         break;
                     #endregion
                     #region Unknown
