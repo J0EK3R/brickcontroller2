@@ -724,8 +724,8 @@
         </Grid>
       </Grid>
 
-      <!-- Cada_C51072W_Section -->
-      <Grid x:Name="Cada_C51072W_Section">
+      <!-- CaDA_RaceCar_Section -->
+      <Grid x:Name="CaDA_RaceCar_Section">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
@@ -733,13 +733,18 @@
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
-          <controls:ChannelSelectorRadioButton x:Name="Cada_C51072W_Channel1"
-                                               DeviceType="Cada_C51072W"
-                                               Channel="1"
+          <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCar_Channel2"
+                                               DeviceType="CaDA_RaceCar"
+                                               Channel="2"
                                                HorizontalOptions="End"
                                                VerticalOptions="End" />
-          <controls:ChannelSelectorRadioButton x:Name="Cada_C51072W_Channel0"
-                                               DeviceType="Cada_C51072W"
+          <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCar_Channel1"
+                                               DeviceType="CaDA_RaceCar"
+                                               Channel="1"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Center" />
+          <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCar_Channel0"
+                                               DeviceType="CaDA_RaceCar"
                                                Channel="0"
                                                HorizontalOptions="End"
                                                VerticalOptions="Start" />

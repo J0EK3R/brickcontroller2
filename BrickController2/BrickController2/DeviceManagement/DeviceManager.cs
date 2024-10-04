@@ -91,8 +91,8 @@ namespace BrickController2.DeviceManagement
                     // Hogokids
                     await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(HOGOKIDS_8051.ManufacturerID));
 
-                    // Cada
-                    await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(Cada_C51072W.ManufacturerID));
+                    // CaDA
+                    await FoundDevice(DeviceType.CaDA_RaceCar, "CaDA RaceCar", "961008", BitConverter.GetBytes(CaDARaceCar.ManufacturerID));
 
                     // TestModel
                     //await FoundDevice(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));

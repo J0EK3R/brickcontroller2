@@ -11,8 +11,8 @@
     <None Remove="UI\Navigation\**" />
     <None Remove="UI\Images\buwizz3_image.png" />
     <None Remove="UI\Images\buwizz3_image_small.png" />
-    <None Remove="UI\Images\cada_c51072w_image.png" />
-    <None Remove="UI\Images\cada_c51072w_image_small.png" />
+    <None Remove="UI\Images\cada_racecar_image.png" />
+    <None Remove="UI\Images\cada_racecar_image_small.png" />
     <None Remove="UI\Images\circuitcubes_image.png" />
     <None Remove="UI\Images\circuitcubes_image_small.png" />
     <None Remove="UI\Images\dummyBT_image.png" />
@@ -86,9 +86,9 @@
     <EmbeddedResource Include="UI\Images\buwizz_image_small.png" />
     <EmbeddedResource Include="UI\Images\circuitcubes_image.png" />
     <EmbeddedResource Include="UI\Images\circuitcubes_image_small.png" />
-    <EmbeddedResource Include="UI\Images\cada_c51072w_image.png" />
+    <EmbeddedResource Include="UI\Images\cada_racecar_image.png" />
     <EmbeddedResource Include="UI\Images\hogokids_8051_image.png" />
-    <EmbeddedResource Include="UI\Images\cada_c51072w_image_small.png" />
+    <EmbeddedResource Include="UI\Images\cada_racecar_image_small.png" />
     <EmbeddedResource Include="UI\Images\hogokids_8051_image_small.png" />
     <EmbeddedResource Include="UI\Images\joek3r_image.png" />
     <EmbeddedResource Include="UI\Images\joek3r_image_small.png" />

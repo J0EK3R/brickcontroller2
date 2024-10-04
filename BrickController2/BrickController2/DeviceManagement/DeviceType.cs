@@ -48,11 +48,11 @@
         /// </summary>
         HOGOKIDS_8051,
 
-        // Cada
+        // CaDA
         /// <summary>
         /// RaceCar
         /// </summary>
-        Cada_C51072W,
+        CaDA_RaceCar,
 
         /// <summary>
         /// TestModel

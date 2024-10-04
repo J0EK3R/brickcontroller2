@@ -105,9 +105,10 @@ namespace BrickController2.UI.Controls
             HOGOKIDS_8051_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             HOGOKIDS_8051_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
-            // Cada_C51072W
-            Cada_C51072W_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            Cada_C51072W_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            // CaDA_RaceCar
+            CaDA_RaceCar_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            CaDA_RaceCar_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            CaDA_RaceCar_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
 
             // TestModel
             TestModel_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
@@ -165,8 +166,8 @@ namespace BrickController2.UI.Controls
                 // Hogokids
                 dcs.HOGOKIDS_8051_Section.IsVisible = false;
 
-                // Cada
-                dcs.Cada_C51072W_Section.IsVisible = false;
+                // CaDA
+                dcs.CaDA_RaceCar_Section.IsVisible = false;
 
                 // TestModel
                 dcs.TestModel_Section.IsVisible = false;
@@ -279,15 +280,14 @@ namespace BrickController2.UI.Controls
                         break;
                     #endregion
 
-                    #region Cada
-                    case DeviceType.Cada_C51072W:
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = true;
+                    #region CaDA
+                    case DeviceType.CaDA_RaceCar:
+                        // CaDA
+                        dcs.CaDA_RaceCar_Section.IsVisible = true;
                         break;
                     #endregion
                     #region TestModel
                     case DeviceType.TestModel:
-                        // Cada
                         dcs.TestModel_Section.IsVisible = false;
                         break;
                     #endregion
@@ -390,9 +390,10 @@ namespace BrickController2.UI.Controls
                 dcs.HOGOKIDS_8051_Channel0.SelectedChannel = selectedChannel;
                 dcs.HOGOKIDS_8051_Channel1.SelectedChannel = selectedChannel;
 
-                // Cada RC
-                dcs.Cada_C51072W_Channel0.SelectedChannel = selectedChannel;
-                dcs.Cada_C51072W_Channel1.SelectedChannel = selectedChannel;
+                // CaDA RaceCar
+                dcs.CaDA_RaceCar_Channel0.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCar_Channel1.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCar_Channel2.SelectedChannel = selectedChannel;
 
                 // TestModel
                 dcs.TestModel_Channel0.SelectedChannel = selectedChannel;

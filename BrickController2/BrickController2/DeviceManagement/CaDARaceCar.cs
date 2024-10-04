@@ -1,58 +1,13 @@
 ﻿using BrickController2.PlatformServices.BluetoothLE;
+using System;
 
 namespace BrickController2.DeviceManagement
 {
     /// <summary>
-    /// Cada C51072W Race Car
-    /// 
-    /// https://www.amazon.de/gp/product/B0B6P9JG2J/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1
+    /// CaDA RaceCar
     /// </summary>
-    internal class Cada_C51072W : BluetoothAdvertisingDeviceEnum<Cada_C51072W.Telegram>
+    internal class CaDARaceCar : BluetoothAdvertisingDevice
     {
-        #region Definitions
-        internal enum Telegram
-        {
-            Connect,
-            Stopp,
-
-            /// <summary>
-            /// forward - right
-            /// </summary>
-            C0_F1__C1_F1,
-            /// <summary>
-            /// forward
-            /// </summary>
-            C0_F1__C1_S,
-            /// <summary>
-            /// forward - left
-            /// </summary>
-            C0_F1__C1_B1,
-
-            /// <summary>
-            /// stop - left
-            /// </summary>
-            C0_S__C1_B1,
-            /// <summary>
-            /// stop - right
-            /// </summary>
-            C0_S__C1_F1,
-
-            /// <summary>
-            /// backward - right
-            /// </summary>
-            C0_B1__C1_F1,
-
-            /// <summary>
-            /// backward
-            /// </summary>
-            C0_B1__C1_S,
-
-            /// <summary>
-            /// backward - left
-            /// </summary>
-            C0_B1__C1_B1,
-        }
-        #endregion
         #region Constants
         /// <summary>
         /// ManufacturerID for BLEAdvertisments
@@ -61,12 +16,21 @@ namespace BrickController2.DeviceManagement
         /// </summary>
         public const ushort ManufacturerID = 0xC200;
 
+        private static readonly byte[] magicNumberArray_0x43_0x41_0x52 =
+        {
+            67, // 0x43
+            65, // 0x41
+            82, // 0x52
+        };
+        #endregion
+        #region Fields
+
         private static readonly byte[] Telegram_Connect = new byte[] {
             0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x41, 0xfa, 0x2a, 0xb4, 0x9e, 0xfd, 0xc7, 0xb6, 0x2e,
-            0xa6, 
-            0x82, 
-            0xc9, 0xf2, 0x0e, 
-            0x7f, 
+            0xa6,
+            0x82,
+            0xc9, 0xf2, 0x0e,
+            0x7f,
             0xcf, 0x2e,
         };
 
@@ -75,8 +39,8 @@ namespace BrickController2.DeviceManagement
             0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
             0x07, // stop
             0x23, // straight
-            0x00, 0x3b, 0xc7, 
-            0xb6, 
+            0x00, 0x3b, 0xc7,
+            0xb6,
             0xa3, 0x22,
         };
 
@@ -115,8 +79,8 @@ namespace BrickController2.DeviceManagement
             0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
             0xeb, // fw
             0xcf, // left
-            0x00, 0x3b, 0xc7, 
-            0xb6, 
+            0x00, 0x3b, 0xc7,
+            0xb6,
             0x92, 0xcd,
         };
 
@@ -146,7 +110,7 @@ namespace BrickController2.DeviceManagement
             0x08, // bw
             0xcf, // left
             0x00, 0x3b, 0xc7,
-            0xb6, 
+            0xb6,
             0xfc, 0x43,
         };
 
@@ -213,28 +177,77 @@ namespace BrickController2.DeviceManagement
         //0xa3, 0x22,
         #endregion
         #endregion
-        #region static Constructor
-        static Cada_C51072W()
-        {
-            Telegrams.Add(Telegram.Connect, Telegram_Connect);
-            Telegrams.Add(Telegram.Stopp, Telegram_Stop);
-            Telegrams.Add(Telegram.C0_F1__C1_F1, Telegram_C0_F1__C1_F1);
-            Telegrams.Add(Telegram.C0_F1__C1_S, Telegram_C0_F1__C1_S);
-            Telegrams.Add(Telegram.C0_F1__C1_B1, Telegram_C0_F1__C1_B1);
-            Telegrams.Add(Telegram.C0_S__C1_B1, Telegram_C0_S__C1_B1);
-            Telegrams.Add(Telegram.C0_S__C1_F1, Telegram_C0_S__C1_F1);
-            Telegrams.Add(Telegram.C0_B1__C1_F1, Telegram_C0_B1__C1_F1);
-            Telegrams.Add(Telegram.C0_B1__C1_S, Telegram_C0_B1__C1_S);
-            Telegrams.Add(Telegram.C0_B1__C1_B1, Telegram_C0_B1__C1_B1);
-        }
-        #endregion
 
         #region Fields
+        public int lastAddress =
+          (0x00 << 24) +
+          (0x96 << 16) +
+          (0x10 << 8) + 
+          (0x08 << 0);
+
+        public int mobileSerial =
+          (0x00 << 24) +
+          (0xcb << 16) +
+          (0x29 << 8) +
+          (0x79 << 0);
+
+        /// <summary>
+        /// verticalValue
+        /// </summary>
         private float _Channel0_Value = 0.0f;
+
+        /// <summary>
+        /// horizontalValue
+        /// </summary>
         private float _Channel1_Value = 0.0f;
+
+        /// <summary>
+        /// lightValue
+        /// </summary>
+        private float _Channel2_Value = 0.0f;
+
+        public readonly byte[] controlDataArray = new byte[] // 16
+{
+            0x75, //  [0] const 0x75 (117)
+            0x13, //  [1] 0x13 (19) STATUS_CONTROL
+            0x00, //  [2] LastAddress
+            0x00, //  [3] LastAddress
+            0x00, //  [4] LastAddress
+            0x00, //  [5] MobileSerialChecksum
+            0x00, //  [6] MobileSerialChecksum
+            0x00, //  [7] MobileSerialChecksum
+            0x00, //  [8] ChannelData random
+            0x00, //  [9] ChannelData random
+            0x80, // [10] ChannelData verticalValue (min= 0x80 (128))
+            0x80, // [11] ChannelData horizontalValue (min= 0x80 (128))
+            0x00, // [12] ChannelData lightValue
+            0x00, // [13] ChannelData 
+            0x00, // [14] ChannelData 
+            0x00, // [15] ChannelData 
+};
+
+        public readonly byte[] pairingDataArray = new byte[] // 16
+        {
+            0x75, //  [0] const 0x75 (117)
+            0x10, //  [1] 0x17 (23) STATUS_UNPAIRING - else - 0x10 (16)
+            0x00, //  [2] LastAddress
+            0x00, //  [3] LastAddress
+            0x00, //  [4] LastAddress
+            0x00, //  [5] MobileSerialChecksum
+            0x00, //  [6] MobileSerialChecksum
+            0x00, //  [7] MobileSerialChecksum
+            0x00, //  [8] 
+            0x00, //  [9] 
+            0x80, // [10] min 128
+            0x80, // [11] min 128
+            0x00, // [12] 
+            0x00, // [13] 
+            0x00, // [14] 
+            0x00, // [15] 
+        };
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.Cada_C51072W;
+        public override DeviceType DeviceType => DeviceType.CaDA_RaceCar;
 
         public override int NumberOfChannels => 2;
 
@@ -250,7 +263,7 @@ namespace BrickController2.DeviceManagement
         /// <param name="deviceData"></param>
         /// <param name="deviceRepository"></param>
         /// <param name="bleService"></param>
-        public Cada_C51072W(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        public CaDARaceCar(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
         }
@@ -262,7 +275,6 @@ namespace BrickController2.DeviceManagement
         /// </summary>
         protected override void InitOutputTask()
         {
-            this._currentTelegram = Telegram.Connect;
         }
         #endregion
 
@@ -272,79 +284,58 @@ namespace BrickController2.DeviceManagement
             switch (channel)
             {
                 case 0:
-                    if (this._Channel0_Value == value)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        this._Channel0_Value = value;
-                    }
+                    this._Channel0_Value = value; 
                     break;
                 case 1:
-                    if (this._Channel1_Value == value)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        this._Channel1_Value = value;
-                    }
+                    this._Channel1_Value = value;
+                    break;
+                case 2:
+                    this._Channel2_Value = value;
                     break;
                 default:
-                    return false;
-            }
-
-            lock (this._outputLock)
-            {
-                if (this._Channel0_Value == 0)
-                {
-                    if (this._Channel1_Value == 0) // Stopp
-                    {
-                        _currentTelegram = Telegram.Stopp;
-                    }
-                    else if (this._Channel1_Value > 0) // C0_S C1_F1
-                    {
-                        _currentTelegram = Telegram.C0_S__C1_F1;
-                    }
-                    else /*if (this._Channel1_Value < 0)*/ // C0_S C1_B1
-                    {
-                        _currentTelegram = Telegram.C0_S__C1_B1;
-                    }
-                }
-                else if (this._Channel0_Value > 0)
-                {
-                    if (this._Channel1_Value == 0) // C0_F1 C1_S
-                    {
-                        _currentTelegram = Telegram.C0_F1__C1_S;
-                    }
-                    else if (this._Channel1_Value > 0) // C0_F1 C1_F1
-                    {
-                        _currentTelegram = Telegram.C0_F1__C1_F1;
-                    }
-                    else /*if (this._Channel1_Value < 0)*/ // C0_F1 C1_B1
-                    {
-                        _currentTelegram = Telegram.C0_F1__C1_B1;
-                    }
-                }
-                else if (this._Channel0_Value < 0)
-                {
-                    if (this._Channel1_Value == 0) // C0_B1 C1_S
-                    {
-                        _currentTelegram = Telegram.C0_B1__C1_S;
-                    }
-                    else if (this._Channel1_Value > 0) // C0_B1 C1_F1
-                    {
-                        _currentTelegram = Telegram.C0_B1__C1_F1;
-                    }
-                    else /*if (this._Channel1_Value < 0)*/ // C0_B1 C1_B1
-                    {
-                        _currentTelegram = Telegram.C0_B1__C1_B1;
-                    }
-                }
+                    break;
             }
             return true;
         }
         #endregion
+
+        #region TryGetTelegram(out byte[] currentData)
+        public override bool TryGetTelegram(out byte[] currentData)
+        {
+            int random = 0; // (int)(new Random().Next() * 100000.0d);
+
+            byte[] channelDataArray = // 8
+            {
+                (byte)(random & 255),
+                (byte)((random >> 8) & 255),
+                (byte)(0x80 - Math.Min(-this._Channel0_Value * 0x80, 0x80)),
+                (byte)(0x80 - Math.Min(-this._Channel1_Value * 0x80, 0x80)),
+                0, //(byte)(0x80 - Math.Min(-this._Channel2_Value * 0x80, 0x80)),
+                0,
+                0,
+                0
+            };
+
+            BLEUtils.encry(channelDataArray);
+
+            Array.Copy(channelDataArray, 0, this.controlDataArray, 8, 8);
+
+            this.controlDataArray[0] = 0x75; // 0x75 (117)
+            this.controlDataArray[1] = 0x13; // 0x13 (19);
+
+            byte[] maskArray = ArrayTools.CreateMaskArray(this.lastAddress, 3);
+            Array.Copy(maskArray, 0, this.controlDataArray, 2, 3);
+            Array.Copy(maskArray, 0, this.pairingDataArray, 2, 3);
+
+            this.controlDataArray[5] = (byte)((this.mobileSerial >> 0) & 0xFF);
+            this.controlDataArray[6] = (byte)((this.mobileSerial >> 8) & 0xFF);
+            this.controlDataArray[7] = (byte)((this.mobileSerial >> 16) & 0xFF);
+
+            BLEUtils.get_rf_payload(CaDARaceCar.magicNumberArray_0x43_0x41_0x52, this.controlDataArray, out currentData);
+
+            return true;
+        }
+        #endregion
+
     }
 }
