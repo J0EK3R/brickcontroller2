@@ -23,173 +23,43 @@ namespace BrickController2.DeviceManagement
             82, // 0x52
         };
         #endregion
-        #region Fields
-
-        private static readonly byte[] Telegram_Connect = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x41, 0xfa, 0x2a, 0xb4, 0x9e, 0xfd, 0xc7, 0xb6, 0x2e,
-            0xa6,
-            0x82,
-            0xc9, 0xf2, 0x0e,
-            0x7f,
-            0xcf, 0x2e,
-        };
-
-        // Stop
-        private static readonly byte[] Telegram_Stop = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0x07, // stop
-            0x23, // straight
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0xa3, 0x22,
-        };
-
-        // stop - left
-        private static readonly byte[] Telegram_C0_S__C1_B1 = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0x07, // stop
-            0xcf, // left
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0x75, 0x7e,
-        };
-
-        // stop - right
-        private static readonly byte[] Telegram_C0_S__C1_F1 = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0x07, // stop
-            0x2c, // right
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0x5f, 0x48,
-        };
-
-        // forward
-        private static readonly byte[] Telegram_C0_F1__C1_S = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0xeb, // fw
-            0x23, // straight
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0x44, 0x91,
-        };
-
-        // forward - left
-        private static readonly byte[] Telegram_C0_F1__C1_B1 = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0xeb, // fw
-            0xcf, // left
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0x92, 0xcd,
-        };
-
-        // forward - right
-        private static readonly byte[] Telegram_C0_F1__C1_F1 = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0xeb, // fw
-            0x2c, // right
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0xb8, 0xfb,
-        };
-
-        // backward
-        private static readonly byte[] Telegram_C0_B1__C1_S = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0x08, // bw
-            0x23, // straight
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0x2a, 0x1f,
-        };
-
-        // backward - left
-        private static readonly byte[] Telegram_C0_B1__C1_B1 = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0x08, // bw
-            0xcf, // left
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0xfc, 0x43,
-        };
-
-        // backward - right
-        private static readonly byte[] Telegram_C0_B1__C1_F1 = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-            0x08, // bw
-            0x7a, // right ???
-            0x00, 0x3b, 0xc7,
-            0xb6,
-            0x2c, 0x3b,
-        };
-        #region telegrams
-        // speed 3 - forward - light on
-        //0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-        //0x3c, 
-        //0x23, 
-        //0xd3,
-        //0x3b, 0xc7, 
-        //0xb6, 0xe3, 0x15,
-
-        // speed 3 - forward - light off
-        //0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-        //0x3c, 
-        //0x23, 
-        //0x00,
-        //0x3b, 0xc7, 
-        //0xb6,
-        //0x56, 0xc8,
-
-        // speed 2 - forward - light off
-        //0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-        //0x08, 
-        //0x23, 
-        //0x00,
-        //0x3b, 0xc7, 
-        //0xb6,
-        //0x2a, 0x1f,
-
-        // speed 2 - forward - light on
-        //0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-        //0x07, 
-        //0x23, 
-        //0x00,
-        //0x3b, 0xc7, 
-        //0xb6,
-        //0xa3, 0x22,
-
-        // speed 1 - forward - light off
-        //0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-        //0x07, 
-        //0x23, 
-        //0xd3,
-        //0x3b, 0xc7, 
-        //0xb6, 0x16, 0xff,
-
-        // speed 1 - forward - light on
-        //0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x42, 0x6c, 0x3a, 0xbc, 0x9e, 0xfd, 0xc7, 0x42, 0xda,
-        //0x07,
-        //0x23,
-        //0x00,
-        //0x3b, 0xc7,
-        //0xb6,
-        //0xa3, 0x22,
+        #region static Fields
+        public static readonly int MobileSerial =
+          (0x00 << 24) +
+          (0x00 << 16) +
+          (0x00 << 8) +
+          (0x00 << 0);
         #endregion
+
+        #region CaDARaceCar()
+        /// <summary>
+        /// class constuctor
+        /// </summary>
+        static CaDARaceCar()
+        {
+            CaDARaceCar.MobileSerial = CaDARaceCar.CreateMobileSerial();
+        }
+        #endregion
+        #region static int CreateMobileSerial()
+        /// <summary>
+        /// creates an unique serial number
+        /// </summary>
+        /// <returns>unique serial number</returns>
+        private static int CreateMobileSerial()
+        {
+            return
+              (0x00 << 24) +
+              (0x00 << 16) +
+              (0x00 << 8) +
+              (0x00 << 0);
+        }
         #endregion
 
         #region Fields
-        public int lastAddress =
-          (0x00 << 24) +
-          (0x96 << 16) +
-          (0x10 << 8) + 
-          (0x08 << 0);
-
-        public int mobileSerial =
-          (0x00 << 24) +
-          (0xcb << 16) +
-          (0x29 << 8) +
-          (0x79 << 0);
+        /// <summary>
+        /// 3 bytes device address
+        /// </summary>
+        public int deviceAddress = 0;
 
         /// <summary>
         /// verticalValue
@@ -206,6 +76,9 @@ namespace BrickController2.DeviceManagement
         /// </summary>
         private float _Channel2_Value = 0.0f;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public readonly byte[] controlDataArray = new byte[] // 16
 {
             0x75, //  [0] const 0x75 (117)
@@ -266,6 +139,22 @@ namespace BrickController2.DeviceManagement
         public CaDARaceCar(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
+            if(deviceData?.Length == 18)
+            {
+                this.deviceAddress =
+                  (0x00 << 24) +
+                  (deviceData[4] << 16) +
+                  (deviceData[5] << 8) +
+                  (deviceData[6] << 0);
+
+                byte[] maskArray = ArrayTools.CreateMaskArray(this.deviceAddress, 3);
+                Array.Copy(maskArray, 0, this.controlDataArray, 2, 3);
+                Array.Copy(maskArray, 0, this.pairingDataArray, 2, 3);
+
+                this.controlDataArray[5] = (byte)((CaDARaceCar.MobileSerial >> 0) & 0xFF);
+                this.controlDataArray[6] = (byte)((CaDARaceCar.MobileSerial >> 8) & 0xFF);
+                this.controlDataArray[7] = (byte)((CaDARaceCar.MobileSerial >> 16) & 0xFF);
+            }
         }
         #endregion
 
@@ -323,13 +212,15 @@ namespace BrickController2.DeviceManagement
             this.controlDataArray[0] = 0x75; // 0x75 (117)
             this.controlDataArray[1] = 0x13; // 0x13 (19);
 
-            byte[] maskArray = ArrayTools.CreateMaskArray(this.lastAddress, 3);
-            Array.Copy(maskArray, 0, this.controlDataArray, 2, 3);
-            Array.Copy(maskArray, 0, this.pairingDataArray, 2, 3);
+            // device address
+            // this.controlDataArray[2]
+            // this.controlDataArray[3]
+            // this.controlDataArray[4]
 
-            this.controlDataArray[5] = (byte)((this.mobileSerial >> 0) & 0xFF);
-            this.controlDataArray[6] = (byte)((this.mobileSerial >> 8) & 0xFF);
-            this.controlDataArray[7] = (byte)((this.mobileSerial >> 16) & 0xFF);
+            // mobile serial
+            // this.controlDataArray[5]
+            // this.controlDataArray[6]
+            // this.controlDataArray[7]
 
             BLEUtils.get_rf_payload(CaDARaceCar.magicNumberArray_0x43_0x41_0x52, this.controlDataArray, out currentData);
 

@@ -109,15 +109,15 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
             //this.publisher.IsAnonymous = true;
 
             //this.publisher.Advertisement.Flags = BluetoothLEAdvertisementFlags.None;
-            //this.publisher.Advertisement.ManufacturerData.Add(this.bluetoothLEManufacturerData);
+            this.publisher.Advertisement.ManufacturerData.Add(this.bluetoothLEManufacturerData);
 
             // From old code (Which is not commented)
-            var data = new BluetoothLEAdvertisementDataSection
-            {
-                DataType = 0x02,
-                Data = new byte[] { 0x01, 0x02 }.AsBuffer()
-            };
-            this.publisher.Advertisement.DataSections.Add(data);
+            //var data = new BluetoothLEAdvertisementDataSection
+            //{
+            //    DataType = 0x02,
+            //    Data = new byte[] { 0x01, 0x02 }.AsBuffer()
+            //};
+            //this.publisher.Advertisement.DataSections.Add(data);
 
             this.publisher.Start();
 

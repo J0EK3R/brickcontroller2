@@ -105,10 +105,26 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
             }
         }
 
+        private static readonly byte[] Telegram_Connect = new byte[] {
+            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x41, 0xfa, 0x2a, 0xb4, 0x9e, 0xfd, 0xc7, 0xb6, 0x2e,
+            0xa6,
+            0x82,
+            0xc9, 0xf2, 0x0e,
+            0x7f,
+            0xcf, 0x2e,
+        };
+
         private async Task<bool> NewScanAsync(Action<BrickController2.PlatformServices.BluetoothLE.ScanResult> scanCallback, CancellationToken token)
         {
             try
             {
+                IBluetoothLEAdvertiserDevice advertiserDevice = GetBluetoothLEAdvertiserDevice();
+
+                byte[] currentData = Telegram_Connect;
+                ushort _manufacturerId = 0xC200;
+                await advertiserDevice.StartAdvertiseAsync(AdvertisingInterval.Min, TxPowerLevel.Max, _manufacturerId, currentData);
+
+
                 var leScanner = new BluetoothLENewScanner(scanCallback);
                 var settingsBuilder = new ScanSettings.Builder()
                     .SetCallbackType(ScanCallbackType.AllMatches)
@@ -120,6 +136,8 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
                 using (token.Register(() =>
                 {
                     _bluetoothAdapter.BluetoothLeScanner.StopScan(leScanner);
+                    advertiserDevice.StopAdvertiseAsync();
+
                     tcs.TrySetResult(true);
                 }))
                 {
