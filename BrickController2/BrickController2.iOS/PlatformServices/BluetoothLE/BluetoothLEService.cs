@@ -8,6 +8,7 @@ using BrickController2.PlatformServices.BluetoothLE;
 using CoreBluetooth;
 using CoreFoundation;
 using Foundation;
+using UIKit;
 
 namespace BrickController2.iOS.PlatformServices.BluetoothLE
 {
@@ -16,18 +17,21 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
         private readonly CBCentralManager _centralManager;
         private readonly IDictionary<CBPeripheral, BluetoothLEDevice> _peripheralMap = new Dictionary<CBPeripheral, BluetoothLEDevice>();
         private readonly object _lock = new object();
+        private readonly string _DeviceId;
 
         private Action<ScanResult> _scanCallback;
 
         public BluetoothLEService()
         {
             _centralManager = new CBCentralManager(this, DispatchQueue.CurrentQueue);
+            this._DeviceId = UIDevice.CurrentDevice.IdentifierForVendor.AsString();
         }
 
         public bool IsBluetoothLESupported => true;
         public bool IsBluetoothOn => _centralManager.State == CBCentralManagerState.PoweredOn;
+        public string DeviceID => _DeviceId;
 
-        public async Task<bool> ScanDevicesAsync(Action<ScanResult> scanCallback, CancellationToken token)
+        public async Task<bool> ScanDevicesAsync(Action<ScanResult> scanCallback, IEnumerable<Tuple<ushort, byte[]>> advertiseList, CancellationToken token)
         {
             if (!IsBluetoothLESupported || !IsBluetoothOn || _centralManager.IsScanning)
             {

@@ -1,5 +1,6 @@
 ﻿using BrickController2.PlatformServices.BluetoothLE;
 using System;
+using System.Collections.Generic;
 
 namespace BrickController2.DeviceManagement
 {
@@ -16,6 +17,9 @@ namespace BrickController2.DeviceManagement
         /// </summary>
         public const ushort ManufacturerID = 0xC200;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private static readonly byte[] magicNumberArray_0x43_0x41_0x52 =
         {
             67, // 0x43
@@ -23,43 +27,17 @@ namespace BrickController2.DeviceManagement
             82, // 0x52
         };
         #endregion
-        #region static Fields
-        public static readonly int MobileSerial =
-          (0x00 << 24) +
-          (0x00 << 16) +
-          (0x00 << 8) +
-          (0x00 << 0);
-        #endregion
-
-        #region CaDARaceCar()
-        /// <summary>
-        /// class constuctor
-        /// </summary>
-        static CaDARaceCar()
-        {
-            CaDARaceCar.MobileSerial = CaDARaceCar.CreateMobileSerial();
-        }
-        #endregion
-        #region static int CreateMobileSerial()
-        /// <summary>
-        /// creates an unique serial number
-        /// </summary>
-        /// <returns>unique serial number</returns>
-        private static int CreateMobileSerial()
-        {
-            return
-              (0x00 << 24) +
-              (0x00 << 16) +
-              (0x00 << 8) +
-              (0x00 << 0);
-        }
-        #endregion
 
         #region Fields
         /// <summary>
         /// 3 bytes device address
         /// </summary>
         public int deviceAddress = 0;
+
+        /// <summary>
+        /// 3 bytes device address
+        /// </summary>
+        public int mobileSerialChecksum = 0;
 
         /// <summary>
         /// verticalValue
@@ -80,7 +58,7 @@ namespace BrickController2.DeviceManagement
         /// 
         /// </summary>
         public readonly byte[] controlDataArray = new byte[] // 16
-{
+        {
             0x75, //  [0] const 0x75 (117)
             0x13, //  [1] 0x13 (19) STATUS_CONTROL
             0x00, //  [2] LastAddress
@@ -97,32 +75,12 @@ namespace BrickController2.DeviceManagement
             0x00, // [13] ChannelData 
             0x00, // [14] ChannelData 
             0x00, // [15] ChannelData 
-};
-
-        public readonly byte[] pairingDataArray = new byte[] // 16
-        {
-            0x75, //  [0] const 0x75 (117)
-            0x10, //  [1] 0x17 (23) STATUS_UNPAIRING - else - 0x10 (16)
-            0x00, //  [2] LastAddress
-            0x00, //  [3] LastAddress
-            0x00, //  [4] LastAddress
-            0x00, //  [5] MobileSerialChecksum
-            0x00, //  [6] MobileSerialChecksum
-            0x00, //  [7] MobileSerialChecksum
-            0x00, //  [8] 
-            0x00, //  [9] 
-            0x80, // [10] min 128
-            0x80, // [11] min 128
-            0x00, // [12] 
-            0x00, // [13] 
-            0x00, // [14] 
-            0x00, // [15] 
         };
         #endregion
         #region Properties
         public override DeviceType DeviceType => DeviceType.CaDA_RaceCar;
 
-        public override int NumberOfChannels => 2;
+        public override int NumberOfChannels => 3;
 
         public override string BatteryVoltageSign => "V";
         #endregion
@@ -139,7 +97,7 @@ namespace BrickController2.DeviceManagement
         public CaDARaceCar(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
-            if(deviceData?.Length == 18)
+            if (deviceData?.Length == 18)
             {
                 this.deviceAddress =
                   (0x00 << 24) +
@@ -148,12 +106,20 @@ namespace BrickController2.DeviceManagement
                   (deviceData[6] << 0);
 
                 byte[] maskArray = ArrayTools.CreateMaskArray(this.deviceAddress, 3);
-                Array.Copy(maskArray, 0, this.controlDataArray, 2, 3);
-                Array.Copy(maskArray, 0, this.pairingDataArray, 2, 3);
+                this.controlDataArray[2] = maskArray[0];
+                this.controlDataArray[3] = maskArray[1];
+                this.controlDataArray[4] = maskArray[2];
 
-                this.controlDataArray[5] = (byte)((CaDARaceCar.MobileSerial >> 0) & 0xFF);
-                this.controlDataArray[6] = (byte)((CaDARaceCar.MobileSerial >> 8) & 0xFF);
-                this.controlDataArray[7] = (byte)((CaDARaceCar.MobileSerial >> 16) & 0xFF);
+                this.mobileSerialChecksum =
+                    (_bleService.DeviceID[0] << 0 ) +
+                    (_bleService.DeviceID[1] << 8 ) +
+                    (_bleService.DeviceID[2] << 16) ;
+
+                byte[] mobileSerialChecksumMaskArray = ArrayTools.CreateMaskArray(this.mobileSerialChecksum, 3);
+
+                this.controlDataArray[5] = mobileSerialChecksumMaskArray[0];
+                this.controlDataArray[6] = mobileSerialChecksumMaskArray[1];
+                this.controlDataArray[7] = mobileSerialChecksumMaskArray[2];
             }
         }
         #endregion
@@ -173,7 +139,7 @@ namespace BrickController2.DeviceManagement
             switch (channel)
             {
                 case 0:
-                    this._Channel0_Value = value; 
+                    this._Channel0_Value = value;
                     break;
                 case 1:
                     this._Channel1_Value = value;
@@ -197,9 +163,9 @@ namespace BrickController2.DeviceManagement
             {
                 (byte)(random & 255),
                 (byte)((random >> 8) & 255),
-                (byte)(0x80 - Math.Min(-this._Channel0_Value * 0x80, 0x80)),
-                (byte)(0x80 - Math.Min(-this._Channel1_Value * 0x80, 0x80)),
-                0, //(byte)(0x80 - Math.Min(-this._Channel2_Value * 0x80, 0x80)),
+                (byte)Math.Max(0, Math.Min(0x80 - (this._Channel0_Value * 0x7F), 0xFF)),
+                (byte)Math.Max(0, Math.Min(0x80 + (this._Channel1_Value * 0x7F), 0xFF)),
+                (byte)Math.Max(0, Math.Min(0x80 + (this._Channel2_Value * 0x7F), 0xFF)),
                 0,
                 0,
                 0
@@ -228,5 +194,46 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
 
+        #region static void AddAdvertisingData(IBluetoothLEService _bleService, List<Tuple<ushort, byte[]>> advertiseList)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_bleService"></param>
+        /// <param name="advertiseList"></param>
+        public static void AddAdvertisingData(IBluetoothLEService _bleService, List<Tuple<ushort, byte[]>> advertiseList)
+        {
+            int mobileSerialChecksum =
+                (_bleService.DeviceID[0] << 0 ) +
+                (_bleService.DeviceID[1] << 8 ) +
+                (_bleService.DeviceID[2] << 16) ;
+
+            byte[] mobileSerialChecksumMaskArray = ArrayTools.CreateMaskArray(mobileSerialChecksum, 3);
+
+            byte[] pairingDataArray = new byte[] // 16
+            {
+              0x75, //  [0] const 0x75 (117)
+              0x10, //  [1] 0x17 (23) STATUS_UNPAIRING - else - 0x10 (16)
+              0x00, //  [2] LastAddress
+              0x00, //  [3] LastAddress
+              0x00, //  [4] LastAddress
+              mobileSerialChecksumMaskArray[0], //  [5] MobileSerialChecksum
+              mobileSerialChecksumMaskArray[1], //  [6] MobileSerialChecksum
+              mobileSerialChecksumMaskArray[2], //  [7] MobileSerialChecksum
+              0x00, //  [8] 
+              0x00, //  [9] 
+              0x80, // [10] min 128
+              0x80, // [11] min 128
+              0x00, // [12] 
+              0x00, // [13] 
+              0x00, // [14] 
+              0x00, // [15] 
+            };
+
+            byte[] rf_payload_Array;
+            BLEUtils.get_rf_payload(CaDARaceCar.magicNumberArray_0x43_0x41_0x52, pairingDataArray, out rf_payload_Array);
+
+            advertiseList.Add(new Tuple<ushort, byte[]>(ManufacturerID, rf_payload_Array));
+        }
+        #endregion
     }
 }

@@ -12,10 +12,19 @@ namespace BrickController2.DeviceManagement
     {
         private readonly IBluetoothLEService _bleService;
         private readonly AsyncLock _asyncLock = new AsyncLock();
+        private int mobileSerialChecksum;
+        private byte[] mobileSerialChecksumMaskArray;
 
         public BluetoothDeviceManager(IBluetoothLEService bleService)
         {
             _bleService = bleService;
+
+            this.mobileSerialChecksum = 
+                (_bleService.DeviceID[0] << 0 ) +
+                (_bleService.DeviceID[1] << 8 ) +
+                (_bleService.DeviceID[2] << 16) ;
+
+            this.mobileSerialChecksumMaskArray = ArrayTools.CreateMaskArray(mobileSerialChecksum, 3);
         }
 
         public bool IsBluetoothLESupported => _bleService.IsBluetoothLESupported;
@@ -23,6 +32,30 @@ namespace BrickController2.DeviceManagement
 
         public async Task<bool> ScanAsync(Func<DeviceType, string, string, byte[], Task> deviceFoundCallback, CancellationToken token)
         {
+            List<Tuple<ushort, byte[]>> advertiseList = new List<Tuple<ushort, byte[]>>();
+
+            // MouldKing
+            await deviceFoundCallback(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(MouldKing_15059.ManufacturerID));
+
+            await deviceFoundCallback(DeviceType.MouldKing_4_0_Modul, "MouldKing 4.0 Module", MouldKing_4_0_Modul.Device1_3, BitConverter.GetBytes(MouldKing_4_0_Modul.ManufacturerID));
+
+            await deviceFoundCallback(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 1", MouldKing_6_0_Modul.Device1, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+            await deviceFoundCallback(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 2", MouldKing_6_0_Modul.Device2, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+            await deviceFoundCallback(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 3", MouldKing_6_0_Modul.Device3, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+
+            await deviceFoundCallback(DeviceType.MouldKing_Mecanum_Modul, "MouldKing Mecanum Module", "Mecanum Module", BitConverter.GetBytes(MouldKing_Mecanum_Modul.ManufacturerID));
+
+            // Hogokids
+            await deviceFoundCallback(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(HOGOKIDS_8051.ManufacturerID));
+
+            // CaDA
+            //await deviceFoundCallback(DeviceType.CaDA_RaceCar, "CaDA RaceCar", "961008", BitConverter.GetBytes(CaDARaceCar.ManufacturerID));
+            CaDARaceCar.AddAdvertisingData(this._bleService, advertiseList);
+
+            // TestModel
+            //await deviceFoundCallback(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));
+
+
             using (await _asyncLock.LockAsync())
             {
                 if (!IsBluetoothOn)
@@ -41,6 +74,7 @@ namespace BrickController2.DeviceManagement
                                 await deviceFoundCallback(deviceInfo.DeviceType, scanResult.DeviceName, scanResult.DeviceAddress, deviceInfo.ManufacturerData);
                             }
                         },
+                        advertiseList,
                         token);
                 }
                 catch (OperationCanceledException)
@@ -76,7 +110,10 @@ namespace BrickController2.DeviceManagement
                 case "f0-ff":
                     if (manufacturerData.Length == 18 &&
                         manufacturerData[2] == 0x75 &&
-                        manufacturerData[3] == 0x41)
+                        (manufacturerData[3] & 0x40) > 0 &&
+                        manufacturerData[7] == this.mobileSerialChecksumMaskArray[0] && // response has to have the same mobileSerialChecksum
+                        manufacturerData[8] == this.mobileSerialChecksumMaskArray[1] &&
+                        manufacturerData[9] == this.mobileSerialChecksumMaskArray[2])
                     {
                         scanResult.DeviceName = "CaDA RaceCar";
                         scanResult.DeviceAddress = $"{manufacturerData[4]:X2}-{manufacturerData[5]:X2}-{manufacturerData[6]:X2}";
