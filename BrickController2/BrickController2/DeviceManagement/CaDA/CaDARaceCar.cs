@@ -1,4 +1,5 @@
-﻿using BrickController2.PlatformServices.BluetoothLE;
+﻿using BluetoothEnDeCrypt.CaDA;
+using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Collections.Generic;
 
@@ -16,16 +17,6 @@ namespace BrickController2.DeviceManagement
         /// dec: 49664
         /// </summary>
         public const ushort ManufacturerID = 0xC200;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private static readonly byte[] magicNumberArray_0x43_0x41_0x52 =
-        {
-            67, // 0x43
-            65, // 0x41
-            82, // 0x52
-        };
         #endregion
 
         #region Fields
@@ -105,7 +96,7 @@ namespace BrickController2.DeviceManagement
                   (deviceData[5] << 8) +
                   (deviceData[6] << 0);
 
-                byte[] maskArray = ArrayTools.CreateMaskArray(this.deviceAddress, 3);
+                byte[] maskArray = CaDABLEUtils.CreateMaskArray(this.deviceAddress, 3);
                 this.controlDataArray[2] = maskArray[0];
                 this.controlDataArray[3] = maskArray[1];
                 this.controlDataArray[4] = maskArray[2];
@@ -115,7 +106,7 @@ namespace BrickController2.DeviceManagement
                     (_bleService.DeviceID[1] << 8 ) +
                     (_bleService.DeviceID[2] << 16) ;
 
-                byte[] mobileSerialChecksumMaskArray = ArrayTools.CreateMaskArray(this.mobileSerialChecksum, 3);
+                byte[] mobileSerialChecksumMaskArray = CaDABLEUtils.CreateMaskArray(this.mobileSerialChecksum, 3);
 
                 this.controlDataArray[5] = mobileSerialChecksumMaskArray[0];
                 this.controlDataArray[6] = mobileSerialChecksumMaskArray[1];
@@ -171,7 +162,7 @@ namespace BrickController2.DeviceManagement
                 0
             };
 
-            BLEUtils.encry(channelDataArray);
+            CaDABLEUtils.Encrypt(channelDataArray);
 
             Array.Copy(channelDataArray, 0, this.controlDataArray, 8, 8);
 
@@ -188,7 +179,7 @@ namespace BrickController2.DeviceManagement
             // this.controlDataArray[6]
             // this.controlDataArray[7]
 
-            BLEUtils.get_rf_payload(CaDARaceCar.magicNumberArray_0x43_0x41_0x52, this.controlDataArray, out currentData);
+            CaDABLEUtils.Get_rf_payload(CaDABLEUtils.AddressArray, this.controlDataArray, CaDABLEUtils.CTXValue, out currentData);
 
             return true;
         }
@@ -207,7 +198,7 @@ namespace BrickController2.DeviceManagement
                 (_bleService.DeviceID[1] << 8 ) +
                 (_bleService.DeviceID[2] << 16) ;
 
-            byte[] mobileSerialChecksumMaskArray = ArrayTools.CreateMaskArray(mobileSerialChecksum, 3);
+            byte[] mobileSerialChecksumMaskArray = CaDABLEUtils.CreateMaskArray(mobileSerialChecksum, 3);
 
             byte[] pairingDataArray = new byte[] // 16
             {
@@ -230,7 +221,7 @@ namespace BrickController2.DeviceManagement
             };
 
             byte[] rf_payload_Array;
-            BLEUtils.get_rf_payload(CaDARaceCar.magicNumberArray_0x43_0x41_0x52, pairingDataArray, out rf_payload_Array);
+            CaDABLEUtils.Get_rf_payload(CaDABLEUtils.AddressArray, pairingDataArray, CaDABLEUtils.CTXValue, out rf_payload_Array);
 
             advertiseList.Add(new Tuple<ushort, byte[]>(ManufacturerID, rf_payload_Array));
         }

@@ -49,11 +49,11 @@ namespace BrickController2.UI.Converters
 
                 case DeviceType.MouldKing_DIY:
                   return ResourceHelper.GetImageResource("mouldking_diy_image_small.png");
-                case DeviceType.MouldKing_4_0_Modul:
+                case DeviceType.MouldKing_4_0_Module:
                     return ResourceHelper.GetImageResource("mouldking_4_0_image_small.png");
-                case DeviceType.MouldKing_6_0_Modul:
+                case DeviceType.MouldKing_6_0_Module:
                     return ResourceHelper.GetImageResource("mouldking_6_0_image_small.png");
-                case DeviceType.MouldKing_Mecanum_Modul:
+                case DeviceType.MouldKing_Mecanum_ATV:
                     return ResourceHelper.GetImageResource("mouldking_mecanum_image_small.png");
                 case DeviceType.MouldKing_15059:
                     return ResourceHelper.GetImageResource("mouldking_15059_image_small.png");
@@ -63,6 +63,9 @@ namespace BrickController2.UI.Converters
 
                 case DeviceType.CaDA_RaceCar:
                     return ResourceHelper.GetImageResource("cada_racecar_image_small.png");
+
+                case DeviceType.PowerBox_M_Battery:
+                    return ResourceHelper.GetImageResource("powerbox_mbattery_image_small.png");
 
                 default:
                     return ResourceHelper.GetImageResource("technichub_image_small.png");

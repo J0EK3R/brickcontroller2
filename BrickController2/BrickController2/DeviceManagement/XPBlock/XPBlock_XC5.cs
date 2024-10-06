@@ -9,7 +9,7 @@ using BrickController2.Helpers;
 namespace BrickController2.DeviceManagement
 {
   /// <summary>
-  /// XP Block XC5 Modul
+  /// XP Block XC5 Module
   /// </summary>
   internal class XPBlock_XC5 : BluetoothDevice
   {

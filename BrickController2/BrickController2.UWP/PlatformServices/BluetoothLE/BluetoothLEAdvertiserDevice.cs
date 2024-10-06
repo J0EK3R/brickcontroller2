@@ -1,6 +1,9 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
+﻿using System;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using BrickController2.PlatformServices.BluetoothLE;
+using BrickController2.Windows.Extensions;
 using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Foundation.Metadata;
 
@@ -93,31 +96,22 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
             //}
             #endregion
 
-            this.CreateData(manufacturerId, rawData);
+            //byte[] flags = new byte[] { 0x02, 0x01, 0x02 };
+            byte[] flags = new byte[] { 0x02 };
 
+            byte[] data = BitConverter.GetBytes( manufacturerId).Concat(rawData).ToArray();
 
-            if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 10))
-            {
-                //publisher.UseExtendedAdvertisement = true;
-                //publisher.IsAnonymous = true;
-                //publisher.IncludeTransmitPowerLevel = includeTxPower;
-                //publisher.PreferredTransmitPowerLevelInDBm = txPower;
-            }
+            this.CreateData(manufacturerId, data);
 
+            BluetoothLEAdvertisementDataSection a = new BluetoothLEAdvertisementDataSection(0x01, flags.ToBuffer());
+            BluetoothLEAdvertisementDataSection b = new BluetoothLEAdvertisementDataSection(0xff, data.ToBuffer());
+            this.publisher.UseExtendedAdvertisement = true;
+            this.publisher.Advertisement.Flags = BluetoothLEAdvertisementFlags.GeneralDiscoverableMode;
+            //this.publisher.Advertisement.DataSections.Add(a);
+            this.publisher.Advertisement.DataSections.Add(b);
 
-            //this.publisher.UseExtendedAdvertisement = true;
-            //this.publisher.IsAnonymous = true;
-
-            //this.publisher.Advertisement.Flags = BluetoothLEAdvertisementFlags.None;
-            this.publisher.Advertisement.ManufacturerData.Add(this.bluetoothLEManufacturerData);
-
-            // From old code (Which is not commented)
-            //var data = new BluetoothLEAdvertisementDataSection
-            //{
-            //    DataType = 0x02,
-            //    Data = new byte[] { 0x01, 0x02 }.AsBuffer()
-            //};
-            //this.publisher.Advertisement.DataSections.Add(data);
+            //this.publisher.Advertisement.Flags = BluetoothLEAdvertisementFlags.GeneralDiscoverableMode;
+            //this.publisher.Advertisement.ManufacturerData.Add(this.bluetoothLEManufacturerData);
 
             this.publisher.Start();
 
@@ -171,34 +165,6 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
         /// <param name="sourceArray"></param>
         private void CreateData(ushort manufacturerId, byte[] sourceArray)
         {
-            //byte[] preinsertArray = new byte[]
-            //{
-            //    0x02,
-            //    0x01,
-            //    0x02
-            //};
-
-            //byte[] targetArray = new byte[preinsertArray.Length + sourceArray.Length];
-            //preinsertArray.CopyTo(targetArray, 0);
-            //sourceArray.CopyTo(targetArray, preinsertArray.Length);
-
-            //byte[] dataArray = new byte[] 
-            //{
-            //    // last 2 bytes of Apple's iBeacon
-            //    0x02, 0x15,
-            //    // UUID e2 c5 6d b5 df fb 48 d2 b0 60 d0 f5 a7 10 96 e0
-            //    0xe2, 0xc5, 0x6d, 0xb5,
-            //    0xdf, 0xfb, 0x48, 0xd2,
-            //    0xb0, 0x60, 0xd0, 0xf5,
-            //    0xa7, 0x10, 0x96, 0xe0,
-            //    // Major
-            //    0x00, 0x00,
-            //    // Minor
-            //    0x00, 0x01,
-            //    // TX power
-            //    0xc5
-            //};
-
             this.bluetoothLEManufacturerData.CompanyId = manufacturerId;
             this.bluetoothLEManufacturerData.Data = sourceArray.AsBuffer();
         }

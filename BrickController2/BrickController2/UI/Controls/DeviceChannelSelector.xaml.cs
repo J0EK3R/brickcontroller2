@@ -94,12 +94,12 @@ namespace BrickController2.UI.Controls
             MouldKing_6_0_Module_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
 
             // MouldKing_15059
-            MouldKing_Mecanum_Module_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            MouldKing_Mecanum_Module_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
-            MouldKing_Mecanum_Module_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
-            MouldKing_Mecanum_Module_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
-            MouldKing_Mecanum_Module_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
-            MouldKing_Mecanum_Module_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+            MouldKing_Mecanum_ATV_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_Mecanum_ATV_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_Mecanum_ATV_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_Mecanum_ATV_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_Mecanum_ATV_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_Mecanum_ATV_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
 
             // HOGOKIDS_8051
             HOGOKIDS_8051_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
@@ -110,13 +110,8 @@ namespace BrickController2.UI.Controls
             CaDA_RaceCar_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
             CaDA_RaceCar_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
 
-            // TestModel
-            TestModel_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            TestModel_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
-            TestModel_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
-            TestModel_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
-            TestModel_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
-            TestModel_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+            // PowerBox_MBattery
+            PowerBox_MBattery_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
         }
 
         public static BindableProperty DeviceProperty = BindableProperty.Create(nameof(DeviceManagement.Device), typeof(DeviceManagement.Device), typeof(DeviceChannelSelector), null, BindingMode.OneWay, null, OnDeviceChanged);
@@ -161,7 +156,7 @@ namespace BrickController2.UI.Controls
                 dcs.MouldKing_15059_Section.IsVisible = false;
                 dcs.MouldKing_4_0_Module_Section.IsVisible = false;
                 dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
+                dcs.MouldKing_Mecanum_ATV_Section.IsVisible = false;
 
                 // Hogokids
                 dcs.HOGOKIDS_8051_Section.IsVisible = false;
@@ -169,8 +164,8 @@ namespace BrickController2.UI.Controls
                 // CaDA
                 dcs.CaDA_RaceCar_Section.IsVisible = false;
 
-                // TestModel
-                dcs.TestModel_Section.IsVisible = false;
+                // PowerBox
+                dcs.PowerBox_MBattery_Section.IsVisible = false;
                 #endregion
 
                 switch (deviceType)
@@ -244,7 +239,7 @@ namespace BrickController2.UI.Controls
                         break;
                     #endregion
                     #region MouldKing 4.0
-                    case DeviceType.MouldKing_4_0_Modul:
+                    case DeviceType.MouldKing_4_0_Module:
                         dcs.MouldKing_4_0_Module_Section.IsVisible = true;
                         #region channels
                         dcs.MouldKing_4_0_Module_Channel0.IsVisible = device.NumberOfChannels >= 1;
@@ -263,13 +258,13 @@ namespace BrickController2.UI.Controls
                         break;
                     #endregion
                     #region MouldKing 6.0
-                    case DeviceType.MouldKing_6_0_Modul:
+                    case DeviceType.MouldKing_6_0_Module:
                         dcs.MouldKing_6_0_Module_Section.IsVisible = true;
                         break;
                     #endregion
                     #region MouldKing Mecanum
-                    case DeviceType.MouldKing_Mecanum_Modul:
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = true;
+                    case DeviceType.MouldKing_Mecanum_ATV:
+                        dcs.MouldKing_Mecanum_ATV_Section.IsVisible = true;
                         break;
                     #endregion
 
@@ -280,15 +275,17 @@ namespace BrickController2.UI.Controls
                         break;
                     #endregion
 
+                    #region PowerBox
+                    case DeviceType.PowerBox_M_Battery:
+                        // Hogokids
+                        dcs.PowerBox_MBattery_Section.IsVisible = true;
+                        break;
+                    #endregion
+
                     #region CaDA
                     case DeviceType.CaDA_RaceCar:
                         // CaDA
                         dcs.CaDA_RaceCar_Section.IsVisible = true;
-                        break;
-                    #endregion
-                    #region TestModel
-                    case DeviceType.TestModel:
-                        dcs.TestModel_Section.IsVisible = false;
                         break;
                     #endregion
                     #region Unknown
@@ -378,13 +375,13 @@ namespace BrickController2.UI.Controls
                 dcs.MouldKing_6_0_Module_Channel4.SelectedChannel = selectedChannel;
                 dcs.MouldKing_6_0_Module_Channel5.SelectedChannel = selectedChannel;
 
-                // MouldKing_Mecanum_Module
-                dcs.MouldKing_Mecanum_Module_Channel0.SelectedChannel = selectedChannel;
-                dcs.MouldKing_Mecanum_Module_Channel1.SelectedChannel = selectedChannel;
-                dcs.MouldKing_Mecanum_Module_Channel2.SelectedChannel = selectedChannel;
-                dcs.MouldKing_Mecanum_Module_Channel3.SelectedChannel = selectedChannel;
-                dcs.MouldKing_Mecanum_Module_Channel4.SelectedChannel = selectedChannel;
-                dcs.MouldKing_Mecanum_Module_Channel5.SelectedChannel = selectedChannel;
+                // MouldKing_Mecanum_ATV
+                dcs.MouldKing_Mecanum_ATV_Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATV_Channel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATV_Channel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATV_Channel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATV_Channel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATV_Channel5.SelectedChannel = selectedChannel;
 
                 // HOGOKIDS_8051
                 dcs.HOGOKIDS_8051_Channel0.SelectedChannel = selectedChannel;
@@ -395,13 +392,8 @@ namespace BrickController2.UI.Controls
                 dcs.CaDA_RaceCar_Channel1.SelectedChannel = selectedChannel;
                 dcs.CaDA_RaceCar_Channel2.SelectedChannel = selectedChannel;
 
-                // TestModel
-                dcs.TestModel_Channel0.SelectedChannel = selectedChannel;
-                dcs.TestModel_Channel1.SelectedChannel = selectedChannel;
-                dcs.TestModel_Channel2.SelectedChannel = selectedChannel;
-                dcs.TestModel_Channel3.SelectedChannel = selectedChannel;
-                dcs.TestModel_Channel4.SelectedChannel = selectedChannel;
-                dcs.TestModel_Channel5.SelectedChannel = selectedChannel;
+                // PowerBox_MBattery
+                dcs.PowerBox_MBattery_Channel0.SelectedChannel = selectedChannel;
             }
         }
     }

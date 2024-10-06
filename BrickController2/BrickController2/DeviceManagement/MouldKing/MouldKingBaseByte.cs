@@ -1,4 +1,5 @@
-﻿using BrickController2.PlatformServices.BluetoothLE;
+﻿using BluetoothEnDeCrypt.MouldKing;
+using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Linq;
 
@@ -339,7 +340,7 @@ namespace BrickController2.DeviceManagement
                 this.SetStateText("Sending Data");
             }
 
-            currentData = MouldKingCrypt.Crypt(currentData);
+            MouldKingBLEUtils.Get_rf_payload(MouldKingBLEUtils.AddressArray, currentData, MouldKingBLEUtils.CTXValue, out currentData);
             return true;
         }
         #endregion

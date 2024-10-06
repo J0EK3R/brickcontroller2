@@ -29,19 +29,19 @@
         MouldKing_15059,
 
         /// <summary>
-        /// 6.0 Modul
+        /// 4.0 Module
         /// </summary>
-        MouldKing_4_0_Modul,
+        MouldKing_4_0_Module,
 
         /// <summary>
-        /// 6.0 Modul
+        /// 6.0 Module
         /// </summary>
-        MouldKing_6_0_Modul,
+        MouldKing_6_0_Module,
 
         /// <summary>
         /// Mecanum
         /// </summary>
-        MouldKing_Mecanum_Modul,
+        MouldKing_Mecanum_ATV,
 
         /// <summary>
         /// HOGOKIDS
@@ -54,9 +54,10 @@
         /// </summary>
         CaDA_RaceCar,
 
+        // PowerBox
         /// <summary>
-        /// TestModel
+        /// PowerBox
         /// </summary>
-        TestModel
+        PowerBox_M_Battery,
     }
 }

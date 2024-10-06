@@ -3,9 +3,9 @@
 namespace BrickController2.DeviceManagement
 {
     /// <summary>
-    /// Mould King 6.0 Modul
+    /// Mould King 6.0 Module
     /// </summary>
-    internal class MouldKing_6_0_Modul : MouldKingBaseByte
+    internal class MouldKing_6_0_Module : MouldKingBaseByte
     {
         #region Constants
         public const string Device1 = "Device1";
@@ -64,14 +64,14 @@ namespace BrickController2.DeviceManagement
         #region Fields
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.MouldKing_6_0_Modul;
+        public override DeviceType DeviceType => DeviceType.MouldKing_6_0_Module;
 
         public override int NumberOfChannels => 6;
         #endregion
 
         #region Constructor
-        public MouldKing_6_0_Modul(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-          : base(name, address, deviceData, deviceRepository, bleService, MouldKing_6_0_Modul.GetTelegramConnect(address), MouldKing_6_0_Modul.GetTelegramBase(address))
+        public MouldKing_6_0_Module(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+          : base(name, address, deviceData, deviceRepository, bleService, MouldKing_6_0_Module.GetTelegramConnect(address), MouldKing_6_0_Module.GetTelegramBase(address))
         {
         }
         #endregion
@@ -84,15 +84,15 @@ namespace BrickController2.DeviceManagement
         /// <returns>Connect-Telegram</returns>
         private static byte[] GetTelegramConnect(string address)
         {
-            if (address == MouldKing_6_0_Modul.Device3)
+            if (address == MouldKing_6_0_Module.Device3)
             {
                 return Telegram_Connect;
             }
-            else if (address == MouldKing_6_0_Modul.Device2)
+            else if (address == MouldKing_6_0_Module.Device2)
             {
                 return Telegram_Connect;
             }
-            else if (address == MouldKing_6_0_Modul.Device1)
+            else if (address == MouldKing_6_0_Module.Device1)
             {
                 return Telegram_Connect;
             }
@@ -110,15 +110,15 @@ namespace BrickController2.DeviceManagement
         /// <returns>Base-Telegram</returns>
         private static byte[] GetTelegramBase(string address)
         {
-            if (address == MouldKing_6_0_Modul.Device3)
+            if (address == MouldKing_6_0_Module.Device3)
             {
                 return Telegram_Base_DeviceC;
             }
-            else if (address == MouldKing_6_0_Modul.Device2)
+            else if (address == MouldKing_6_0_Module.Device2)
             {
                 return Telegram_Base_DeviceB;
             }
-            else if (address == MouldKing_6_0_Modul.Device1)
+            else if (address == MouldKing_6_0_Module.Device1)
             {
                 return Telegram_Base_DeviceA;
             }
