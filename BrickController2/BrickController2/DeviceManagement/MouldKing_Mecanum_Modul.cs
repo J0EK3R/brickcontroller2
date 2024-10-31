@@ -3,9 +3,9 @@
 namespace BrickController2.DeviceManagement
 {
     /// <summary>
-    /// Mould King 6.0 Modul
+    /// Mould King Mecanum Model
     /// </summary>
-    internal class MouldKing_Mecanum_Modul : MouldKingBase
+    internal class MouldKing_Mecanum_Modul : MouldKingBaseByte
     {
         #region Constants
         /// <summary>
@@ -21,6 +21,7 @@ namespace BrickController2.DeviceManagement
         #endregion
         #region Properties
         public override DeviceType DeviceType => DeviceType.MouldKing_Mecanum_Modul;
+        public override int NumberOfChannels => 6;
         #endregion
 
         #region Constructor
