@@ -30,6 +30,12 @@ namespace BrickController2.DeviceManagement
                     return true;
                 }
 
+                // MouldKing
+                await deviceFoundCallback(DeviceType.MK_Robot, "MouldKing Robot", "MouldKing Robot", BitConverter.GetBytes(0xFFF0));
+
+                // Hogokids
+                await deviceFoundCallback(DeviceType.HK_Robot, "Hogokids Robot", "Hogokids Robot", BitConverter.GetBytes(0x6CBC));
+
                 try
                 {
                     return await _bleService.ScanDevicesAsync(

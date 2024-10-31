@@ -24,6 +24,12 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<CircuitCubeDevice>().Keyed<Device>(DeviceType.CircuitCubes);
             builder.RegisterType<Wedo2Device>().Keyed<Device>(DeviceType.WeDo2);
 
+            // MouldKing
+            builder.RegisterType<MK_Robot>().Keyed<Device>(DeviceType.MK_Robot);
+
+            // Hogokids
+            builder.RegisterType<HK_Robot>().Keyed<Device>(DeviceType.HK_Robot);
+
             builder.Register<DeviceFactory>(c =>
             {
                 IComponentContext ctx = c.Resolve<IComponentContext>();
