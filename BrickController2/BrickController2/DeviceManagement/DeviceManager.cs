@@ -72,13 +72,26 @@ namespace BrickController2.DeviceManagement
                 try
                 {
                     // MouldKing
-                    await FoundDevice(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(0xFFF0));
+                    await FoundDevice(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(MouldKing_15059.ManufacturerID));
+
+                    //await FoundDevice(DeviceType.MouldKing_4_0_Modul, "MouldKing 4.0 Module", MouldKing_4_0_Modul.DeviceA, BitConverter.GetBytes(MouldKing_4_0_Modul.ManufacturerID));
+                    //await FoundDevice(DeviceType.MouldKing_4_0_Modul, "MouldKing 4.0 Module", MouldKing_4_0_Modul.DeviceB, BitConverter.GetBytes(MouldKing_4_0_Modul.ManufacturerID));
+                    //await FoundDevice(DeviceType.MouldKing_4_0_Modul, "MouldKing 4.0 Module", MouldKing_4_0_Modul.DeviceC, BitConverter.GetBytes(MouldKing_4_0_Modul.ManufacturerID));
+
+                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", MouldKing_6_0_Modul.DeviceA, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", MouldKing_6_0_Modul.DeviceB, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", MouldKing_6_0_Modul.DeviceC, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+
+                    await FoundDevice(DeviceType.MouldKing_Mecanum_Modul, "MouldKing Mecanum Module", "Mecanum Module", BitConverter.GetBytes(MouldKing_Mecanum_Modul.ManufacturerID));
 
                     // Hogokids
-                    await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(0x6CBC));
+                    await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(HOGOKIDS_8051.ManufacturerID));
 
                     // Cada
-                    await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(0xC200));
+                    await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(Cada_C51072W.ManufacturerID));
+
+                    // TestModel
+                    await FoundDevice(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));
 
                     var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice, token);
                     var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice, token);

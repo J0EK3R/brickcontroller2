@@ -1,10 +1,4 @@
-﻿using BrickController2.Helpers;
-using BrickController2.PlatformServices.BluetoothLE;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using BrickController2.PlatformServices.BluetoothLE;
 
 namespace BrickController2.DeviceManagement
 {
@@ -13,7 +7,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/dp/B0C9Q61RJ2?ref=ppx_yo2ov_dt_b_product_details&th=1
     /// </summary>
-    internal class HOGOKIDS_8051 : BluetoothAdvertisingDevice<HOGOKIDS_8051.Telegram>
+    internal class HOGOKIDS_8051 : BluetoothAdvertisingDeviceEnum<HOGOKIDS_8051.Telegram>
     {
         #region Definitions
         internal enum Telegram
@@ -34,24 +28,32 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
         #region Constants
-        // byte[10]
+        /// <summary>
+        /// ManufacturerID for BLEAdvertisments
+        /// hex: 0x6CBC
+        /// dec: 27836
+        /// </summary>
+        public const ushort ManufacturerID = 0x6CBC;
+
+        // byte[7]/byte[10]
         //
         // ss00 bbaa
         //
         // ss - speed 
-        //  00: 0
-        //  01: 1
-        //  10: 2
+        //  0000: 0 = 0x00
+        //  0100: 1 = 0x40
+        //  1000: 2 = 0x80
+        //  1100: 4 = 0xC0
         //
         // aa - channel 0
-        //  00: stop
-        //  10: forward
-        //  01: backward
+        //  bb 00: stop      = 0x00
+        //  bb 01: backward  = 0x01
+        //  bb 10: forward   = 0x02
         //
         // bb - channel 1
-        //  00: stop
-        //  10: forward
-        //  01: backward
+        //  00 aa: stop      = 0x00
+        //  01 aa: backward  = 0x04
+        //  10 aa: forward   = 0x08
 
         // Color: byte[8]
         //
@@ -194,22 +196,25 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
 
-        #region InitFirstTelegram()
-        protected override Telegram InitFirstTelegram()
+        #region InitOutputTask()()
+        /// <summary>
+        /// This method sets the device to initial state before advertising starts
+        /// </summary>
+        protected override void InitOutputTask()
         {
-            return Telegram.Connect;
+            this._currentTelegram = Telegram.Connect;
         }
         #endregion
 
         #region SetOutput(int channel, float value)
-        public override void SetOutput(int channel, float value)
+        protected override bool SetChannel(int channel, float value)
         {
             switch (channel)
             {
                 case 0:
                     if (this._Channel0_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -219,7 +224,7 @@ namespace BrickController2.DeviceManagement
                 case 1:
                     if (this._Channel1_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -227,10 +232,10 @@ namespace BrickController2.DeviceManagement
                     }
                     break;
                 default:
-                    return;
+                    return false;
             }
 
-            lock (_outputLock)
+            lock (this._outputLock)
             {
                 if (this._Channel0_Value == 0)
                 {
@@ -278,6 +283,7 @@ namespace BrickController2.DeviceManagement
                     }
                 }
             }
+            return true;
         }
         #endregion
     }

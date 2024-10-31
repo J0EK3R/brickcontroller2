@@ -21,13 +21,30 @@
         /// </summary>
         MouldKing_15059,
 
-        // HOGOKIDS
+        /// <summary>
+        /// 6.0 Modul
+        /// </summary>
+        MouldKing_6_0_Modul,
+
+        /// <summary>
+        /// Mecanum
+        /// </summary>
+        MouldKing_Mecanum_Modul,
+
+        /// <summary>
+        /// HOGOKIDS
+        /// </summary>
         HOGOKIDS_8051,
 
         // Cada
         /// <summary>
         /// RaceCar
         /// </summary>
-        Cada_C51072W
+        Cada_C51072W,
+
+        /// <summary>
+        /// TestModel
+        /// </summary>
+        TestModel
     }
 }

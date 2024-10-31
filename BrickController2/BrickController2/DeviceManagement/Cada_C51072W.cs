@@ -7,7 +7,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/gp/product/B0B6P9JG2J/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1
     /// </summary>
-    internal class Cada_C51072W : BluetoothAdvertisingDevice<Cada_C51072W.Telegram>
+    internal class Cada_C51072W : BluetoothAdvertisingDeviceEnum<Cada_C51072W.Telegram>
     {
         #region Definitions
         internal enum Telegram
@@ -54,6 +54,13 @@ namespace BrickController2.DeviceManagement
         }
         #endregion
         #region Constants
+        /// <summary>
+        /// ManufacturerID for BLEAdvertisments
+        /// hex: 0xC200
+        /// dec: 49664
+        /// </summary>
+        public const ushort ManufacturerID = 0xC200;
+
         private static readonly byte[] Telegram_Connect = new byte[] {
             0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x41, 0xfa, 0x2a, 0xb4, 0x9e, 0xfd, 0xc7, 0xb6, 0x2e,
             0xa6, 
@@ -235,28 +242,39 @@ namespace BrickController2.DeviceManagement
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="address"></param>
+        /// <param name="deviceData"></param>
+        /// <param name="deviceRepository"></param>
+        /// <param name="bleService"></param>
         public Cada_C51072W(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
                 : base(name, address, deviceData, deviceRepository, bleService)
         {
         }
         #endregion
 
-        #region InitFirstTelegram()
-        protected override Telegram InitFirstTelegram()
+        #region InitOutputTask()()
+        /// <summary>
+        /// This method sets the device to initial state before advertising starts
+        /// </summary>
+        protected override void InitOutputTask()
         {
-            return Telegram.Connect;
+            this._currentTelegram = Telegram.Connect;
         }
         #endregion
 
         #region SetOutput(int channel, float value)
-        public override void SetOutput(int channel, float value)
+        protected override bool SetChannel(int channel, float value)
         {
             switch (channel)
             {
                 case 0:
                     if (this._Channel0_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -266,7 +284,7 @@ namespace BrickController2.DeviceManagement
                 case 1:
                     if (this._Channel1_Value == value)
                     {
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -274,10 +292,10 @@ namespace BrickController2.DeviceManagement
                     }
                     break;
                 default:
-                    return;
+                    return false;
             }
 
-            lock (_outputLock)
+            lock (this._outputLock)
             {
                 if (this._Channel0_Value == 0)
                 {
@@ -325,6 +343,7 @@ namespace BrickController2.DeviceManagement
                     }
                 }
             }
+            return true;
         }
         #endregion
     }
