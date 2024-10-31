@@ -443,6 +443,45 @@
       </Grid>
 
 
+      <!-- MouldKing_DIY_Section -->
+      <Grid x:Name="MouldKing_DIY_Section">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+          <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIY_Channel0"
+                                               DeviceType="MouldKing_DIY"
+                                               Channel="0"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="Start" />
+          <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIY_Channel1"
+                                               DeviceType="MouldKing_DIY"
+                                               Channel="1"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Start" />
+          <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIY_Channel2"
+                                               DeviceType="MouldKing_DIY"
+                                               Channel="2"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="End" />
+          <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIY_Channel3"
+                                               DeviceType="MouldKing_DIY"
+                                               Channel="3"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="End" />
+        </Grid>
+
+        <Image Grid.Column="1"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
+               WidthRequest="150"
+               HeightRequest="120" />
+
+        <Grid Grid.Column="2">
+        </Grid>
+      </Grid>
 
       <!-- MouldKing_15059_Section -->
       <Grid x:Name="MouldKing_15059_Section">

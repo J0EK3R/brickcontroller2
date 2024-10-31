@@ -21,6 +21,7 @@ Cross platform mobile application for controlling Lego creations using a bluetoo
 - Lego WeDo 2.0 Smart Hub
 - Circuit Cubes
 - XP Block XC-5
+- black MouldKing DIY module
 
 ## Supported (BLE advertisement) devices (Android only)
 

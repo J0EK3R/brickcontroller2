@@ -52,6 +52,8 @@ namespace BrickController2.UI.Converters
                 case DeviceType.XPBlock_XC5:
                   return ResourceHelper.GetImageResource("xpblock_xc5_image.png");
 
+                case DeviceType.MouldKing_DIY:
+                  return ResourceHelper.GetImageResource("mouldking_diy_image.png");
                 case DeviceType.MouldKing_4_0_Modul:
                     return ResourceHelper.GetImageResource("mouldking_4_0_image.png");
                 case DeviceType.MouldKing_6_0_Modul:
