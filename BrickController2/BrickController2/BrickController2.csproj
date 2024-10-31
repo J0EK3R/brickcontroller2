@@ -83,4 +83,10 @@
     <PackageReference Include="SQLitePCLRaw.bundle_green" />
   </ItemGroup>
 
+  <ItemGroup>
+    <MauiXaml Update="UI\Controls\ToolbarIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+  </ItemGroup>
+
 </Project>
