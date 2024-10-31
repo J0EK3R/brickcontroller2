@@ -69,7 +69,7 @@ namespace BrickController2.DeviceManagement
     /// <param name="deviceRepository"></param>
     /// <param name="bleService"></param>
     public MouldKing_DIY(string name, string address, byte[] deviceData, IEnumerable<DeviceSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-        : base("MouldKing DIY", address, deviceRepository, bleService)
+        : base(name, address, deviceRepository, bleService)
     {
     }
     #endregion

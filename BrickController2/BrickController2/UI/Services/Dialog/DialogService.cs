@@ -51,7 +51,7 @@ namespace BrickController2.UI.Services.Dialog
                 _dialogServer.GameControllerService = _gameControllerService;
             }
 
-            return _dialogServer?.ShowGameControllerEventDialogAsync(title, message, cancelButtonText, token) ?? Task.FromResult(new GameControllerEventDialogResult(false, GameControllerEventType.Axis, string.Empty));
+            return _dialogServer?.ShowGameControllerEventDialogAsync(title, message, cancelButtonText, token) ?? Task.FromResult(new GameControllerEventDialogResult(false, GameControllerEventDialogResult.NoControllerDeviceId, GameControllerEventType.Axis, string.Empty));
         }
 
         public void RegisterDialogServer(IDialogServer dialogServer)

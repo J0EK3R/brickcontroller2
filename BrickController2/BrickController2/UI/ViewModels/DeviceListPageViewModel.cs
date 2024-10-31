@@ -8,7 +8,6 @@ using Device = BrickController2.DeviceManagement.Device;
 using BrickController2.UI.Commands;
 using System.Threading;
 using BrickController2.UI.Services.Translation;
-using Xamarin.Forms;
 
 namespace BrickController2.UI.ViewModels
 {
@@ -23,7 +22,7 @@ namespace BrickController2.UI.ViewModels
             INavigationService navigationService,
             ITranslationService translationService,
             IDeviceManager deviceManager,
-            IDialogService dialogService) 
+            IDialogService dialogService)
             : base(navigationService, translationService)
         {
             DeviceManager = deviceManager;

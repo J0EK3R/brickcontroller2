@@ -91,9 +91,9 @@ namespace BrickController2.DeviceManagement
             }
         }
 
-        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceIfo(IDictionary<byte, byte[]> advertismentData)
+        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceIfo(ScanResult scanResult)
         {
-            IDictionary<byte, byte[]> advertismentData = scanResult?.AdvertismentData;
+            IDictionary<byte, byte[]>? advertismentData = scanResult?.AdvertismentData;
 
             if (advertismentData == null)
             {
@@ -102,7 +102,7 @@ namespace BrickController2.DeviceManagement
 
             if (!advertismentData.TryGetValue(0xFF, out var manufacturerData) || manufacturerData.Length < 2)
             {
-                return GetDeviceInfoByService(advertismentData);
+                return GetDeviceInfoByService(scanResult, advertismentData);
             }
 
             var manufacturerDataString = BitConverter.ToString(manufacturerData).ToLower();
@@ -123,7 +123,11 @@ namespace BrickController2.DeviceManagement
                         return (DeviceType.CaDA_RaceCar, manufacturerData);
                     }
                     break;
-                case "33-ac": return (DeviceType.MouldKing_DIY, manufacturerData);
+                case "33-ac":
+                    {
+                        scanResult.DeviceName = "MouldKing DIY";
+                        return (DeviceType.MouldKing_DIY, manufacturerData);
+                    }
                 case "98-01": return (DeviceType.SBrick, manufacturerData);
                 case "48-4d": return (DeviceType.BuWizz, manufacturerData);
                 case "4e-05":
@@ -158,7 +162,7 @@ namespace BrickController2.DeviceManagement
             return (DeviceType.Unknown, null);
         }
 
-        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceInfoByService(IDictionary<byte, byte[]> advertismentData)
+        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceInfoByService(ScanResult scanResult, IDictionary<byte, byte[]> advertismentData)
         {
             string manufacturerDataString;
 
@@ -167,6 +171,7 @@ namespace BrickController2.DeviceManagement
               nameData.Length > 0 &&
               (manufacturerDataString = Encoding.ASCII.GetString(nameData)).StartsWith("JG_JMC"))
             {
+                scanResult.DeviceName = "XPBlock XC5";
                 return (DeviceType.XPBlock_XC5, null);
             }
             // 0x06: 128 bits Service UUID type
