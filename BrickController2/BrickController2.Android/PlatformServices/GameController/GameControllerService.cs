@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using Android.Runtime;
 using Android.Views;
 using BrickController2.PlatformServices.GameController;
-using Java.Util.Logging;
-using Kotlin.Contracts;
-using static Android.Graphics.Paint;
-using static Android.Service.Notification.NotificationListenerService;
-using static Android.Telephony.CarrierConfigManager;
-using Xamarin.Forms;
 
 namespace BrickController2.Droid.PlatformServices.GameController
 {
@@ -71,8 +65,10 @@ namespace BrickController2.Droid.PlatformServices.GameController
                 GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
                 return true;
             }
+
             return false;
         }
+
         public bool OnGenericMotionEvent(MotionEvent e)
         {
             // https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/multiple-controllers
@@ -87,8 +83,8 @@ namespace BrickController2.Droid.PlatformServices.GameController
                 {
                     var axisValue = e.GetAxisValue(axisCode);
 
-                    if ((axisCode == Axis.Rx || axisCode == Axis.Ry) && 
-                        e.Device?.VendorId == 1356 && 
+                    if ((axisCode == Axis.Rx || axisCode == Axis.Ry) &&
+                        e.Device?.VendorId == 1356 &&
                         (e.Device?.ProductId == 2508 || e.Device?.ProductId == 1476))
                     {
                         // DualShock 4 hack for the triggers ([-1:1] -> [0:1])
@@ -96,10 +92,11 @@ namespace BrickController2.Droid.PlatformServices.GameController
                         {
                             continue;
                         }
+
                         axisValue = (axisValue + 1) / 2;
                     }
 
-                    if (e.Device?.VendorId == 0x057e && 
+                    if (e.Device?.VendorId == 0x057e &&
                         (/*e.Device.ProductId == 0x2006 || e.Device.ProductId == 0x2007 ||*/ e.Device.ProductId == 0x2009))
                     {
                         // Nintendo Switch Pro controller hack ([-0.69:0.7] -> [-1:1])

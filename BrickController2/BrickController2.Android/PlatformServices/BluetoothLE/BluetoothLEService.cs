@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +25,7 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
 
             this._DeviceId = BluetoothLEService.GetDeviceId();
 
-            if (context.PackageManager.HasSystemFeature(PackageManager.FeatureBluetoothLe))
+            if (context.PackageManager?.HasSystemFeature(PackageManager.FeatureBluetoothLe) ?? false)
             {
                 var bluetoothManager = (BluetoothManager?)context.GetSystemService(Context.BluetoothService);
                 _bluetoothAdapter = bluetoothManager?.Adapter;
@@ -160,18 +159,18 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
 
         private static string GetDeviceId()
         {
-            string id = Android.OS.Build.Serial;
+            string id = Build.Serial;
             if (string.IsNullOrWhiteSpace(id) || id == Build.Unknown || id == "0")
             {
-                try
-                {
-                    var context = Android.App.Application.Context;
-                    id = Secure.GetString(context.ContentResolver, Secure.AndroidId);
-                }
-                catch (Exception ex)
-                {
-                    Android.Util.Log.Warn("DeviceInfo", "Unable to get id: " + ex.ToString());
-                }
+                //try
+                //{
+                //    var context = Android.App.Application.Context;
+                //    id = Secure.GetString(context.ContentResolver, Secure.AndroidId);
+                //}
+                //catch (Exception ex)
+                //{
+                //    Android.Util.Log.Warn("DeviceInfo", "Unable to get id: " + ex.ToString());
+                //}
             }
 
             return id;

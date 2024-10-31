@@ -21,7 +21,7 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
             //    return;
             //}
 
-            var advertismentData = ScanRecordProcessor.GetAdvertismentData(bytes);
+            var advertismentData = ScanRecordProcessor.GetAdvertismentData(result.ScanRecord.GetBytes());
             _scanCallback(new BrickController2.PlatformServices.BluetoothLE.ScanResult(result.Device.Name, result.Device.Address, advertismentData));
         }
 
