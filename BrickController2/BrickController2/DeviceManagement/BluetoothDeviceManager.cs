@@ -102,7 +102,7 @@ namespace BrickController2.DeviceManagement
 
             if (!advertismentData.TryGetValue(0xFF, out var manufacturerData) || manufacturerData.Length < 2)
             {
-                return GetDeviceInfoByService(advertismentData);
+                return GetDeviceInfoByService(scanResult, advertismentData);
             }
 
             var manufacturerDataString = BitConverter.ToString(manufacturerData).ToLower();
@@ -158,7 +158,7 @@ namespace BrickController2.DeviceManagement
             return (DeviceType.Unknown, null);
         }
 
-        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceInfoByService(IDictionary<byte, byte[]> advertismentData)
+        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceInfoByService(ScanResult scanResult, IDictionary<byte, byte[]> advertismentData)
         {
             string manufacturerDataString;
 
@@ -167,6 +167,7 @@ namespace BrickController2.DeviceManagement
               nameData.Length > 0 &&
               (manufacturerDataString = Encoding.ASCII.GetString(nameData)).StartsWith("JG_JMC"))
             {
+                scanResult.DeviceName = "XPBlock XC5";
                 return (DeviceType.XPBlock_XC5, null);
             }
             // 0x06: 128 bits Service UUID type
