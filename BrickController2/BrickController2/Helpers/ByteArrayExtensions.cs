@@ -74,7 +74,8 @@ namespace BrickController2.Helpers
 
         public static void SetFloat(this byte[] data, float value, int offset = 0)
         {
-            var intValue = BitConverter.SingleToInt32Bits(value);
+            //var intValue = BitConverter.SingleToInt32Bits(value);
+            var intValue = (int)value;
             SetInt32(data, intValue, offset);
         }
     }
