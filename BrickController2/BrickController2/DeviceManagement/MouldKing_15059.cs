@@ -7,7 +7,7 @@ namespace BrickController2.DeviceManagement
     /// 
     /// https://www.amazon.de/dp/B09TPHJ5L7?psc=1&ref=ppx_yo2ov_dt_b_product_details
     /// </summary>
-    internal class MouldKing_15059 : MouldKingBase
+    internal class MouldKing_15059 : MouldKingBaseByte
     {
         #region Constants
         /// <summary>
@@ -24,12 +24,12 @@ namespace BrickController2.DeviceManagement
         #region Properties
         public override DeviceType DeviceType => DeviceType.MouldKing_15059;
 
-        //public override int NumberOfChannels => 2;
+        public override int NumberOfChannels => 2;
         #endregion
 
         #region Constructor
         public MouldKing_15059(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-                : base(name, address, deviceData, deviceRepository, bleService, Telegram_Connect, Telegram_Base)
+                : base(name, address, deviceData, deviceRepository, bleService, MouldKing_15059.Telegram_Connect, MouldKing_15059.Telegram_Base)
         {
         }
         #endregion

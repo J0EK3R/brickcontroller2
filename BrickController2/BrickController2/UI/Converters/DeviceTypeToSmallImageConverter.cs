@@ -15,7 +15,7 @@ namespace BrickController2.UI.Converters
             {
                 case DeviceType.BuWizz:
                 case DeviceType.BuWizz2:
-                   return ResourceHelper.GetImageResource("buwizz_image_small.png");
+                    return ResourceHelper.GetImageResource("buwizz_image_small.png");
 
                 case DeviceType.BuWizz3:
                     return ResourceHelper.GetImageResource("buwizz3_image_small.png");
@@ -45,6 +45,7 @@ namespace BrickController2.UI.Converters
                     return ResourceHelper.GetImageResource("wedo2hub_image_small.png");
 
                 case DeviceType.MouldKing_15059:
+                case DeviceType.MouldKing_4_0_Modul:
                 case DeviceType.MouldKing_6_0_Modul:
                 case DeviceType.MouldKing_Mecanum_Modul:
                     return ResourceHelper.GetImageResource("mouldking_15059_image_small.png");

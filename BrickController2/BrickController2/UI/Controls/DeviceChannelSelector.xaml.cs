@@ -115,6 +115,7 @@ namespace BrickController2.UI.Controls
 
                 // MouldKing
                 dcs.MouldKing_15059_Section.IsVisible = deviceType == DeviceType.MouldKing_15059;
+                dcs.MouldKing_4_0_Module_Section.IsVisible = deviceType == DeviceType.MouldKing_4_0_Modul;
                 dcs.MouldKing_6_0_Module_Section.IsVisible = deviceType == DeviceType.MouldKing_6_0_Modul;
                 dcs.MouldKing_Mecanum_Module_Section.IsVisible = deviceType == DeviceType.MouldKing_Mecanum_Modul;
 
