@@ -76,9 +76,9 @@ namespace BrickController2.DeviceManagement
 
                     await FoundDevice(DeviceType.MouldKing_4_0_Modul, "MouldKing 4.0 Module", MouldKing_4_0_Modul.Device1_3, BitConverter.GetBytes(MouldKing_4_0_Modul.ManufacturerID));
 
-                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", MouldKing_6_0_Modul.Device1, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
-                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", MouldKing_6_0_Modul.Device2, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
-                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module", MouldKing_6_0_Modul.Device3, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 1", MouldKing_6_0_Modul.Device1, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 2", MouldKing_6_0_Modul.Device2, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
+                    await FoundDevice(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 3", MouldKing_6_0_Modul.Device3, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
 
                     await FoundDevice(DeviceType.MouldKing_Mecanum_Modul, "MouldKing Mecanum Module", "Mecanum Module", BitConverter.GetBytes(MouldKing_Mecanum_Modul.ManufacturerID));
 

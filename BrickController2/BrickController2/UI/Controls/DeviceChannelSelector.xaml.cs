@@ -49,7 +49,21 @@ namespace BrickController2.UI.Controls
             MouldKing_15059_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             MouldKing_15059_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
-            // MouldKing_15059
+            // MouldKing4.0
+            MouldKing_4_0_Module_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_4_0_Module_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_4_0_Module_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_4_0_Module_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_4_0_Module_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_4_0_Module_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+            MouldKing_4_0_Module_Channel6.Command = new SafeCommand(() => SelectedChannel = 6);
+            MouldKing_4_0_Module_Channel7.Command = new SafeCommand(() => SelectedChannel = 7);
+            MouldKing_4_0_Module_Channel8.Command = new SafeCommand(() => SelectedChannel = 8);
+            MouldKing_4_0_Module_Channel9.Command = new SafeCommand(() => SelectedChannel = 9);
+            MouldKing_4_0_Module_Channel10.Command = new SafeCommand(() => SelectedChannel = 10);
+            MouldKing_4_0_Module_Channel11.Command = new SafeCommand(() => SelectedChannel = 11);
+
+            // MouldKing6.0
             MouldKing_6_0_Module_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             MouldKing_6_0_Module_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
             MouldKing_6_0_Module_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
@@ -725,6 +739,20 @@ namespace BrickController2.UI.Controls
                 // MouldKing_15059
                 dcs.MouldKing_15059_Channel0.SelectedChannel = selectedChannel;
                 dcs.MouldKing_15059_Channel1.SelectedChannel = selectedChannel;
+
+                // MouldKing_4_0
+                dcs.MouldKing_4_0_Module_Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel5.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel6.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel7.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel8.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel9.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel10.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_Module_Channel11.SelectedChannel = selectedChannel;
 
                 // MouldKing_6_0
                 dcs.MouldKing_6_0_Module_Channel0.SelectedChannel = selectedChannel;

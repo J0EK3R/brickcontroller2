@@ -41,7 +41,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_A_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_A_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_A_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_A_Value > 0)
@@ -65,7 +65,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_B_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_B_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_B_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_B_Value > 0)
@@ -89,7 +89,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_C_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_C_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_C_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_C_Value > 0)
@@ -113,7 +113,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_D_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_D_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_D_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_D_Value > 0)
@@ -137,7 +137,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_E_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_E_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_E_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_E_Value > 0)
@@ -161,7 +161,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_F_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_F_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_F_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_F_Value > 0)
@@ -185,7 +185,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_G_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_G_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_G_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_G_Value > 0)
@@ -209,7 +209,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_H_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_H_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_H_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_H_Value > 0)
@@ -233,7 +233,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_I_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_I_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_I_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_I_Value > 0)
@@ -257,7 +257,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_J_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_J_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_J_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_J_Value > 0)
@@ -281,7 +281,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_K_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_K_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_K_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_K_Value > 0)
@@ -305,7 +305,7 @@ namespace BrickController2.DeviceManagement
                 if (this._Channel_L_Value < 0)
                 {
                     // Range [-1..0] -> 0x80 - [0x7F .. 0x00] = [0x01 .. 0x80]
-                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_L_Value * 0x7F, 0x7F));
+                    currentData[currentChannelStartOffset] = (byte)(0x80 - Math.Min(-this._Channel_L_Value * 0x80, 0x80));
                     allZero = false;
                 }
                 else if (this._Channel_L_Value > 0)
