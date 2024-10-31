@@ -11,8 +11,8 @@ namespace BrickController2.PlatformServices.BluetoothLE
             AdvertismentData = advertismentData;
         }
 
-        public string DeviceName { get; }
-        public string DeviceAddress { get; }
+        public string DeviceName { get; set; }
+        public string DeviceAddress { get; set; }
         public IDictionary<byte, byte[]> AdvertismentData { get; }
     }
 }

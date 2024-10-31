@@ -37,8 +37,8 @@ namespace BrickController2.DeviceManagement.DI
             // Hogokids
             builder.RegisterType<HOGOKIDS_8051>().Keyed<Device>(DeviceType.HOGOKIDS_8051);
 
-            // Cada
-            builder.RegisterType<Cada_C51072W>().Keyed<Device>(DeviceType.Cada_C51072W);
+            // CaDA
+            builder.RegisterType<CaDARaceCar>().Keyed<Device>(DeviceType.CaDA_RaceCar);
 
             // TestModel
             //builder.RegisterType<TestModel>().Keyed<Device>(DeviceType.TestModel);

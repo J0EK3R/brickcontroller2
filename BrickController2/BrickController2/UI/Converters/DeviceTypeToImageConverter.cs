@@ -66,8 +66,8 @@ namespace BrickController2.UI.Converters
                 case DeviceType.HOGOKIDS_8051:
                     return ResourceHelper.GetImageResource("hogokids_8051_image.png");
 
-                case DeviceType.Cada_C51072W:
-                    return ResourceHelper.GetImageResource("cada_c51072w_image.png");
+                case DeviceType.CaDA_RaceCar:
+                    return ResourceHelper.GetImageResource("cada_racecar_image.png");
 
                 default:
                     return ResourceHelper.GetImageResource("technichub_image.png");
