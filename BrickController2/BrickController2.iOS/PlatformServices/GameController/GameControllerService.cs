@@ -9,6 +9,8 @@ namespace BrickController2.iOS.PlatformServices.GameController
 {
     public class GameControllerService : IGameControllerService
     {
+        private const string ControllerDeviceId = "Controller";
+
         private enum GameControllerType
         {
             Unknown,
@@ -196,8 +198,11 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
+                    // ToDo: find ControllerDeviceId
+                    string controllerDeviceId = ControllerDeviceId;
+
                     _lastControllerEventValueMap[name] = value;
-                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(GameControllerEventType.Button, name, value));
+                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Button, name, value));
                 }
             };
         }
@@ -210,8 +215,11 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
+                    // ToDo: find ControllerDeviceId
+                    string controllerDeviceId = ControllerDeviceId;
+
                     _lastControllerEventValueMap[name] = value;
-                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(GameControllerEventType.Axis, name, value));
+                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Axis, name, value));
                 }
             };
         }
@@ -232,7 +240,10 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
-                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(GameControllerEventType.Axis, name, value));
+                    // ToDo: find ControllerDeviceId
+                    string controllerDeviceId = ControllerDeviceId;
+
+                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Axis, name, value));
                     _lastControllerEventValueMap[name] = value;
                 }
             };
@@ -252,7 +263,10 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
-                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(GameControllerEventType.Axis, name, value));
+                    // ToDo: find ControllerDeviceId
+                    string controllerDeviceId = ControllerDeviceId;
+
+                    GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Axis, name, value));
                     _lastControllerEventValueMap[name] = value;
                 }
             };
