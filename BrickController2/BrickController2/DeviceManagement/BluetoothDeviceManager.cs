@@ -123,7 +123,11 @@ namespace BrickController2.DeviceManagement
                         return (DeviceType.CaDA_RaceCar, manufacturerData);
                     }
                     break;
-                case "33-ac": return (DeviceType.MouldKing_DIY, manufacturerData);
+                case "33-ac":
+                    {
+                        scanResult.DeviceName = "MouldKing DIY";
+                        return (DeviceType.MouldKing_DIY, manufacturerData);
+                    }
                 case "98-01": return (DeviceType.SBrick, manufacturerData);
                 case "48-4d": return (DeviceType.BuWizz, manufacturerData);
                 case "4e-05":
