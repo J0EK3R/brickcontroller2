@@ -65,6 +65,8 @@
     <None Remove="UI\Images\mouldking_diy_image_small.png" />
     <None Remove="UI\Images\mouldking_mecanum_image.png" />
     <None Remove="UI\Images\mouldking_mecanum_image_small.png" />
+    <None Remove="UI\Images\powerbox_mbattery_image.png" />
+    <None Remove="UI\Images\powerbox_mbattery_image_small.png" />
     <None Remove="UI\Images\poweredup_image.png" />
     <None Remove="UI\Images\poweredup_image_small.png" />
     <None Remove="UI\Images\sbrick_image.png" />
@@ -90,6 +92,8 @@
     <EmbeddedResource Include="UI\Images\hogokids_8051_image.png" />
     <EmbeddedResource Include="UI\Images\cada_racecar_image_small.png" />
     <EmbeddedResource Include="UI\Images\hogokids_8051_image_small.png" />
+    <EmbeddedResource Include="UI\Images\powerbox_mbattery_image_small.png" />
+    <EmbeddedResource Include="UI\Images\powerbox_mbattery_image.png" />
     <EmbeddedResource Include="UI\Images\joek3r_image.png" />
     <EmbeddedResource Include="UI\Images\joek3r_image_small.png" />
     <EmbeddedResource Include="UI\Images\mouldking_diy_image_small.png" />

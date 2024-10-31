@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BluetoothEnDeCrypt.CaDA;
 using BrickController2.Helpers;
 using BrickController2.PlatformServices.BluetoothLE;
 
@@ -24,7 +25,7 @@ namespace BrickController2.DeviceManagement
                 (_bleService.DeviceID[1] << 8 ) +
                 (_bleService.DeviceID[2] << 16) ;
 
-            this.mobileSerialChecksumMaskArray = ArrayTools.CreateMaskArray(mobileSerialChecksum, 3);
+            this.mobileSerialChecksumMaskArray = CaDABLEUtils.CreateMaskArray(mobileSerialChecksum, 3);
         }
 
         public bool IsBluetoothLESupported => _bleService.IsBluetoothLESupported;
@@ -35,15 +36,14 @@ namespace BrickController2.DeviceManagement
             List<Tuple<ushort, byte[]>> advertiseList = new List<Tuple<ushort, byte[]>>();
 
             // MouldKing
+            await deviceFoundCallback(DeviceType.MouldKing_4_0_Module, "MouldKing 4.0 Module", MouldKing_4_0_Module.Device1_3, BitConverter.GetBytes(MouldKing_4_0_Module.ManufacturerID));
+
+            await deviceFoundCallback(DeviceType.MouldKing_6_0_Module, "MouldKing 6.0 Module Device 1", MouldKing_6_0_Module.Device1, BitConverter.GetBytes(MouldKing_6_0_Module.ManufacturerID));
+            await deviceFoundCallback(DeviceType.MouldKing_6_0_Module, "MouldKing 6.0 Module Device 2", MouldKing_6_0_Module.Device2, BitConverter.GetBytes(MouldKing_6_0_Module.ManufacturerID));
+            await deviceFoundCallback(DeviceType.MouldKing_6_0_Module, "MouldKing 6.0 Module Device 3", MouldKing_6_0_Module.Device3, BitConverter.GetBytes(MouldKing_6_0_Module.ManufacturerID));
+
             await deviceFoundCallback(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(MouldKing_15059.ManufacturerID));
-
-            await deviceFoundCallback(DeviceType.MouldKing_4_0_Modul, "MouldKing 4.0 Module", MouldKing_4_0_Modul.Device1_3, BitConverter.GetBytes(MouldKing_4_0_Modul.ManufacturerID));
-
-            await deviceFoundCallback(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 1", MouldKing_6_0_Modul.Device1, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
-            await deviceFoundCallback(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 2", MouldKing_6_0_Modul.Device2, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
-            await deviceFoundCallback(DeviceType.MouldKing_6_0_Modul, "MouldKing 6.0 Module Device 3", MouldKing_6_0_Modul.Device3, BitConverter.GetBytes(MouldKing_6_0_Modul.ManufacturerID));
-
-            await deviceFoundCallback(DeviceType.MouldKing_Mecanum_Modul, "MouldKing Mecanum Module", "Mecanum Module", BitConverter.GetBytes(MouldKing_Mecanum_Modul.ManufacturerID));
+            await deviceFoundCallback(DeviceType.MouldKing_Mecanum_ATV, "MouldKing Mecanum ATV", "Mecanum ATV", BitConverter.GetBytes(MouldKing_Mecanum_ATV.ManufacturerID));
 
             // Hogokids
             await deviceFoundCallback(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(HOGOKIDS_8051.ManufacturerID));
@@ -51,6 +51,9 @@ namespace BrickController2.DeviceManagement
             // CaDA
             //await deviceFoundCallback(DeviceType.CaDA_RaceCar, "CaDA RaceCar", "961008", BitConverter.GetBytes(CaDARaceCar.ManufacturerID));
             CaDARaceCar.AddAdvertisingData(this._bleService, advertiseList);
+
+            // PowerBox
+            await deviceFoundCallback(DeviceType.PowerBox_M_Battery, "PowerBox MBattery", "MBattery", BitConverter.GetBytes(PowerBoxMBattery.ManufacturerID));
 
             // TestModel
             //await deviceFoundCallback(DeviceType.TestModel, "TestModel", "TestModel", BitConverter.GetBytes(TestModel.ManufacturerID));

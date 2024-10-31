@@ -27,6 +27,7 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
 
         public BleService()
         {
+            this._DeviceId = BleService.GetDeviceId();
         }
 
         public bool IsBluetoothLESupported => CurrentBluetoothStatus.HasFlag(BluetoothStatus.LowEnergySupported);
@@ -63,7 +64,7 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
             try
             {
                 _isScanning = true;
-                return await NewScanAsync(scanCallback, token);
+                return await NewScanAsync(scanCallback, advertiseList, token);
             }
             catch (Exception)
             {
@@ -85,24 +86,20 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE
             return new BleDevice(address);
         }
 
-        private static readonly byte[] Telegram_Connect = new byte[] {
-            0xee, 0x1b, 0xc8, 0xaf, 0x9f, 0x3c, 0xcd, 0x41, 0xfa, 0x2a, 0xb4, 0x9e, 0xfd, 0xc7, 0xb6, 0x2e,
-            0xa6,
-            0x82,
-            0xc9, 0xf2, 0x0e,
-            0x7f,
-            0xcf, 0x2e,
-        };
-
-        private async Task<bool> NewScanAsync(Action<ScanResult> scanCallback, CancellationToken token)
+        private async Task<bool> NewScanAsync(Action<ScanResult> scanCallback, IEnumerable<Tuple<ushort, byte[]>> advertiseList, CancellationToken token)
         {
             try
             {
-                IBluetoothLEAdvertiserDevice advertiserDevice = GetBluetoothLEAdvertiserDevice();
+                IBluetoothLEAdvertiserDevice advertiserDevice = null;
+                if (advertiseList != null)
+                {
+                    advertiserDevice = this.GetBluetoothLEAdvertiserDevice();
 
-                byte[] currentData = Telegram_Connect;
-                ushort _manufacturerId = 0xC200;
-                await advertiserDevice.StartAdvertiseAsync(AdvertisingInterval.Min, TxPowerLevel.Max, _manufacturerId, currentData);
+                    foreach (Tuple<ushort, byte[]> currentEntry in advertiseList)
+                    {
+                        await advertiserDevice.StartAdvertiseAsync(AdvertisingInterval.Min, TxPowerLevel.Max, currentEntry.Item1, currentEntry.Item2);
+                    }
+                }
 
                 var leScanner = new BleScanner(scanCallback);
 

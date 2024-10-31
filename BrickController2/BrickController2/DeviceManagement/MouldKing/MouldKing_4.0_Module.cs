@@ -3,9 +3,9 @@
 namespace BrickController2.DeviceManagement
 {
     /// <summary>
-    /// Mould King 4.0 Modul
+    /// Mould King 4.0 Module
     /// </summary>
-    internal class MouldKing_4_0_Modul : MouldKingBaseNibble
+    internal class MouldKing_4_0_Module : MouldKingBaseNibble
     {
         #region Constants
         public const string Device1_3 = "Device1-3";
@@ -55,7 +55,7 @@ namespace BrickController2.DeviceManagement
         #region Fields
         #endregion
         #region Properties
-        public override DeviceType DeviceType => DeviceType.MouldKing_4_0_Modul;
+        public override DeviceType DeviceType => DeviceType.MouldKing_4_0_Module;
 
         /// <summary>
         /// 3 Devices with 4 channels each
@@ -64,8 +64,8 @@ namespace BrickController2.DeviceManagement
         #endregion
 
         #region Constructor
-        public MouldKing_4_0_Modul(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-          : base(name, address, deviceData, deviceRepository, bleService, MouldKing_4_0_Modul.Telegram_Connect, MouldKing_4_0_Modul.Telegram_Base)
+        public MouldKing_4_0_Module(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+          : base(name, address, deviceData, deviceRepository, bleService, MouldKing_4_0_Module.Telegram_Connect, MouldKing_4_0_Module.Telegram_Base)
         {
         }
         #endregion
