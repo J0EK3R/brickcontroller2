@@ -91,9 +91,9 @@ namespace BrickController2.DeviceManagement
             }
         }
 
-        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceIfo(IDictionary<byte, byte[]> advertismentData)
+        private (DeviceType DeviceType, byte[]? ManufacturerData) GetDeviceIfo(ScanResult scanResult)
         {
-            IDictionary<byte, byte[]> advertismentData = scanResult?.AdvertismentData;
+            IDictionary<byte, byte[]>? advertismentData = scanResult?.AdvertismentData;
 
             if (advertismentData == null)
             {
