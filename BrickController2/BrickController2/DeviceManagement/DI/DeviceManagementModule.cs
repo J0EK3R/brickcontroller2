@@ -39,6 +39,7 @@ namespace BrickController2.DeviceManagement.DI
 
             // CaDA
             builder.RegisterType<CaDARaceCar>().Keyed<Device>(DeviceType.CaDA_RaceCar);
+            builder.RegisterType<CaDABot>().Keyed<Device>(DeviceType.CaDA_Bot);
 
             // PowerBox
             builder.RegisterType<PowerBoxMBattery>().Keyed<Device>(DeviceType.PowerBox_M_Battery);

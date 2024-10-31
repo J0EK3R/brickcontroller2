@@ -63,6 +63,8 @@ namespace BrickController2.UI.Converters
 
                 case DeviceType.CaDA_RaceCar:
                     return ResourceHelper.GetImageResource("cada_racecar_image_small.png");
+                case DeviceType.CaDA_Bot:
+                    return ResourceHelper.GetImageResource("cada_bot_image_small.png");
 
                 case DeviceType.PowerBox_M_Battery:
                     return ResourceHelper.GetImageResource("powerbox_mbattery_image_small.png");

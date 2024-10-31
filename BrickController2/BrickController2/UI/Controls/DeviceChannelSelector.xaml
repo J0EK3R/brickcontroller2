@@ -759,6 +759,41 @@
         </Grid>
       </Grid>
 
+      <!-- CaDA_Bot_Section -->
+      <Grid x:Name="CaDA_Bot_Section">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+          <controls:ChannelSelectorRadioButton x:Name="CaDA_Bot_Channel2"
+                                               DeviceType="CaDA_Bot"
+                                               Channel="2"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="End" />
+          <controls:ChannelSelectorRadioButton x:Name="CaDA_Bot_Channel1"
+                                               DeviceType="CaDA_Bot"
+                                               Channel="1"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Center" />
+          <controls:ChannelSelectorRadioButton x:Name="CaDA_Bot_Channel0"
+                                               DeviceType="CaDA_Bot"
+                                               Channel="0"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Start" />
+        </Grid>
+
+        <Image Grid.Column="1"
+               Source="{Binding SelectedDevice.DeviceType, Converter={StaticResource DeviceTypeToImage}}"
+               WidthRequest="150"
+               HeightRequest="120" />
+
+        <Grid Grid.Column="2">
+        </Grid>
+      </Grid>
+
       <!-- PowerBox_MBattery_Section -->
       <Grid x:Name="PowerBox_MBattery_Section">
         <Grid.ColumnDefinitions>

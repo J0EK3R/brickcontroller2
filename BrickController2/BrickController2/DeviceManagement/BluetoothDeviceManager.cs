@@ -124,6 +124,7 @@ namespace BrickController2.DeviceManagement
                     }
                     break;
                 case "33-ac": return (DeviceType.MouldKing_DIY, manufacturerData);
+                case "33-a0": return (DeviceType.CaDA_Bot, manufacturerData);
                 case "98-01": return (DeviceType.SBrick, manufacturerData);
                 case "48-4d": return (DeviceType.BuWizz, manufacturerData);
                 case "4e-05":

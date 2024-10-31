@@ -110,6 +110,11 @@ namespace BrickController2.UI.Controls
             CaDA_RaceCar_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
             CaDA_RaceCar_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
 
+            // CaDA_Bot
+            CaDA_Bot_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            CaDA_Bot_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            CaDA_Bot_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+
             // PowerBox_MBattery
             PowerBox_MBattery_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
         }
@@ -163,6 +168,7 @@ namespace BrickController2.UI.Controls
 
                 // CaDA
                 dcs.CaDA_RaceCar_Section.IsVisible = false;
+                dcs.CaDA_Bot_Section.IsVisible = false;
 
                 // PowerBox
                 dcs.PowerBox_MBattery_Section.IsVisible = false;
@@ -287,6 +293,10 @@ namespace BrickController2.UI.Controls
                         // CaDA
                         dcs.CaDA_RaceCar_Section.IsVisible = true;
                         break;
+                    case DeviceType.CaDA_Bot:
+                        // CaDA
+                        dcs.CaDA_Bot_Section.IsVisible = true;
+                        break;
                     #endregion
                     #region Unknown
                     case DeviceType.Unknown:
@@ -391,6 +401,11 @@ namespace BrickController2.UI.Controls
                 dcs.CaDA_RaceCar_Channel0.SelectedChannel = selectedChannel;
                 dcs.CaDA_RaceCar_Channel1.SelectedChannel = selectedChannel;
                 dcs.CaDA_RaceCar_Channel2.SelectedChannel = selectedChannel;
+
+                // CaDA Bot
+                dcs.CaDA_Bot_Channel0.SelectedChannel = selectedChannel;
+                dcs.CaDA_Bot_Channel1.SelectedChannel = selectedChannel;
+                dcs.CaDA_Bot_Channel2.SelectedChannel = selectedChannel;
 
                 // PowerBox_MBattery
                 dcs.PowerBox_MBattery_Channel0.SelectedChannel = selectedChannel;

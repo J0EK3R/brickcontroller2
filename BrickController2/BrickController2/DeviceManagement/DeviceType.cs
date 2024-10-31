@@ -54,6 +54,11 @@
         /// </summary>
         CaDA_RaceCar,
 
+        /// <summary>
+        /// CaDABot
+        /// </summary>
+        CaDA_Bot,
+
         // PowerBox
         /// <summary>
         /// PowerBox
