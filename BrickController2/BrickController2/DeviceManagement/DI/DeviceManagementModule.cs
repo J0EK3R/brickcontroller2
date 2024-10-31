@@ -25,13 +25,13 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<Wedo2Device>().Keyed<Device>(DeviceType.WeDo2);
 
             // MouldKing
-            builder.RegisterType<MK_Robot>().Keyed<Device>(DeviceType.MK_Robot);
+            builder.RegisterType<MouldKing_15059>().Keyed<Device>(DeviceType.MouldKing_15059);
 
             // Hogokids
-            builder.RegisterType<HK_Robot>().Keyed<Device>(DeviceType.HK_Robot);
+            builder.RegisterType<HOGOKIDS_8051>().Keyed<Device>(DeviceType.HOGOKIDS_8051);
 
             // Cada
-            builder.RegisterType<Cada_RC_C51072W>().Keyed<Device>(DeviceType.Cada_RC_C51072W);
+            builder.RegisterType<Cada_C51072W>().Keyed<Device>(DeviceType.Cada_C51072W);
 
             builder.Register<DeviceFactory>(c =>
             {

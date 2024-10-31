@@ -46,16 +46,16 @@ namespace BrickController2.UI.Controls
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
             // MouldKing
-            MK_Robot_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            MK_Robot_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_15059_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_15059_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
             // Hogokids
-            HK_Robot_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            HK_Robot_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            HOGOKIDS_8051_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            HOGOKIDS_8051_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
-            // Cada_RC_C51072W
-            Cada_RC_C51072W_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
-            Cada_RC_C51072W_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            // Cada_C51072W
+            Cada_C51072W_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            Cada_C51072W_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
         }
 
         public static BindableProperty DeviceTypeProperty = BindableProperty.Create(nameof(DeviceType), typeof(DeviceType), typeof(DeviceChannelSelector), default(DeviceType), BindingMode.OneWay, null, OnDeviceTypeChanged);
@@ -90,13 +90,13 @@ namespace BrickController2.UI.Controls
                 dcs.Wedo2Section.IsVisible = deviceType == DeviceType.WeDo2;
 
                 // MouldKing
-                dcs.MK_Robot_Section.IsVisible = deviceType == DeviceType.MK_Robot;
+                dcs.MouldKing_15059_Section.IsVisible = deviceType == DeviceType.MouldKing_15059;
 
                 // Hogokids
-                dcs.HK_Robot_Section.IsVisible = deviceType == DeviceType.HK_Robot;
+                dcs.HOGOKIDS_8051_Section.IsVisible = deviceType == DeviceType.HOGOKIDS_8051;
 
                 // Cada
-                dcs.Cada_RC_C51072W_Section.IsVisible = deviceType == DeviceType.Cada_RC_C51072W;
+                dcs.Cada_C51072W_Section.IsVisible = deviceType == DeviceType.Cada_C51072W;
             }
         }
 
@@ -139,16 +139,16 @@ namespace BrickController2.UI.Controls
                 dcs.WedoChannel1.SelectedChannel = selectedChannel;
 
                 // MouldKing
-                dcs.MK_Robot_Channel0.SelectedChannel = selectedChannel;
-                dcs.MK_Robot_Channel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_15059_Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_15059_Channel1.SelectedChannel = selectedChannel;
 
                 // Hogokids
-                dcs.HK_Robot_Channel0.SelectedChannel = selectedChannel;
-                dcs.HK_Robot_Channel1.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051_Channel0.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051_Channel1.SelectedChannel = selectedChannel;
 
                 // Cada RC
-                dcs.Cada_RC_C51072W_Channel0.SelectedChannel = selectedChannel;
-                dcs.Cada_RC_C51072W_Channel1.SelectedChannel = selectedChannel;
+                dcs.Cada_C51072W_Channel0.SelectedChannel = selectedChannel;
+                dcs.Cada_C51072W_Channel1.SelectedChannel = selectedChannel;
             }
         }
     }

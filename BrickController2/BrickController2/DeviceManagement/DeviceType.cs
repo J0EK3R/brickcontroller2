@@ -16,12 +16,18 @@
         WeDo2,
 
         // MouldKing
-        MK_Robot,
+        /// <summary>
+        /// Robot
+        /// </summary>
+        MouldKing_15059,
 
-        // Hogokids
-        HK_Robot,
+        // HOGOKIDS
+        HOGOKIDS_8051,
 
         // Cada
-        Cada_RC_C51072W
+        /// <summary>
+        /// RaceCar
+        /// </summary>
+        Cada_C51072W
     }
 }

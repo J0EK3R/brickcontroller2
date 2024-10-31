@@ -71,6 +71,15 @@ namespace BrickController2.DeviceManagement
 
                 try
                 {
+                    // MouldKing
+                    await FoundDevice(DeviceType.MouldKing_15059, "MouldKing Robot", "15059", BitConverter.GetBytes(0xFFF0));
+
+                    // Hogokids
+                    await FoundDevice(DeviceType.HOGOKIDS_8051, "HOGOKIDS Robot", "8051", BitConverter.GetBytes(0x6CBC));
+
+                    // Cada
+                    await FoundDevice(DeviceType.Cada_C51072W, "Cada C51072W RaceCar", "C51072W", BitConverter.GetBytes(0xC200));
+
                     var infraScan = _infraredDeviceManager.ScanAsync(FoundDevice, token);
                     var bluetoothScan = _bluetoothDeviceManager.ScanAsync(FoundDevice, token);
 
@@ -110,15 +119,22 @@ namespace BrickController2.DeviceManagement
 
         public Device GetDeviceById(string Id)
         {
-            if (string.IsNullOrEmpty(Id))
+            try
+            {
+                if (string.IsNullOrEmpty(Id))
+                {
+                    return null;
+                }
+
+                var deviceTypeAndAddress = Id.Split('#');
+                var deviceType = (DeviceType)Enum.Parse(typeof(DeviceType), deviceTypeAndAddress[0]);
+                var deviceAddress = deviceTypeAndAddress[1];
+                return Devices.FirstOrDefault(d => d.DeviceType == deviceType && d.Address == deviceAddress);
+            }
+            catch
             {
                 return null;
             }
-
-            var deviceTypeAndAddress = Id.Split('#');
-            var deviceType = (DeviceType)Enum.Parse(typeof(DeviceType), deviceTypeAndAddress[0]);
-            var deviceAddress = deviceTypeAndAddress[1];
-            return Devices.FirstOrDefault(d => d.DeviceType == deviceType && d.Address == deviceAddress);
         }
 
         public async Task DeleteDeviceAsync(Device device)
