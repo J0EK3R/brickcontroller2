@@ -45,6 +45,15 @@ namespace BrickController2.UI.Controls
             WedoChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
 
+            // XP_Block_XC5
+            XP_Block_XC5_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            XP_Block_XC5_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            XP_Block_XC5_Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            XP_Block_XC5_Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            XP_Block_XC5_Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            XP_Block_XC5_Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+
             // MouldKing_15059
             MouldKing_15059_Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
             MouldKing_15059_Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
@@ -118,379 +127,104 @@ namespace BrickController2.UI.Controls
                 DeviceManagement.Device device = newValue as DeviceManagement.Device;
                 DeviceType deviceType = device?.DeviceType ?? DeviceType.Unknown;
 
+                #region sections
+                dcs.SbrickSection.IsVisible = false;
+                dcs.BuWizzSection.IsVisible = false;
+                dcs.BuWizz3Section.IsVisible = false;
+                dcs.InfraredSection.IsVisible = false;
+                dcs.PoweredUpSection.IsVisible = false;
+                dcs.BoostSection.IsVisible = false;
+                dcs.TechnicHubSection.IsVisible = false;
+                dcs.DuploTrainHubSection.IsVisible = false;
+                dcs.CircuitCubes.IsVisible = false;
+                dcs.Wedo2Section.IsVisible = false;
+
+                dcs.XP_Block_XC5_Section.IsVisible = false;
+
+                // MouldKing
+                dcs.MouldKing_15059_Section.IsVisible = false;
+                dcs.MouldKing_4_0_Module_Section.IsVisible = false;
+                dcs.MouldKing_6_0_Module_Section.IsVisible = false;
+                dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
+
+                // Hogokids
+                dcs.HOGOKIDS_8051_Section.IsVisible = false;
+
+                // Cada
+                dcs.Cada_C51072W_Section.IsVisible = false;
+
+                // TestModel
+                dcs.TestModel_Section.IsVisible = false;
+                #endregion
+
                 switch (deviceType)
-                {
+                 {
                     #region DeviceType.SBrick
                     case DeviceType.SBrick:
-                        #region sections
                         dcs.SbrickSection.IsVisible = true;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region BuWizz BuWizz2
                     case DeviceType.BuWizz:
                     case DeviceType.BuWizz2:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
                         dcs.BuWizzSection.IsVisible = true;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region BuWizz3
                     case DeviceType.BuWizz3:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
                         dcs.BuWizz3Section.IsVisible = true;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region Infrared
                     case DeviceType.Infrared:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
                         dcs.InfraredSection.IsVisible = true;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region Boost
                     case DeviceType.Boost:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
                         dcs.BoostSection.IsVisible = true;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region PowerUp
                     case DeviceType.PoweredUp:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
                         dcs.PoweredUpSection.IsVisible = true;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region TechnicHub
                     case DeviceType.TechnicHub:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
                         dcs.TechnicHubSection.IsVisible = true;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region DuploTrainHub
                     case DeviceType.DuploTrainHub:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
                         dcs.DuploTrainHubSection.IsVisible = true;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region CircuitCubes
                     case DeviceType.CircuitCubes:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
                         dcs.CircuitCubes.IsVisible = true;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region WeDo2
                     case DeviceType.WeDo2:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
                         dcs.Wedo2Section.IsVisible = true;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
+
+                    #region XPBlock_XC5
+                    case DeviceType.XPBlock_XC5:
+                        dcs.XP_Block_XC5_Section.IsVisible = true;
+                        break;
+                    #endregion
+
                     #region MouldKing 15059
                     case DeviceType.MouldKing_15059:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
                         dcs.MouldKing_15059_Section.IsVisible = true;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region MouldKing 4.0
                     case DeviceType.MouldKing_4_0_Modul:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
                         dcs.MouldKing_4_0_Module_Section.IsVisible = true;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         #region channels
                         dcs.MouldKing_4_0_Module_Channel0.IsVisible = device.NumberOfChannels >= 1;
                         dcs.MouldKing_4_0_Module_Channel1.IsVisible = device.NumberOfChannels >= 2;
@@ -509,189 +243,37 @@ namespace BrickController2.UI.Controls
                     #endregion
                     #region MouldKing 6.0
                     case DeviceType.MouldKing_6_0_Modul:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
                         dcs.MouldKing_6_0_Module_Section.IsVisible = true;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region MouldKing Mecanum
                     case DeviceType.MouldKing_Mecanum_Modul:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
                         dcs.MouldKing_Mecanum_Module_Section.IsVisible = true;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
+
                     #region HogoKids
                     case DeviceType.HOGOKIDS_8051:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
                         // Hogokids
                         dcs.HOGOKIDS_8051_Section.IsVisible = true;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
+
                     #region Cada
                     case DeviceType.Cada_C51072W:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
                         // Cada
                         dcs.Cada_C51072W_Section.IsVisible = true;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                     #endregion
                     #region TestModel
                     case DeviceType.TestModel:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
                         // Cada
                         dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = true;
-                        #endregion
                         break;
                     #endregion
                     #region Unknown
                     case DeviceType.Unknown:
                     default:
-                        #region sections
-                        dcs.SbrickSection.IsVisible = false;
-                        dcs.BuWizzSection.IsVisible = false;
-                        dcs.BuWizz3Section.IsVisible = false;
-                        dcs.InfraredSection.IsVisible = false;
-                        dcs.PoweredUpSection.IsVisible = false;
-                        dcs.BoostSection.IsVisible = false;
-                        dcs.TechnicHubSection.IsVisible = false;
-                        dcs.DuploTrainHubSection.IsVisible = false;
-                        dcs.CircuitCubes.IsVisible = false;
-                        dcs.Wedo2Section.IsVisible = false;
-
-                        // MouldKing
-                        dcs.MouldKing_15059_Section.IsVisible = false;
-                        dcs.MouldKing_4_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_6_0_Module_Section.IsVisible = false;
-                        dcs.MouldKing_Mecanum_Module_Section.IsVisible = false;
-
-                        // Hogokids
-                        dcs.HOGOKIDS_8051_Section.IsVisible = false;
-
-                        // Cada
-                        dcs.Cada_C51072W_Section.IsVisible = false;
-
-                        // TestModel
-                        dcs.TestModel_Section.IsVisible = false;
-                        #endregion
                         break;
                         #endregion
                 }
@@ -735,6 +317,14 @@ namespace BrickController2.UI.Controls
                 dcs.CircuitCubesC.SelectedChannel = selectedChannel;
                 dcs.WedoChannel0.SelectedChannel = selectedChannel;
                 dcs.WedoChannel1.SelectedChannel = selectedChannel;
+
+                // XP_Block_XC5
+                dcs.XP_Block_XC5_Channel0.SelectedChannel = selectedChannel;
+                dcs.XP_Block_XC5_Channel1.SelectedChannel = selectedChannel;
+                dcs.XP_Block_XC5_Channel2.SelectedChannel = selectedChannel;
+                dcs.XP_Block_XC5_Channel3.SelectedChannel = selectedChannel;
+                dcs.XP_Block_XC5_Channel4.SelectedChannel = selectedChannel;
+                dcs.XP_Block_XC5_Channel5.SelectedChannel = selectedChannel;
 
                 // MouldKing_15059
                 dcs.MouldKing_15059_Channel0.SelectedChannel = selectedChannel;

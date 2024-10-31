@@ -71,6 +71,8 @@
     <None Remove="UI\Images\technichub_image_small.png" />
     <None Remove="UI\Images\wedo2hub_image.png" />
     <None Remove="UI\Images\wedo2hub_image_small.png" />
+    <None Remove="UI\Images\xpblock_xc5_image.png" />
+    <None Remove="UI\Images\xpblock_xc5_image_small.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -88,6 +90,8 @@
     <EmbeddedResource Include="UI\Images\hogokids_8051_image_small.png" />
     <EmbeddedResource Include="UI\Images\joek3r_image.png" />
     <EmbeddedResource Include="UI\Images\joek3r_image_small.png" />
+    <EmbeddedResource Include="UI\Images\xpblock_xc5_image_small.png" />
+    <EmbeddedResource Include="UI\Images\xpblock_xc5_image.png" />
     <EmbeddedResource Include="UI\Images\mouldking_mecanum_image_small.png" />
     <EmbeddedResource Include="UI\Images\mouldking_mecanum_image.png" />
     <EmbeddedResource Include="UI\Images\mouldking_6_0_image_small.png" />
