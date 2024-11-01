@@ -10,6 +10,5 @@ namespace BrickController2.DeviceManagement
         Task DeleteDeviceAsync(DeviceType type, string address);
         Task DeleteDevicesAsync();
         Task UpdateDeviceAsync(DeviceType type, string address, string newName);
-        Task UpdateDeviceAsync(DeviceType type, string address, IEnumerable<DeviceSetting> settings);
     }
 }

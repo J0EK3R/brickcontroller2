@@ -18,8 +18,7 @@
             <converters:DeviceTypeToSmallImageConverter x:Key="DeviceTypeToSmallImage"/>
             <converters:DeviceConnectedToBoolConverter x:Key="DeviceConnectedToBool"/>
             <converters:DeviceDisconnectedToBoolConverter x:Key="DeviceDisconnectedToBool"/>
-            <converters:InverseBoolConverter x:Key="InverseBool" />
-    </ResourceDictionary>
+        </ResourceDictionary>
     </local:PageBase.Resources>
 
     <local:PageBase.Content>

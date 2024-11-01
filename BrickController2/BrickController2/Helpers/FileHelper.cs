@@ -17,7 +17,9 @@ namespace BrickController2.Helpers
         {
             var filePaths = Directory.EnumerateFiles(directoryPath, searchPattern, SearchOption.TopDirectoryOnly);
 
-            return filePaths.ToDictionary(fp => Path.GetFileNameWithoutExtension(fp), fp => fp);
+            var filenameFilepathMap = new Dictionary<string, string>(filePaths.Select(fp => KeyValuePair.Create(Path.GetFileNameWithoutExtension(fp), fp)));
+
+            return filenameFilepathMap;
         }
 
         public static bool FilenameValidator(string filename)
