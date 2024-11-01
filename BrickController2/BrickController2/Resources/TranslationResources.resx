@@ -141,6 +141,9 @@
   <data name="AdvancedSettings" xml:space="preserve">
     <value>Advanced settings</value>
   </data>
+  <data name="ApplyChanges" xml:space="preserve">
+    <value>Apply changes</value>
+  </data>
   <data name="AreYouSureToDeleteControllerAction" xml:space="preserve">
     <value>Are you sure to delete this controller action?</value>
   </data>
@@ -200,9 +203,6 @@
   </data>
   <data name="BuWizz2OutputLevel" xml:space="preserve">
     <value>BuWizz 2 output level</value>
-  </data>
-  <data name="BuWizz2SwapChannels" xml:space="preserve">
-    <value>Swap channels</value>
   </data>
   <data name="BuWizzOutputLevel" xml:space="preserve">
     <value>BuWizz output level</value>
@@ -291,9 +291,6 @@
   <data name="Devices" xml:space="preserve">
     <value>Devices</value>
   </data>
-  <data name="DeviceSettings" xml:space="preserve">
-    <value>Device settings</value>
-  </data>
   <data name="DeviceType" xml:space="preserve">
     <value>Device type</value>
   </data>
@@ -329,6 +326,15 @@
   </data>
   <data name="ErrorDuringScanning" xml:space="preserve">
     <value>Error during scanning</value>
+  </data>
+  <data name="ExportControllerProfile" xml:space="preserve">
+    <value>Export the controller profile</value>
+  </data>
+  <data name="ExportCreation" xml:space="preserve">
+    <value>Export the creation</value>
+  </data>
+  <data name="ExportSequence" xml:space="preserve">
+    <value>Export the sequence</value>
   </data>
   <data name="ExportSuccessful" xml:space="preserve">
     <value>Export successful:</value>
@@ -569,5 +575,32 @@
   </data>
   <data name="Yes" xml:space="preserve">
     <value>Yes</value>
+  </data>
+  <data name="AddCreation" xml:space="preserve">
+    <value>Add a new creation</value>
+  </data>
+  <data name="ScanForDevices" xml:space="preserve">
+    <value>Scan for new devices</value>
+  </data>
+  <data name="AddControlPoint" xml:space="preserve">
+    <value>Add a new control point</value>
+  </data>
+  <data name="AddControllerProfile" xml:space="preserve">
+    <value>Add a new controller profile</value>
+  </data>
+  <data name="AddControllerEvent" xml:space="preserve">
+    <value>Add a new controller event</value>
+  </data>
+  <data name="OpenDeviceDetails" xml:space="preserve">
+    <value>Show the device details</value>
+  </data>
+  <data name="OpenSequenceEditor" xml:space="preserve">
+    <value>Edit the sequence</value>
+  </data>
+  <data name="AddSequence" xml:space="preserve">
+    <value>Add a new sequence</value>
+  </data>
+  <data name="OpenChannelSetup" xml:space="preserve">
+    <value>Setup the channel</value>
   </data>
 </root>

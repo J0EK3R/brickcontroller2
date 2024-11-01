@@ -1,8 +1,6 @@
 ﻿using BrickController2.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +15,6 @@ namespace BrickController2.DeviceManagement
         private string _firmwareVersion = "-";
         private string _hardwareVersion = "-";
         private string _batteryVoltage = "-";
-        private readonly Dictionary<string, DeviceSetting> _settings = new Dictionary<string, DeviceSetting>();
 
         private volatile DeviceState _deviceState;
         protected int _outputLevel;
@@ -112,39 +109,6 @@ namespace BrickController2.DeviceManagement
                 await _deviceRepository.UpdateDeviceAsync(device.DeviceType, device.Address, newName);
                 device.Name = newName;
             }
-        }
-
-        public async Task UpdateDeviceSettingsAsync(IEnumerable<DeviceSetting> settings)
-        {
-            using (await _asyncLock.LockAsync())
-            {
-                // update provided settings
-                foreach (var s in settings ?? Enumerable.Empty<DeviceSetting>())
-                {
-                    SetSettingValue(s.Name, s.Value);
-                }
-
-                await _deviceRepository.UpdateDeviceAsync(DeviceType, Address, CurrentSettings);
-            }
-        }
-        public IReadOnlyCollection<DeviceSetting> CurrentSettings => _settings.Values;
-
-        protected TValue GetSettingValue<TValue>(string settingName, TValue defaultValue = default)
-        {
-            if (_settings.TryGetValue(settingName, out var setting) && setting.Value is TValue value)
-            {
-                return value;
-            }
-
-            return defaultValue;
-        }
-
-        protected void SetSettingValue<TValue>(string settingName, TValue value) => SetSettingValue(settingName, null, value);
-
-        protected void SetSettingValue<TValue>(string settingName, IEnumerable<DeviceSetting> settings, TValue defaultValue)
-        {
-            var foundSetting = settings?.FirstOrDefault(s => s.Name == settingName);
-            _settings[settingName] = new DeviceSetting { Name = settingName, Value = foundSetting?.Value ?? defaultValue };
         }
 
         public override string ToString()
