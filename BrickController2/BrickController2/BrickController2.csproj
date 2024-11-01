@@ -8,71 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="UI\Images\boost_image.png" />
-    <EmbeddedResource Include="UI\Images\boost_image_small.png" />
-    <EmbeddedResource Include="UI\Images\buwizz3_image.png" />
-    <EmbeddedResource Include="UI\Images\buwizz3_image_small.png" />
-    <EmbeddedResource Include="UI\Images\buwizz_image.png" />
-    <EmbeddedResource Include="UI\Images\buwizz_image_small.png" />
-    <EmbeddedResource Include="UI\Images\circuitcubes_image.png" />
-    <EmbeddedResource Include="UI\Images\circuitcubes_image_small.png" />
-    <EmbeddedResource Include="UI\Images\cada_racecar_image.png" />
-    <EmbeddedResource Include="UI\Images\hogokids_8051_image.png" />
-    <EmbeddedResource Include="UI\Images\cada_racecar_image_small.png" />
-    <EmbeddedResource Include="UI\Images\hogokids_8051_image_small.png" />
-    <EmbeddedResource Include="UI\Images\powerbox_mbattery_image_small.png" />
-    <EmbeddedResource Include="UI\Images\powerbox_mbattery_image.png" />
-    <EmbeddedResource Include="UI\Images\joek3r_image.png" />
-    <EmbeddedResource Include="UI\Images\joek3r_image_small.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_diy_image_small.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_diy_image.png" />
-    <EmbeddedResource Include="UI\Images\xpblock_xc5_image_small.png" />
-    <EmbeddedResource Include="UI\Images\xpblock_xc5_image.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_mecanum_image_small.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_mecanum_image.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_6_0_image_small.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_6_0_image.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_4_0_image_small.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_4_0_image.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_15059_image_small.png" />
-    <EmbeddedResource Include="UI\Images\mouldking_15059_image.png" />
-    <EmbeddedResource Include="UI\Images\duplotrainhub_image.png" />
-    <EmbeddedResource Include="UI\Images\duplotrainhub_image_small.png" />
-    <EmbeddedResource Include="UI\Images\ic_add.png" />
-    <EmbeddedResource Include="UI\Images\ic_back.png" />
-    <EmbeddedResource Include="UI\Images\ic_checkmark.png" />
-    <EmbeddedResource Include="UI\Images\ic_checkmark_filled.png" />
-    <EmbeddedResource Include="UI\Images\ic_circle.png" />
-    <EmbeddedResource Include="UI\Images\ic_edit.png" />
-    <EmbeddedResource Include="UI\Images\ic_exclamation_mark.png" />
-    <EmbeddedResource Include="UI\Images\ic_export.png" />
-    <EmbeddedResource Include="UI\Images\ic_import.png" />
-    <EmbeddedResource Include="UI\Images\ic_menu.png" />
-    <EmbeddedResource Include="UI\Images\ic_play.png" />
-    <EmbeddedResource Include="UI\Images\ic_search.png" />
-    <EmbeddedResource Include="UI\Images\ic_settings.png" />
-    <EmbeddedResource Include="UI\Images\technichub_image.png" />
-    <EmbeddedResource Include="UI\Images\technichub_image_small.png" />
-    <EmbeddedResource Include="UI\Images\ic_buttons.png" />
-    <EmbeddedResource Include="UI\Images\ic_console.png" />
-    <EmbeddedResource Include="UI\Images\ic_delete.png" />
-    <EmbeddedResource Include="UI\Images\ic_info.png" />
-    <EmbeddedResource Include="UI\Images\ic_joystick.png" />
-    <EmbeddedResource Include="UI\Images\ic_link.png" />
-    <EmbeddedResource Include="UI\Images\infra_image.png" />
-    <EmbeddedResource Include="UI\Images\infra_image_small.png" />
-    <EmbeddedResource Include="UI\Images\poweredup_image.png" />
-    <EmbeddedResource Include="UI\Images\poweredup_image_small.png" />
-    <EmbeddedResource Include="UI\Images\sbrick_image.png" />
-    <EmbeddedResource Include="UI\Images\sbrick_image_small.png" />
-    <EmbeddedResource Include="UI\Images\ic_sequence.png" />
-    <EmbeddedResource Include="UI\Images\dummyBT_image.png" />
-    <EmbeddedResource Include="UI\Images\wedo2hub_image.png" />
-    <EmbeddedResource Include="UI\Images\dummyBT_image_small.png" />
-    <EmbeddedResource Include="UI\Images\wedo2hub_image_small.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Autofac" />
     <PackageReference Include="Microsoft.Maui.Controls" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" />
@@ -86,7 +21,85 @@
   </ItemGroup>
 
   <ItemGroup>
+    <MauiXaml Update="UI\Controls\ChannelSelectorRadioButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\CheckBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\ColorImage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\DeviceChannelSelector.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\DeviceOutputTesterControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\Dialogs.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\FloatingActionButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\SegmentedControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Controls\SwipeIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
     <MauiXaml Update="UI\Controls\ToolbarIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\AboutPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\ChannelSetupPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\ControllerActionPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\ControllerProfilePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\ControllerTesterPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\CreationListPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\CreationPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\CreationScannerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\CreationSharePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\DeviceListPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\DevicePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\PlayerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\SequenceEditorPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\SequenceListPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Pages\SettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Themes\DarkTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="UI\Themes\LightTheme.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
   </ItemGroup>

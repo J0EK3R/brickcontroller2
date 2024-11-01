@@ -148,14 +148,6 @@ namespace BrickController2.CreationManagement
                 }
 
                 controllerProfile.ControllerEvents.Add(controllerEvent);
-
-                List<ControllerEvent> newSort = controllerProfile.ControllerEvents.OrderBy(item => $"{item}").ToList();
-                controllerProfile.ControllerEvents.Clear();
-                foreach(ControllerEvent currentControllerEvent in newSort)
-                {
-                    controllerProfile.ControllerEvents.Add(currentControllerEvent);
-                }
-
                 await _databaseConnection.UpdateWithChildrenAsync(controllerProfile);
             }
         }

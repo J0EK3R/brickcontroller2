@@ -146,6 +146,8 @@ namespace BrickController2.UI.ViewModels
                     }
 
                     SharedFileStorageService.IsPermissionGranted = storagePermissionStatus == PermissionStatus.Granted;
+                    // update command enablement
+                    ImportCreationCommand.RaiseCanExecuteChanged();
                 }
             }
             catch (OperationCanceledException)

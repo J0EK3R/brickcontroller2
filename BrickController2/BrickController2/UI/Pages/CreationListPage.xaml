@@ -42,7 +42,7 @@
                             <SwipeView>
                                 <SwipeView.LeftItems>
                                     <SwipeItems Mode="Execute">
-                                        <SwipeItem Text="{extensions:Translate Delete}" IconImageSource="{extensions:ImageResource Source=ic_delete.png}" BackgroundColor="{DynamicResource DeleteSwipeItemBackgroundColor}" Command="{Binding BindingContext.DeleteCreationCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}"/>
+                                        <controls:SwipeIcon Text="{extensions:Translate Delete}" Icon="cancel" BackgroundColor="{DynamicResource DeleteSwipeItemBackgroundColor}" Command="{Binding BindingContext.DeleteCreationCommand, Source={x:Reference Page}}" CommandParameter="{Binding .}"/>
                                     </SwipeItems>
                                 </SwipeView.LeftItems>
                                 <VerticalStackLayout>
@@ -54,9 +54,9 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Frame Grid.Column="0" WidthRequest="40" HeightRequest="40" BackgroundColor="{Binding Id, Converter={StaticResource IntToColor}}" CornerRadius="20" Padding="0" HasShadow="False" VerticalOptions="Center">
+                                        <Border Grid.Column="0" WidthRequest="40" HeightRequest="40" BackgroundColor="{Binding Id, Converter={StaticResource IntToColor}}" StrokeShape="RoundRectangle 20" Padding="0" VerticalOptions="Center">
                                             <Label Text="{Binding Name, Converter={StaticResource TextToCapitalInitial}}" TextColor="White" FontSize="Medium" HorizontalOptions="Center" VerticalOptions="Center"/>
-                                        </Frame>
+                                        </Border>
                                         <Label Grid.Column="1" Text="{Binding Name}" FontSize="Large" FontAttributes="Bold" VerticalOptions="CenterAndExpand"/>
                                     </Grid>
                                     <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="6,6,6,0"/>
@@ -83,7 +83,7 @@
                             <TapGestureRecognizer Command="{Binding NavigateToDevicesCommand}"/>
                         </Frame.GestureRecognizers>
                         <VerticalStackLayout HorizontalOptions="CenterAndExpand" Spacing="6">
-                            <controls:ColorImage Source="{extensions:ImageResource Source=ic_link.png}" Style="{StaticResource FooterColorImageStyle}"/>
+                            <controls:ColorImage Icon="hub" Style="{StaticResource FooterColorImageStyle}"/>
                             <Label Text="{extensions:Translate Devices}" FontSize="Small"/>
                         </VerticalStackLayout>
                     </Frame>
@@ -92,7 +92,7 @@
                             <TapGestureRecognizer Command="{Binding NavigateToControllerTesterCommand}"/>
                         </Frame.GestureRecognizers>
                         <VerticalStackLayout HorizontalOptions="CenterAndExpand" Spacing="6">
-                            <controls:ColorImage Source="{extensions:ImageResource Source=ic_console.png}" Style="{StaticResource FooterColorImageStyle}"/>
+                            <controls:ColorImage Icon="sports_esports" Style="{StaticResource FooterColorImageStyle}"/>
                             <Label Text="{extensions:Translate Controller}" FontSize="Small"/>
                         </VerticalStackLayout>
                     </Frame>
@@ -101,7 +101,7 @@
                             <TapGestureRecognizer Command="{Binding NavigateToSequencesCommand}"/>
                         </Frame.GestureRecognizers>
                         <VerticalStackLayout HorizontalOptions="CenterAndExpand" Spacing="6">
-                            <controls:ColorImage Source="{extensions:ImageResource Source=ic_sequence.png}" Style="{StaticResource FooterColorImageStyle}"/>
+                            <controls:ColorImage Icon="format_list_bulleted" Style="{StaticResource FooterColorImageStyle}"/>
                             <Label Text="{extensions:Translate Sequences}" FontSize="Small"/>
                         </VerticalStackLayout>
                     </Frame>
@@ -110,13 +110,13 @@
                             <TapGestureRecognizer Command="{Binding NavigateToAboutCommand}"/>
                         </Frame.GestureRecognizers>
                         <VerticalStackLayout HorizontalOptions="CenterAndExpand" Spacing="6">
-                            <controls:ColorImage Source="{extensions:ImageResource Source=ic_info.png}" Style="{StaticResource FooterColorImageStyle}"/>
+                            <controls:ColorImage Icon="info" Style="{StaticResource FooterColorImageStyle}"/>
                             <Label Text="{extensions:Translate About}" FontSize="Small"/>
                         </VerticalStackLayout>
                     </Frame>
                 </Grid>
 
-                <controls:FloatingActionButton Grid.Row="0" ButtonColor="Red" ImageSource="{extensions:ImageResource Source=ic_add.png}" ImageColor="White" Command="{Binding AddCreationCommand}" HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
+                <controls:FloatingActionButton Grid.Row="0" Style="{StaticResource FloatingActionButtonStyle}" Icon="add" Command="{Binding AddCreationCommand}" ToolTipProperties.Text="{extensions:Translate AddCreation}" HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
             </Grid>
 
             <controls:Dialogs x:Name="Dialogs" AbsoluteLayout.LayoutBounds="0, 0, 1, 1" AbsoluteLayout.LayoutFlags="All"/>
