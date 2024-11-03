@@ -603,4 +603,7 @@
   <data name="OpenChannelSetup" xml:space="preserve">
     <value>Setup the channel</value>
   </data>
+  <data name="DeleteAllDevices" xml:space="preserve">
+    <value>Delete all devices</value>
+  </data>
 </root>

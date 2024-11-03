@@ -576,4 +576,7 @@
   <data name="OpenChannelSetup" xml:space="preserve">
     <value>Einrichtung des Kanals</value>
   </data>
+  <data name="DeleteAllDevices" xml:space="preserve">
+    <value>Alle Geräte löschen</value>
+  </data>
 </root>

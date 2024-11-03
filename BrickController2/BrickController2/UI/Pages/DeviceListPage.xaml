@@ -58,9 +58,10 @@
                     </CollectionView.EmptyView>
                 </CollectionView>
 
+                <controls:FloatingActionButton Style="{StaticResource FloatingActionButtonStyle}" Icon="delete" Command="{Binding DeleteAllDevicesCommand}" ToolTipProperties.Text="{extensions:Translate DeleteAllDevices}" HorizontalOptions="Center" VerticalOptions="End" Margin="10" />
                 <controls:FloatingActionButton Style="{StaticResource FloatingActionButtonStyle}" Icon="search" Command="{Binding ScanCommand}" ToolTipProperties.Text="{extensions:Translate ScanForDevices}" HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
 
-            </Grid>
+      </Grid>
 
             <controls:Dialogs x:Name="Dialogs" AbsoluteLayout.LayoutBounds="0, 0, 1, 1" AbsoluteLayout.LayoutFlags="All"/>
 
