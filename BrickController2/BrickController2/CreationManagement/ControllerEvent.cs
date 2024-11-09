@@ -9,6 +9,7 @@ namespace BrickController2.CreationManagement
 {
     public class ControllerEvent : NotifyPropertyChangedSource
     {
+        private string _controllerDeviceId;
         private GameControllerEventType _eventType;
         private string _eventCode = string.Empty;
         private ObservableCollection<ControllerAction> _controllerActions = new ObservableCollection<ControllerAction>();
@@ -24,6 +25,12 @@ namespace BrickController2.CreationManagement
         [ManyToOne]
         [JsonIgnore]
         public ControllerProfile? ControllerProfile { get; set; }
+
+        public string ControllerDeviceId
+        {
+            get { return _controllerDeviceId; }
+            set { _controllerDeviceId = value; RaisePropertyChanged(); }
+        }
 
         public GameControllerEventType EventType
         {
@@ -46,7 +53,7 @@ namespace BrickController2.CreationManagement
 
         public override string ToString()
         {
-            return $"{EventType} - {EventCode}";
+            return $"{ControllerDeviceId} - {EventType} - {EventCode}";
         }
     }
 }
