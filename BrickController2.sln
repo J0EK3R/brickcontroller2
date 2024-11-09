@@ -10,6 +10,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrickController2", "BrickController2\BrickController2\BrickController2.csproj", "{852D9034-471A-42D0-8701-63D12E2EDACA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrickController2.WinUI", "BrickController2\BrickController2.WinUI\BrickController2.WinUI.csproj", "{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{CB3D749D-7F1A-4D9D-9B44-D058B7A76B98}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,24 +77,26 @@ Global
 		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|ARM64.Build.0 = Release|Any CPU
 		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x64.ActiveCfg = Release|Any CPU
 		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x64.Build.0 = Release|Any CPU
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|Any CPU.Build.0 = Debug|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|Any CPU.Deploy.0 = Debug|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|ARM64.Build.0 = Debug|ARM64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|x64.ActiveCfg = Debug|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|x64.Build.0 = Debug|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Debug|x64.Deploy.0 = Debug|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|Any CPU.ActiveCfg = Release|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|Any CPU.Build.0 = Release|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|Any CPU.Deploy.0 = Release|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|ARM64.ActiveCfg = Release|ARM64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|ARM64.Build.0 = Release|ARM64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|ARM64.Deploy.0 = Release|ARM64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|x64.ActiveCfg = Release|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|x64.Build.0 = Release|x64
-		{47060ECF-9DBD-424B-8CB7-0B0578DB6D7A}.Release|x64.Deploy.0 = Release|x64
+		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x86.ActiveCfg = Release|Any CPU
+		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x86.Build.0 = Release|Any CPU
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|Any CPU.Build.0 = Debug|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|Any CPU.Deploy.0 = Debug|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|x64.ActiveCfg = Debug|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|x64.Build.0 = Debug|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|x64.Deploy.0 = Debug|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|Any CPU.ActiveCfg = Release|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|Any CPU.Build.0 = Release|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|Any CPU.Deploy.0 = Release|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|ARM64.Build.0 = Release|ARM64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|ARM64.Deploy.0 = Release|ARM64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|x64.ActiveCfg = Release|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|x64.Build.0 = Release|x64
+		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Release|x64.Deploy.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
