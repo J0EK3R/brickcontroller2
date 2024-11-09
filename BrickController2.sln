@@ -12,7 +12,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{CB3D749D-7F1A-4D9D-9B44-D058B7A76B98}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		README.md = README.md
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BrickController2.WinUI", "BrickController2\BrickController2.WinUI\BrickController2.WinUI.csproj", "{6B687831-16FE-4C94-AEC9-8278075AF37D}"
@@ -75,8 +78,6 @@ Global
 		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|ARM64.Build.0 = Release|Any CPU
 		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x64.ActiveCfg = Release|Any CPU
 		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x64.Build.0 = Release|Any CPU
-		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x86.ActiveCfg = Release|Any CPU
-		{852D9034-471A-42D0-8701-63D12E2EDACA}.Release|x86.Build.0 = Release|Any CPU
 		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|Any CPU.Build.0 = Debug|x64
 		{6B687831-16FE-4C94-AEC9-8278075AF37D}.Debug|Any CPU.Deploy.0 = Debug|x64
