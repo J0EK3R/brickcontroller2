@@ -100,4 +100,9 @@ public class BleService : IBluetoothLEService
             return false;
         }
     }
+
+    public IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice()
+    {
+        return new BluetoothLEAdvertiserDevice();
+    }
 }
