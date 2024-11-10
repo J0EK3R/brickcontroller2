@@ -6,6 +6,7 @@ using Android.Bluetooth.LE;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Runtime;
 using BrickController2.PlatformServices.BluetoothLE;
 
 namespace BrickController2.Droid.PlatformServices.BluetoothLE
@@ -129,6 +130,13 @@ namespace BrickController2.Droid.PlatformServices.BluetoothLE
             {
                 return false;
             }
+        }
+
+        public IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice()
+        {
+            BluetoothLeAdvertiser advertiser = _bluetoothAdapter.BluetoothLeAdvertiser;
+
+            return new BluetoothLEAdvertiserDevice(advertiser);
         }
     }
 }

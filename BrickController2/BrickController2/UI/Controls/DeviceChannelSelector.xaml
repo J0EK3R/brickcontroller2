@@ -214,7 +214,6 @@
                 <Grid Grid.Column="2">
                 </Grid>
             </Grid>
-
-        </Grid>
+    </Grid>
     </ContentView.Content>
 </ContentView>

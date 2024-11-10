@@ -18,6 +18,7 @@ namespace BrickController2.Droid.PlatformServices.Permission
                 {
                     permissions.Add((Manifest.Permission.Bluetooth, true));
                     permissions.Add((Manifest.Permission.BluetoothAdmin, true));
+                    permissions.Add((Manifest.Permission.BluetoothAdvertise, true));
                     permissions.Add((Manifest.Permission.AccessFineLocation, true));
                     permissions.Add((Manifest.Permission.AccessCoarseLocation, true));
                 }
@@ -26,10 +27,11 @@ namespace BrickController2.Droid.PlatformServices.Permission
 #pragma warning disable CA1416 // Validate platform compatibility
                     permissions.Add((Manifest.Permission.BluetoothConnect, true));
                     permissions.Add((Manifest.Permission.BluetoothScan, true));
+                    permissions.Add((Manifest.Permission.BluetoothAdvertise, true));
 #pragma warning restore CA1416 // Validate platform compatibility
-                }
+        }
 
-                return permissions.ToArray();
+        return permissions.ToArray();
             }
         }
     }
