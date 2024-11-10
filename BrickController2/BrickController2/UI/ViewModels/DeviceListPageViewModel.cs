@@ -21,13 +21,14 @@ namespace BrickController2.UI.ViewModels
             INavigationService navigationService,
             ITranslationService translationService,
             IDeviceManager deviceManager,
-            IDialogService dialogService) 
+            IDialogService dialogService)
             : base(navigationService, translationService)
         {
             DeviceManager = deviceManager;
             _dialogService = dialogService;
 
             ScanCommand = new SafeCommand(async () => await ScanAsync(), () => !DeviceManager.IsScanning);
+            DeleteAllDevicesCommand = new SafeCommand(async () => await DeleteAllDevicesAsync(), () => !DeviceManager.IsScanning);
             DeviceTappedCommand = new SafeCommand<Device>(async device => await NavigationService.NavigateToAsync<DevicePageViewModel>(new NavigationParameters(("device", device))));
             DeleteDeviceCommand = new SafeCommand<Device>(async device => await DeleteDeviceAsync(device));
         }
@@ -35,6 +36,7 @@ namespace BrickController2.UI.ViewModels
         public IDeviceManager DeviceManager { get; }
 
         public ICommand ScanCommand { get; }
+        public ICommand DeleteAllDevicesCommand { get; }
         public ICommand DeviceTappedCommand { get; }
         public ICommand DeleteDeviceCommand { get; }
 
@@ -129,6 +131,28 @@ namespace BrickController2.UI.ViewModels
                     Translate("ErrorDuringScanning"),
                     Translate("Ok"),
                     CancellationToken.None);
+            }
+        }
+
+        private async Task DeleteAllDevicesAsync()
+        {
+            try
+            {
+                if (await _dialogService.ShowQuestionDialogAsync(
+                    Translate("Confirm"),
+                    $"{Translate("AreYouSureToDeleteDevice")} 'All'?",
+                    Translate("Yes"),
+                    Translate("No"),
+                    _disappearingTokenSource.Token))
+                {
+                    await _dialogService.ShowProgressDialogAsync(
+                        false,
+                        async (progressDialog, token) => await DeviceManager.DeleteDevicesAsync(),
+                        Translate("Deleting"));
+                }
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
     }

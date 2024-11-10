@@ -642,4 +642,7 @@
   <data name="Applying" xml:space="preserve">
     <value>Bewerben...</value>
   </data>
+  <data name="DeleteAllDevices" xml:space="preserve">
+    <value>Alle Geräte löschen</value>
+  </data>
 </root>

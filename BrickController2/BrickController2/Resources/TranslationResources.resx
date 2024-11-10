@@ -642,4 +642,7 @@
   <data name="Applying" xml:space="preserve">
     <value>Applying...</value>
   </data>
+  <data name="DeleteAllDevices" xml:space="preserve">
+    <value>Delete all devices</value>
+  </data>
 </root>
