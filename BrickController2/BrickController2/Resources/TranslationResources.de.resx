@@ -606,4 +606,7 @@
   <data name="Copy" xml:space="preserve">
     <value>Kopieren</value>
   </data>
+  <data name="Add" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
 </root>
