@@ -287,7 +287,7 @@ namespace BrickController2.UI.ViewModels
 
                 await _dialogService.ShowProgressDialogAsync(
                     false,
-                    async (progressDialog, token) => await _creationManager.AddOrGetControllerEventAsync(ControllerProfile, controllerEvent.EventType, controllerEvent.EventCode),
+                    async (progressDialog, token) => await _creationManager.AddOrGetControllerEventAsync(ControllerProfile, controllerEvent.ControllerDeviceId, controllerEvent.EventType, controllerEvent.EventCode),
                     Translate("Creating"),
                     token: DisappearingToken);
 

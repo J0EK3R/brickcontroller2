@@ -49,6 +49,29 @@ namespace BrickController2.UI.Converters
                 case DeviceType.WeDo2:
                     return ResourceHelper.GetImageResource("wedo2hub_image.png");
 
+                case DeviceType.XPBlock_XC5:
+                    return ResourceHelper.GetImageResource("xpblock_xc5_image.png");
+
+                case DeviceType.MouldKing_DIY:
+                    return ResourceHelper.GetImageResource("mouldking_diy_image.png");
+                case DeviceType.MouldKing_4_0_Module:
+                    return ResourceHelper.GetImageResource("mouldking_4_0_image.png");
+                case DeviceType.MouldKing_6_0_Module:
+                    return ResourceHelper.GetImageResource("mouldking_6_0_image.png");
+                case DeviceType.MouldKing_Mecanum_ATV:
+                    return ResourceHelper.GetImageResource("mouldking_mecanum_image.png");
+                case DeviceType.MouldKing_15059:
+                    return ResourceHelper.GetImageResource("mouldking_15059_image.png");
+
+                case DeviceType.HOGOKIDS_8051:
+                    return ResourceHelper.GetImageResource("hogokids_8051_image.png");
+
+                case DeviceType.CaDA_RaceCar:
+                    return ResourceHelper.GetImageResource("cada_racecar_image.png");
+
+                case DeviceType.PowerBox_M_Battery:
+                    return ResourceHelper.GetImageResource("powerbox_mbattery_image.png");
+
                 default:
                     return null;
             }

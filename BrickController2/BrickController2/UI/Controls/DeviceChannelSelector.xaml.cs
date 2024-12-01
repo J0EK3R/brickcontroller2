@@ -44,6 +44,66 @@ namespace BrickController2.UI.Controls
             CircuitCubesC.Command = new SafeCommand(() => SelectedChannel = 2);
             WedoChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
             WedoChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
+            XPBlock_XC5Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            XPBlock_XC5Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            XPBlock_XC5Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            XPBlock_XC5Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            XPBlock_XC5Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            XPBlock_XC5Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            MouldKing_DIYChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_DIYChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_DIYChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_DIYChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_DIYChannel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_DIYChannel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            MouldKing_15059Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_15059Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+
+            MouldKing_4_0_ModuleChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_4_0_ModuleChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_4_0_ModuleChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_4_0_ModuleChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_4_0_ModuleChannel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_4_0_ModuleChannel5.Command = new SafeCommand(() => SelectedChannel = 5);
+            MouldKing_4_0_ModuleChannel6.Command = new SafeCommand(() => SelectedChannel = 6);
+            MouldKing_4_0_ModuleChannel7.Command = new SafeCommand(() => SelectedChannel = 7);
+            MouldKing_4_0_ModuleChannel8.Command = new SafeCommand(() => SelectedChannel = 8);
+            MouldKing_4_0_ModuleChannel9.Command = new SafeCommand(() => SelectedChannel = 9);
+            MouldKing_4_0_ModuleChannel10.Command = new SafeCommand(() => SelectedChannel = 10);
+            MouldKing_4_0_ModuleChannel11.Command = new SafeCommand(() => SelectedChannel = 11);
+
+            MouldKing_6_0_ModuleChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_6_0_ModuleChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_6_0_ModuleChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_6_0_ModuleChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_6_0_ModuleChannel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_6_0_ModuleChannel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            MouldKing_Mecanum_ATVChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            MouldKing_Mecanum_ATVChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            MouldKing_Mecanum_ATVChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            MouldKing_Mecanum_ATVChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            MouldKing_Mecanum_ATVChannel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            MouldKing_Mecanum_ATVChannel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            HOGOKIDS_8051Channel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            HOGOKIDS_8051Channel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            HOGOKIDS_8051Channel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            HOGOKIDS_8051Channel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            HOGOKIDS_8051Channel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            HOGOKIDS_8051Channel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            CaDA_RaceCarChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
+            CaDA_RaceCarChannel1.Command = new SafeCommand(() => SelectedChannel = 1);
+            CaDA_RaceCarChannel2.Command = new SafeCommand(() => SelectedChannel = 2);
+            CaDA_RaceCarChannel3.Command = new SafeCommand(() => SelectedChannel = 3);
+            CaDA_RaceCarChannel4.Command = new SafeCommand(() => SelectedChannel = 4);
+            CaDA_RaceCarChannel5.Command = new SafeCommand(() => SelectedChannel = 5);
+
+            PowerBox_M_BatteryChannel0.Command = new SafeCommand(() => SelectedChannel = 0);
         }
 
         public static BindableProperty DeviceTypeProperty = BindableProperty.Create(nameof(DeviceType), typeof(DeviceType), typeof(DeviceChannelSelector), default(DeviceType), BindingMode.OneWay, null, OnDeviceTypeChanged);
@@ -76,6 +136,16 @@ namespace BrickController2.UI.Controls
                 dcs.DuploTrainHubSection.IsVisible = deviceType == DeviceType.DuploTrainHub;
                 dcs.CircuitCubes.IsVisible = deviceType == DeviceType.CircuitCubes;
                 dcs.Wedo2Section.IsVisible = deviceType == DeviceType.WeDo2;
+
+                dcs.XPBlock_XC5Section.IsVisible = deviceType == DeviceType.XPBlock_XC5;
+                dcs.MouldKing_DIYSection.IsVisible = deviceType == DeviceType.MouldKing_DIY;
+                dcs.MouldKing_15059Section.IsVisible = deviceType == DeviceType.MouldKing_15059;
+                dcs.MouldKing_4_0_ModuleSection.IsVisible = deviceType == DeviceType.MouldKing_4_0_Module;
+                dcs.MouldKing_6_0_ModuleSection.IsVisible = deviceType == DeviceType.MouldKing_6_0_Module;
+                dcs.MouldKing_Mecanum_ATVSection.IsVisible = deviceType == DeviceType.MouldKing_Mecanum_ATV;
+                dcs.HOGOKIDS_8051Section.IsVisible = deviceType == DeviceType.MouldKing_Mecanum_ATV;
+                dcs.CaDA_RaceCarSection.IsVisible = deviceType == DeviceType.CaDA_RaceCar;
+                dcs.PowerBox_M_BatterySection.IsVisible = deviceType == DeviceType.PowerBox_M_Battery;
             }
         }
 
@@ -116,6 +186,66 @@ namespace BrickController2.UI.Controls
                 dcs.CircuitCubesC.SelectedChannel = selectedChannel;
                 dcs.WedoChannel0.SelectedChannel = selectedChannel;
                 dcs.WedoChannel1.SelectedChannel = selectedChannel;
+
+                dcs.XPBlock_XC5Channel0.SelectedChannel = selectedChannel;
+                dcs.XPBlock_XC5Channel1.SelectedChannel = selectedChannel;
+                dcs.XPBlock_XC5Channel2.SelectedChannel = selectedChannel;
+                dcs.XPBlock_XC5Channel3.SelectedChannel = selectedChannel;
+                dcs.XPBlock_XC5Channel4.SelectedChannel = selectedChannel;
+                dcs.XPBlock_XC5Channel5.SelectedChannel = selectedChannel;
+
+                dcs.MouldKing_DIYChannel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIYChannel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIYChannel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIYChannel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIYChannel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_DIYChannel5.SelectedChannel = selectedChannel;
+
+                dcs.MouldKing_15059Channel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_15059Channel1.SelectedChannel = selectedChannel;
+
+                dcs.MouldKing_4_0_ModuleChannel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel5.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel6.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel7.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel8.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel9.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel10.SelectedChannel = selectedChannel;
+                dcs.MouldKing_4_0_ModuleChannel11.SelectedChannel = selectedChannel;
+
+                dcs.MouldKing_6_0_ModuleChannel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_ModuleChannel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_ModuleChannel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_ModuleChannel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_ModuleChannel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_6_0_ModuleChannel5.SelectedChannel = selectedChannel;
+
+                dcs.MouldKing_Mecanum_ATVChannel0.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATVChannel1.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATVChannel2.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATVChannel3.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATVChannel4.SelectedChannel = selectedChannel;
+                dcs.MouldKing_Mecanum_ATVChannel5.SelectedChannel = selectedChannel;
+
+                dcs.HOGOKIDS_8051Channel0.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051Channel1.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051Channel2.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051Channel3.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051Channel4.SelectedChannel = selectedChannel;
+                dcs.HOGOKIDS_8051Channel5.SelectedChannel = selectedChannel;
+
+                dcs.CaDA_RaceCarChannel0.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCarChannel1.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCarChannel2.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCarChannel3.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCarChannel4.SelectedChannel = selectedChannel;
+                dcs.CaDA_RaceCarChannel5.SelectedChannel = selectedChannel;
+
+                dcs.PowerBox_M_BatteryChannel0.SelectedChannel = selectedChannel;
             }
         }
     }
