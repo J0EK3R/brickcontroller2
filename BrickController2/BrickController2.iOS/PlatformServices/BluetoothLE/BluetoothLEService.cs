@@ -15,7 +15,8 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
     {
         private readonly CBCentralManager _centralManager;
         private readonly IDictionary<CBPeripheral, BluetoothLEDevice> _peripheralMap = new Dictionary<CBPeripheral, BluetoothLEDevice>();
-        private readonly object _lock = new();
+        private readonly object _lock = new object();
+        private readonly string _DeviceId;
 
         private Action<ScanResult>? _scanCallback;
 
@@ -28,8 +29,9 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
 
         public bool IsBluetoothLESupported => true;
         public bool IsBluetoothOn => _centralManager.State == CBManagerState.PoweredOn;
+        public string DeviceID => _DeviceId;
 
-        public async Task<bool> ScanDevicesAsync(Action<ScanResult> scanCallback, CancellationToken token)
+        public async Task<bool> ScanDevicesAsync(Action<ScanResult> scanCallback, IEnumerable<Tuple<ushort, byte[]>> advertiseList, CancellationToken token)
         {
             if (!IsBluetoothLESupported || !IsBluetoothOn || _centralManager.IsScanning)
             {
@@ -75,7 +77,7 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
 
         public override void DiscoveredPeripheral(CBCentralManager central, CBPeripheral peripheral, NSDictionary advertisementData, NSNumber RSSI)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 if (peripheral is null || peripheral.Identifier is null || string.IsNullOrEmpty(peripheral.Name))
                 {
@@ -148,8 +150,7 @@ namespace BrickController2.iOS.PlatformServices.BluetoothLE
 
         public IBluetoothLEAdvertiserDevice GetBluetoothLEAdvertiserDevice()
         {
-            return null;
+            return new BluetoothLEAdvertiserDevice(null);
         }
-
     }
 }

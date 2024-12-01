@@ -176,7 +176,6 @@
                 <Image Grid.Column="1" Source="{extensions:ImageResource Source=duplotrainhub_image.png}" WidthRequest="150" HeightRequest="80" HorizontalOptions="Center"/>
             </Grid>
 
-
             <!-- CircuitCubes -->
             <Grid x:Name="CircuitCubes">
                 <Grid.RowDefinitions>
@@ -214,6 +213,548 @@
                 <Grid Grid.Column="2">
                 </Grid>
             </Grid>
-    </Grid>
+
+            <!-- XPBlock_XC5 -->
+            <Grid x:Name="XPBlock_XC5Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="XPBlock_XC5Channel0"
+                                                         DeviceType="XPBlock_XC5"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="XPBlock_XC5Channel1"
+                                                         DeviceType="XPBlock_XC5"
+                                                         Channel="1"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="XPBlock_XC5Channel2"
+                                                         DeviceType="XPBlock_XC5"
+                                                         Channel="2"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="End"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=xpblock_xc5_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="XPBlock_XC5Channel3"
+                                                         DeviceType="XPBlock_XC5"
+                                                         Channel="3"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="XPBlock_XC5Channel4"
+                                                         DeviceType="XPBlock_XC5"
+                                                         Channel="4"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Center"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="XPBlock_XC5Channel5"
+                                                         DeviceType="XPBlock_XC5"
+                                                         Channel="5"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="End"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- MouldKing_DIY -->
+            <Grid x:Name="MouldKing_DIYSection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIYChannel0"
+                                                         DeviceType="MouldKing_DIY"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIYChannel1"
+                                                         DeviceType="MouldKing_DIY"
+                                                         Channel="1"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIYChannel2"
+                                                         DeviceType="MouldKing_DIY"
+                                                         Channel="2"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="End"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=xpblock_xc5_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIYChannel3"
+                                                         DeviceType="MouldKing_DIY"
+                                                         Channel="3"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIYChannel4"
+                                                         DeviceType="MouldKing_DIY"
+                                                         Channel="4"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Center"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_DIYChannel5"
+                                                         DeviceType="MouldKing_DIY"
+                                                         Channel="5"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="End"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- MouldKing_15059 -->
+            <Grid x:Name="MouldKing_15059Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_15059Channel0"
+                                                         DeviceType="MouldKing_15059"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=mouldking_15059_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_15059Channel1"
+                                                         DeviceType="MouldKing_15059"
+                                                         Channel="1"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- MouldKing_4_0_Module -->
+            <Grid x:Name="MouldKing_4_0_ModuleSection">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel0"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="0"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Start"
+                                                             Margin="0,0,20,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel1"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="1"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center"
+                                                             Margin="0,0,20,0" />
+                    </Grid>
+
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label VerticalOptions="Start">Device 1</Label>
+                        <Image VerticalOptions="End"
+                               Source="{extensions:ImageResource Source=mouldking_4_0_image.png}"
+                               WidthRequest="150"
+                               HeightRequest="100" />
+                    </VerticalStackLayout>
+                    
+                    <Grid Grid.Column="2">
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel2"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="2"
+                                                             HorizontalOptions="Start"
+                                                             VerticalOptions="Start"
+                                                             Margin="20,0,0,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel3"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="3"
+                                                             HorizontalOptions="Start"
+                                                             VerticalOptions="Center"
+                                                             Margin="20,0,0,0" />
+                    </Grid>
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel4"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="4"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Start"
+                                                             Margin="0,0,20,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel5"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="5"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center"
+                                                             Margin="0,0,20,0" />
+                    </Grid>
+
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label VerticalOptions="Start">Device 2</Label>
+                        <Image VerticalOptions="End"
+                               Source="{extensions:ImageResource Source=mouldking_4_0_image.png}"
+                               WidthRequest="150"
+                               HeightRequest="100" />
+                    </VerticalStackLayout>
+
+                    <Grid Grid.Column="2">
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel6"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="6"
+                                                             HorizontalOptions="Start"
+                                                             VerticalOptions="Start"
+                                                             Margin="20,0,0,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel7"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="7"
+                                                             HorizontalOptions="Start"
+                                                             VerticalOptions="Center"
+                                                             Margin="20,0,0,0" />
+                    </Grid>
+                </Grid>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel8"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="8"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Start"
+                                                             Margin="0,0,20,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel9"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="9"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center"
+                                                             Margin="0,0,20,0" />
+                    </Grid>
+
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label VerticalOptions="Start">Device 3</Label>
+                        <Image VerticalOptions="End"
+                               Source="{extensions:ImageResource Source=mouldking_4_0_image.png}"
+                               WidthRequest="150"
+                               HeightRequest="100" />
+                    </VerticalStackLayout>
+
+                    <Grid Grid.Column="2">
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel10"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="10"
+                                                             HorizontalOptions="Start"
+                                                             VerticalOptions="Start"
+                                                             Margin="20,0,0,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MouldKing_4_0_ModuleChannel11"
+                                                             DeviceType="MouldKing_4_0_Module"
+                                                             Channel="11"
+                                                             HorizontalOptions="Start"
+                                                             VerticalOptions="Center"
+                                                             Margin="20,0,0,0" />
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <!-- MouldKing_6_0_Module -->
+            <Grid x:Name="MouldKing_6_0_ModuleSection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_ModuleChannel0"
+                                                         DeviceType="MouldKing_6_0_Module"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_ModuleChannel1"
+                                                         DeviceType="MouldKing_6_0_Module"
+                                                         Channel="1"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_ModuleChannel2"
+                                                         DeviceType="MouldKing_6_0_Module"
+                                                         Channel="2"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="End"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=mouldking_6_0_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_ModuleChannel3"
+                                                         DeviceType="MouldKing_6_0_Module"
+                                                         Channel="3"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_ModuleChannel4"
+                                                         DeviceType="MouldKing_6_0_Module"
+                                                         Channel="4"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Center"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_6_0_ModuleChannel5"
+                                                         DeviceType="MouldKing_6_0_Module"
+                                                         Channel="5"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="End"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- MouldKing_Mecanum_ATV -->
+            <Grid x:Name="MouldKing_Mecanum_ATVSection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_Mecanum_ATVChannel0"
+                                                         DeviceType="MouldKing_Mecanum_ATV"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_Mecanum_ATVChannel1"
+                                                         DeviceType="MouldKing_Mecanum_ATV"
+                                                         Channel="1"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_Mecanum_ATVChannel2"
+                                                         DeviceType="MouldKing_Mecanum_ATV"
+                                                         Channel="2"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="End"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=mouldking_mecanum_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_Mecanum_ATVChannel3"
+                                                         DeviceType="MouldKing_Mecanum_ATV"
+                                                         Channel="3"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_Mecanum_ATVChannel4"
+                                                         DeviceType="MouldKing_Mecanum_ATV"
+                                                         Channel="4"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Center"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="MouldKing_Mecanum_ATVChannel5"
+                                                         DeviceType="MouldKing_Mecanum_ATV"
+                                                         Channel="5"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="End"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- HOGOKIDS_8051 -->
+            <Grid x:Name="HOGOKIDS_8051Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="HOGOKIDS_8051Channel0"
+                                                         DeviceType="HOGOKIDS_8051"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="HOGOKIDS_8051Channel1"
+                                                         DeviceType="HOGOKIDS_8051"
+                                                         Channel="1"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="HOGOKIDS_8051Channel2"
+                                                         DeviceType="HOGOKIDS_8051"
+                                                         Channel="2"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="End"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=hogokids_8051_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="HOGOKIDS_8051Channel3"
+                                                         DeviceType="HOGOKIDS_8051"
+                                                         Channel="3"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="HOGOKIDS_8051Channel4"
+                                                         DeviceType="HOGOKIDS_8051"
+                                                         Channel="4"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Center"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="HOGOKIDS_8051Channel5"
+                                                         DeviceType="HOGOKIDS_8051"
+                                                         Channel="5"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="End"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- CaDA_RaceCar -->
+            <Grid x:Name="CaDA_RaceCarSection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCarChannel0"
+                                                         DeviceType="CaDA_RaceCar"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCarChannel1"
+                                                         DeviceType="CaDA_RaceCar"
+                                                         Channel="1"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Center"
+                                                         Margin="0,0,20,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCarChannel2"
+                                                         DeviceType="CaDA_RaceCar"
+                                                         Channel="2"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="End"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=cada_racecar_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+                    <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCarChannel3"
+                                                         DeviceType="CaDA_RaceCar"
+                                                         Channel="3"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Start"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCarChannel4"
+                                                         DeviceType="CaDA_RaceCar"
+                                                         Channel="4"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="Center"
+                                                         Margin="20,0,0,0" />
+                    <controls:ChannelSelectorRadioButton x:Name="CaDA_RaceCarChannel5"
+                                                         DeviceType="CaDA_RaceCar"
+                                                         Channel="5"
+                                                         HorizontalOptions="Start"
+                                                         VerticalOptions="End"
+                                                         Margin="20,0,0,0" />
+                </Grid>
+            </Grid>
+
+            <!-- PowerBox_M_Battery -->
+            <Grid x:Name="PowerBox_M_BatterySection">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <controls:ChannelSelectorRadioButton x:Name="PowerBox_M_BatteryChannel0"
+                                                         DeviceType="PowerBox_M_Battery"
+                                                         Channel="0"
+                                                         HorizontalOptions="End"
+                                                         VerticalOptions="Start"
+                                                         Margin="0,0,20,0" />
+                </Grid>
+
+                <Image Grid.Column="1"
+                       Source="{extensions:ImageResource Source=powerbox_mbattery_image.png}"
+                       WidthRequest="150"
+                       HeightRequest="100" />
+
+                <Grid Grid.Column="2">
+
+                </Grid>
+            </Grid>
+        </Grid>
     </ContentView.Content>
 </ContentView>

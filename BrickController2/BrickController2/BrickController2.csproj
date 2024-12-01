@@ -13,8 +13,12 @@
     <None Remove="UI\Navigation\**" />
     <None Remove="UI\Images\buwizz3_image.png" />
     <None Remove="UI\Images\buwizz3_image_small.png" />
+    <None Remove="UI\Images\cada_racecar_image.png" />
+    <None Remove="UI\Images\cada_racecar_image_small.png" />
     <None Remove="UI\Images\circuitcubes_image.png" />
     <None Remove="UI\Images\circuitcubes_image_small.png" />
+    <None Remove="UI\Images\hogokids_8051_image.png" />
+    <None Remove="UI\Images\hogokids_8051_image_small.png" />
     <None Remove="UI\Images\ic_add.png" />
     <None Remove="UI\Images\ic_back.png" />
     <None Remove="UI\Images\ic_checkmark.png" />
@@ -49,6 +53,20 @@
     <None Remove="UI\Images\ic_settings.png" />
     <None Remove="UI\Images\infra_image.png" />
     <None Remove="UI\Images\infra_image_small.png" />
+    <None Remove="UI\Images\joek3r_image.png" />
+    <None Remove="UI\Images\joek3r_image_small.png" />
+    <None Remove="UI\Images\mouldking_15059_image.png" />
+    <None Remove="UI\Images\mouldking_15059_image_small.png" />
+    <None Remove="UI\Images\mouldking_4_0_image.png" />
+    <None Remove="UI\Images\mouldking_4_0_image_small.png" />
+    <None Remove="UI\Images\mouldking_6_0_image.png" />
+    <None Remove="UI\Images\mouldking_6_0_image_small.png" />
+    <None Remove="UI\Images\mouldking_diy_image.png" />
+    <None Remove="UI\Images\mouldking_diy_image_small.png" />
+    <None Remove="UI\Images\mouldking_mecanum_image.png" />
+    <None Remove="UI\Images\mouldking_mecanum_image_small.png" />
+    <None Remove="UI\Images\powerbox_mbattery_image.png" />
+    <None Remove="UI\Images\powerbox_mbattery_image_small.png" />
     <None Remove="UI\Images\poweredup_image.png" />
     <None Remove="UI\Images\poweredup_image_small.png" />
     <None Remove="UI\Images\sbrick_image.png" />
@@ -57,6 +75,8 @@
     <None Remove="UI\Images\technichub_image_small.png" />
     <None Remove="UI\Images\wedo2hub_image.png" />
     <None Remove="UI\Images\wedo2hub_image_small.png" />
+    <None Remove="UI\Images\xpblock_xc5_image.png" />
+    <None Remove="UI\Images\xpblock_xc5_image_small.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,10 +86,28 @@
     <EmbeddedResource Include="UI\Images\buwizz3_image_small.png" />
     <EmbeddedResource Include="UI\Images\buwizz_image.png" />
     <EmbeddedResource Include="UI\Images\buwizz_image_small.png" />
+    <EmbeddedResource Include="UI\Images\cada_racecar_image.png" />
+    <EmbeddedResource Include="UI\Images\cada_racecar_image_small.png" />
     <EmbeddedResource Include="UI\Images\circuitcubes_image.png" />
     <EmbeddedResource Include="UI\Images\circuitcubes_image_small.png" />
     <EmbeddedResource Include="UI\Images\duplotrainhub_image.png" />
     <EmbeddedResource Include="UI\Images\duplotrainhub_image_small.png" />
+    <EmbeddedResource Include="UI\Images\hogokids_8051_image.png" />
+    <EmbeddedResource Include="UI\Images\hogokids_8051_image_small.png" />
+    <EmbeddedResource Include="UI\Images\joek3r_image.png" />
+    <EmbeddedResource Include="UI\Images\joek3r_image_small.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_15059_image.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_15059_image_small.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_4_0_image.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_4_0_image_small.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_6_0_image.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_6_0_image_small.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_diy_image.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_diy_image_small.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_mecanum_image.png" />
+    <EmbeddedResource Include="UI\Images\mouldking_mecanum_image_small.png" />
+    <EmbeddedResource Include="UI\Images\powerbox_mbattery_image.png" />
+    <EmbeddedResource Include="UI\Images\powerbox_mbattery_image_small.png" />
     <EmbeddedResource Include="UI\Images\technichub_image.png" />
     <EmbeddedResource Include="UI\Images\technichub_image_small.png" />
     <EmbeddedResource Include="UI\Images\infra_image.png" />
@@ -80,6 +118,8 @@
     <EmbeddedResource Include="UI\Images\sbrick_image_small.png" />
     <EmbeddedResource Include="UI\Images\wedo2hub_image.png" />
     <EmbeddedResource Include="UI\Images\wedo2hub_image_small.png" />
+    <EmbeddedResource Include="UI\Images\xpblock_xc5_image.png" />
+    <EmbeddedResource Include="UI\Images\xpblock_xc5_image_small.png" />
   </ItemGroup>
 
   <ItemGroup>
