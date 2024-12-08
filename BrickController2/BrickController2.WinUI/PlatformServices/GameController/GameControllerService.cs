@@ -11,7 +11,6 @@ namespace BrickController2.Windows.PlatformServices.GameController;
 
 public class GameControllerService : IGameControllerService
 {
-
     private readonly Dictionary<string, GamepadController> _availableControllers = [];
     private readonly object _lockObject = new();
     private readonly IMainThreadService _mainThreadService;
@@ -54,19 +53,19 @@ public class GameControllerService : IGameControllerService
         }
     }
 
-    internal void RaiseEvent(IDictionary<(GameControllerEventType, string), float> events)
+    internal void RaiseEvent(IDictionary<(GameControllerEventType, string), float> events, string controllerDeviceId)
     {
         if (!events.Any())
         {
             return;
         }
 
-        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(events));
+        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, events));
     }
 
-    internal void RaiseEvent(string deviceId, string key, GameControllerEventType eventType, float value = 0.0f)
+    internal void RaiseEvent(string deviceId, string key, GameControllerEventType eventType, string controllerDeviceId, float value = 0.0f)
     {
-        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(eventType, key, value));
+        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, eventType, key, value));
     }
 
     private void InitializeControllers()

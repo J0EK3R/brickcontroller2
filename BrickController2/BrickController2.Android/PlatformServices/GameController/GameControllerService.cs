@@ -41,7 +41,12 @@ namespace BrickController2.Droid.PlatformServices.GameController
         {
             if ((((int)e.Source & (int)InputSourceType.Gamepad) == (int)InputSourceType.Gamepad) && e.RepeatCount == 0)
             {
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
+                // https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/multiple-controllers
+                // Note: On devices running Android 4.1(API level 16) and higher, you can obtain an input device’s descriptor using getDescriptor(), which returns a unique persistent
+                // string value for the input device.Unlike a device ID, the descriptor value won't change even if the input device is disconnected, reconnected, or reconfigured. 
+                string controllerDeviceId = $"{e.Device?.ControllerNumber ?? -1}";
+
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
                 return true;
             }
 
@@ -52,15 +57,23 @@ namespace BrickController2.Droid.PlatformServices.GameController
         {
             if ((((int)e.Source & (int)InputSourceType.Gamepad) == (int)InputSourceType.Gamepad) && e.RepeatCount == 0)
             {
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
+                // https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/multiple-controllers
+                // Note: On devices running Android 4.1(API level 16) and higher, you can obtain an input device’s descriptor using getDescriptor(), which returns a unique persistent
+                // string value for the input device.Unlike a device ID, the descriptor value won't change even if the input device is disconnected, reconnected, or reconfigured. 
+                string controllerDeviceId = $"{e.Device?.ControllerNumber ?? -1}";
+
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
                 return true;
             }
-
             return false;
         }
-
         public bool OnGenericMotionEvent(MotionEvent e)
         {
+            // https://developer.android.com/develop/ui/views/touch-and-input/game-controllers/multiple-controllers
+            // Note: On devices running Android 4.1(API level 16) and higher, you can obtain an input device’s descriptor using getDescriptor(), which returns a unique persistent
+            // string value for the input device.Unlike a device ID, the descriptor value won't change even if the input device is disconnected, reconnected, or reconfigured. 
+
+            string controllerDeviceId = $"{e.Device?.ControllerNumber ?? -1}";
             if (e.Source == InputSourceType.Joystick && e.Action == MotionEventActions.Move)
             {
                 var events = new Dictionary<(GameControllerEventType, string), float>();
@@ -111,7 +124,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
                     events[(GameControllerEventType.Axis, axisCode.ToString())] = axisValue;
                 }
 
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(events));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, events));
                 return true;
             }
 

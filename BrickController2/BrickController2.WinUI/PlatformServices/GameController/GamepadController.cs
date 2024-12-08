@@ -59,7 +59,7 @@ internal class GamepadController
             .Where(HasChanged)
             .ToDictionary(x => (x.EventType, x.Name), x => x.Value);
 
-        _controllerService.RaiseEvent(currentEvents);
+        _controllerService.RaiseEvent(currentEvents, DeviceId);
     }
 
     private static bool AreAlmostEqual(float a, float b) => Math.Abs(a - b) < 0.001;
