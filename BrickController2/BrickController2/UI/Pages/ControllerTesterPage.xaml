@@ -29,6 +29,7 @@
                             <StackLayout Orientation="Vertical" Padding="10">
                                 <StackLayout Orientation="Horizontal">
                                     <Label Text="ControllerId: " FontSize="Medium"/>
+                                    <Label Text=" - " FontSize="Medium"/>
                                     <Label Text="{Binding ControllerDeviceId}" FontSize="Medium"/>
                                 </StackLayout>
                                 <StackLayout Orientation="Horizontal">
