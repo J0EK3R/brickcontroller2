@@ -1,4 +1,5 @@
-﻿using BrickController2.PlatformServices.GameController;
+﻿using BrickController2.Helpers;
+using BrickController2.PlatformServices.GameController;
 using BrickController2.UI.Services.MainThread;
 using BrickController2.Windows.Extensions;
 using Microsoft.Maui.Dispatching;
@@ -121,13 +122,30 @@ public class GameControllerService : IGameControllerService
             var dispatcher = _dispatcherProvider.GetForCurrentThread();
             foreach (var gamepad in gamepads)
             {
+                // deviceId looks like "{wgi/nrid/]Xd\\h-M1mO]-il0l-4L\\-Gebf:^3->kBRhM-d4}\0"
                 var deviceId = gamepad.GetDeviceId();
+                
+                int controllerIndex = GetUnusedControllerIndex(); // get first unused index begins at 1
+                string controllerDeviceId = GameControllerHelper.GetControllerDeviceId(controllerIndex);
 
-                var newController = new GamepadController(this, gamepad, dispatcher!.CreateTimer());
+                var newController = new GamepadController(this, gamepad, controllerIndex, controllerDeviceId, dispatcher!.CreateTimer());
                 _availableControllers[deviceId] = newController;
 
                 newController.Start();
             }
+        }
+    }
+
+    private int GetUnusedControllerIndex()
+    {
+        lock (_lockObject)
+        {
+            int unusedIndex = 1;
+            while(_availableControllers.Values.Any(gamepadController => gamepadController.ControllerIndex == unusedIndex))
+            {
+                unusedIndex++;
+            }
+            return unusedIndex;
         }
     }
 }

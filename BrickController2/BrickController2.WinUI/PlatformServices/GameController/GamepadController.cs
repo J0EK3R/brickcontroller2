@@ -17,23 +17,31 @@ internal class GamepadController
     private readonly IDispatcherTimer _timer;
 
     private readonly Dictionary<string, float> _lastReadingValues = [];
+    private readonly int _controllerIndex;
+    private readonly string _controllerName;
+    private readonly string _deviceId;
 
-    public GamepadController(GameControllerService service, Gamepad gamepad, IDispatcherTimer timer)
-        : this(service, gamepad, timer, DefaultInterval)
+    public GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, string controllerName, IDispatcherTimer timer)
+        : this(service, gamepad, controllerIndex, controllerName, timer, DefaultInterval)
     {
     }
 
-    private GamepadController(GameControllerService service, Gamepad gamepad, IDispatcherTimer timer, TimeSpan timerInterval)
+    private GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, string controllerName, IDispatcherTimer timer, TimeSpan timerInterval)
     {
         _controllerService = service;
         _gamepad = gamepad;
         _timer = timer;
+        _controllerIndex = controllerIndex;
+        _deviceId = _gamepad.GetDeviceId();
+        _controllerName = controllerName;
 
         _timer.Interval = timerInterval;
         _timer.Tick += Timer_Tick;
     }
 
-    public string DeviceId => _gamepad.GetDeviceId();
+    public string DeviceId => _deviceId;
+    public int ControllerIndex => _controllerIndex;
+    public string ControllerName => _controllerName;
 
     public void Start()
     {
@@ -59,7 +67,7 @@ internal class GamepadController
             .Where(HasChanged)
             .ToDictionary(x => (x.EventType, x.Name), x => x.Value);
 
-        _controllerService.RaiseEvent(currentEvents, DeviceId);
+        _controllerService.RaiseEvent(currentEvents, ControllerName);
     }
 
     private static bool AreAlmostEqual(float a, float b) => Math.Abs(a - b) < 0.001;
