@@ -2,6 +2,9 @@
 using Android.Content.PM;
 using Android.Runtime;
 using Android.Views;
+using Android.Hardware.Input;
+using Android.Content;
+using Android.OS;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui;
 using Microsoft.Maui.ApplicationModel;
@@ -20,13 +23,73 @@ namespace BrickController2.Droid
             ConfigChanges.UiMode | 
             ConfigChanges.ScreenLayout | 
             ConfigChanges.SmallestScreenSize)]
-    public class MainActivity : MauiAppCompatActivity
+    public class MainActivity : MauiAppCompatActivity, InputManager.IInputDeviceListener
     {
         private readonly GameControllerService _gameControllerService;
+        private InputManager? _inputManager;
 
         public MainActivity()
         {
             _gameControllerService = IPlatformApplication.Current!.Services.GetRequiredService<GameControllerService>()!;
+        }
+
+        protected override void OnCreate(Bundle? savedInstanceState)
+        {
+            base.OnCreate(savedInstanceState);
+
+            _inputManager = (InputManager?)GetSystemService(Context.InputService);
+
+            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
+            // current decision: on Create/Destroy
+            _gameControllerService?.MainActivityOnCreate();
+            _inputManager?.RegisterInputDeviceListener(this, null);
+        }
+
+        protected override void OnDestroy()
+        {
+            // JK: OnDestroy was never called...
+
+            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
+            // current decision: on Create/Destroy
+            _inputManager?.UnregisterInputDeviceListener(this);
+            _gameControllerService?.MainActivityOnDestroy();
+
+            base.OnDestroy();
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+
+            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
+            // current decision: on Create/Destroy
+            //_inputManager?.RegisterInputDeviceListener(this, null);
+            _gameControllerService?.MainActivityOnResume();
+        }
+
+        protected override void OnPause()
+        {
+            base.OnPause();
+
+            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
+            // current decision: on Create/Destroy
+            //_inputManager?.UnregisterInputDeviceListener(this);
+            _gameControllerService?.MainActivityOnPause();
+        }
+
+        public void OnInputDeviceAdded(int deviceId)
+        {
+            _gameControllerService?.MainActivityOnInputDeviceAdded(deviceId);
+        }
+
+        public void OnInputDeviceRemoved(int deviceId)
+        {
+            _gameControllerService?.MainActivityOnInputDeviceRemoved(deviceId);
+        }
+
+        public void OnInputDeviceChanged(int deviceId)
+        {
+            _gameControllerService?.MainActivityOnInputDeviceChanged(deviceId);
         }
 
         public override bool OnKeyDown([GeneratedEnum] global::Android.Views.Keycode keyCode, KeyEvent? e)

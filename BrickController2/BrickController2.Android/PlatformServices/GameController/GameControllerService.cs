@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Android.Runtime;
 using Android.Views;
+using Android.Hardware.Input;
+using Android.Content;
 using BrickController2.PlatformServices.GameController;
-using BrickController2.Droid.Extensions;
 
 namespace BrickController2.Droid.PlatformServices.GameController
 {
     public class GameControllerService : IGameControllerService
     {
+        private readonly Dictionary<int, GamepadController> _availableControllers = [];
         private readonly IDictionary<Axis, float> _lastAxisValues = new Dictionary<Axis, float>();
         private readonly object _lockObject = new object();
+        private readonly Context _context;
+        private readonly InputManager _inputManager;
 
         private event EventHandler<GameControllerEventArgs>? GameControllerEventInternal;
 
@@ -38,13 +43,84 @@ namespace BrickController2.Droid.PlatformServices.GameController
             }
         }
 
+        public GameControllerService(Context context)
+        {
+            _context = context;
+            _inputManager = (InputManager)_context.GetSystemService(Context.InputService)!;
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when MainActivity is created
+        /// </summary>
+        public void MainActivityOnCreate()
+        {
+            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
+            // current decision: on Create/Destroy
+            this.RefreshGameControllers();
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when MainActivity is destroy
+        /// </summary>
+        public void MainActivityOnDestroy()
+        {
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when MainActivity is paused 
+        /// </summary>
+        public void MainActivityOnPause()
+        {
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when MainActivity is resumed 
+        /// </summary>
+        public void MainActivityOnResume()
+        {
+            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
+            // current decision: on Create/Destroy
+
+            // while MainActivity was paused the InputDeviceListener was unregistered
+            // gamecontrollers could be added/removed so we have to Refresh
+            //this.RefreshGameControllers();
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when an InputDevice is added
+        /// </summary>
+        /// <param name="deviceId">deviceId of InputDevice</param>
+        public void MainActivityOnInputDeviceAdded(int deviceId)
+        {
+            this.AddGameControllerDevice(deviceId);
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when an InputDevice is removed 
+        /// </summary>
+        /// <param name="deviceId">deviceId of InputDevice</param>
+        public void MainActivityOnInputDeviceRemoved(int deviceId)
+        {
+            this.RemoveGameControllerDevice(deviceId);
+        }
+
+        /// <summary>
+        /// Handler called from MainActivity when an InputDevice is changed 
+        /// </summary>
+        /// <param name="deviceId">deviceId of InputDevice</param>
+        public void MainActivityOnInputDeviceChanged(int deviceId)
+        {
+            this.AddGameControllerDevice(deviceId);
+        }
+
         public bool OnKeyDown([GeneratedEnum] Keycode keyCode, KeyEvent e)
         {
-            if ((((int)e.Source & (int)InputSourceType.Gamepad) == (int)InputSourceType.Gamepad) && e.RepeatCount == 0)
+            GamepadController? gamepadController;
+            if (e.Source.HasFlag(InputSourceType.Gamepad) && 
+                e.RepeatCount == 0 &&
+                _availableControllers.TryGetValue(e.DeviceId, out gamepadController)) // fetch matching GamepadController from table
             {
-                string controllerDeviceId = e.Device.GetDeviceId();
-
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
                 return true;
             }
 
@@ -53,19 +129,23 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
         public bool OnKeyUp([GeneratedEnum] Keycode keyCode, KeyEvent e)
         {
-            if ((((int)e.Source & (int)InputSourceType.Gamepad) == (int)InputSourceType.Gamepad) && e.RepeatCount == 0)
+            GamepadController? gamepadController;
+            if (e.Source.HasFlag(InputSourceType.Gamepad) && 
+                e.RepeatCount == 0 &&
+                _availableControllers.TryGetValue(e.DeviceId, out gamepadController)) // fetch matching GamepadController from table
             {
-                string controllerDeviceId = e.Device.GetDeviceId();
-
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
                 return true;
             }
             return false;
         }
+
         public bool OnGenericMotionEvent(MotionEvent e)
         {
-            string controllerDeviceId = e.Device.GetDeviceId();
-            if (e.Source == InputSourceType.Joystick && e.Action == MotionEventActions.Move)
+            GamepadController? gamepadController;
+            if (e.Source == InputSourceType.Joystick && 
+                e.Action == MotionEventActions.Move &&
+                _availableControllers.TryGetValue(e.DeviceId, out gamepadController)) // fetch matching GamepadController from table
             {
                 var events = new Dictionary<(GameControllerEventType, string), float>();
                 foreach (Axis axisCode in Enum.GetValues(typeof(Axis)))
@@ -115,11 +195,98 @@ namespace BrickController2.Droid.PlatformServices.GameController
                     events[(GameControllerEventType.Axis, axisCode.ToString())] = axisValue;
                 }
 
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, events));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, events));
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Add any connected game controller
+        /// </summary>
+        private void RefreshGameControllers()
+        {
+            lock (_lockObject)
+            {
+                this.ClearGameControllers();
+
+                int[] deviceIds = _inputManager?.GetInputDeviceIds() ?? Array.Empty<int>();
+
+                foreach (int deviceId in deviceIds)
+                {
+                    this.AddGameControllerDevice(deviceId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove any registered game controller
+        /// </summary>
+        private void ClearGameControllers()
+        {
+            lock (_lockObject)
+            {
+                int[] savedKeys = _availableControllers.Keys.ToArray();
+
+                foreach (int deviceId in savedKeys)
+                {
+                    this.RemoveGameControllerDevice(deviceId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add game controller device
+        /// </summary>
+        /// <param name="deviceId">deviceId of InputDevice</param>
+        private void AddGameControllerDevice(int deviceId)
+        {
+            lock (_lockObject)
+            {
+                if (!_availableControllers.ContainsKey(deviceId))
+                {
+                    InputDevice gamepad = InputDevice.GetDevice(deviceId)!;
+
+                    if (gamepad.Sources.HasFlag(InputSourceType.Gamepad) ||
+                        gamepad.Sources.HasFlag(InputSourceType.Joystick))
+                    {
+                        int controllerIndex = GetUnusedControllerIndex(); // get first unused index begins at 1
+
+                        GamepadController newController = new GamepadController(this, gamepad, controllerIndex);
+
+                        _availableControllers[deviceId] = newController;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove game controller device
+        /// </summary>
+        /// <param name="deviceId">deviceId of InputDevice</param>
+        private void RemoveGameControllerDevice(int deviceId)
+        {
+            lock (_lockObject)
+            {
+                if (_availableControllers.ContainsKey(deviceId))
+                {
+                    this._availableControllers.Remove(deviceId);
+                }
+            }
+        }
+
+        private int GetUnusedControllerIndex()
+        {
+            lock (_lockObject)
+            {
+                int unusedIndex = 1;
+                while (_availableControllers.Values.Any(gamepadController => gamepadController.ControllerIndex == unusedIndex))
+                {
+                    unusedIndex++;
+                }
+                return unusedIndex;
+            }
         }
 
         private static float AdjustControllerValue(float value)

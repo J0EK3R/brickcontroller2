@@ -1,10 +1,11 @@
-﻿using BrickController2.PlatformServices.GameController;
-using BrickController2.Windows.Extensions;
-using Microsoft.Maui.Dispatching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Gaming.Input;
+using Microsoft.Maui.Dispatching;
+using BrickController2.Helpers;
+using BrickController2.PlatformServices.GameController;
+using BrickController2.Windows.Extensions;
 
 namespace BrickController2.Windows.PlatformServices.GameController;
 
@@ -19,29 +20,30 @@ internal class GamepadController
     private readonly Dictionary<string, float> _lastReadingValues = [];
     private readonly int _controllerIndex;
     private readonly string _controllerName;
-    private readonly string _deviceId;
+    private readonly string _uniquePersistentDeviceId;
 
-    public GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, string controllerName, IDispatcherTimer timer)
-        : this(service, gamepad, controllerIndex, controllerName, timer, DefaultInterval)
+    public string UniquePersistentDeviceId => _uniquePersistentDeviceId;
+    public int ControllerIndex => _controllerIndex;
+    public string ControllerName => _controllerName;
+    public Gamepad Gamepad => _gamepad;
+
+    public GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, IDispatcherTimer timer)
+        : this(service, gamepad, controllerIndex, timer, DefaultInterval)
     {
     }
 
-    private GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, string controllerName, IDispatcherTimer timer, TimeSpan timerInterval)
+    private GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, IDispatcherTimer timer, TimeSpan timerInterval)
     {
         _controllerService = service;
         _gamepad = gamepad;
         _timer = timer;
         _controllerIndex = controllerIndex;
-        _deviceId = _gamepad.GetDeviceId();
-        _controllerName = controllerName;
+        _uniquePersistentDeviceId = _gamepad.GetUniquePersistentDeviceId();
+        _controllerName = GameControllerHelper.GetControllerDeviceId(controllerIndex);
 
         _timer.Interval = timerInterval;
         _timer.Tick += Timer_Tick;
     }
-
-    public string DeviceId => _deviceId;
-    public int ControllerIndex => _controllerIndex;
-    public string ControllerName => _controllerName;
 
     public void Start()
     {
