@@ -143,7 +143,7 @@ namespace BrickController2.UI.ViewModels
                     $"{Translate("AreYouSureToDeleteDevice")} 'All'?",
                     Translate("Yes"),
                     Translate("No"),
-                    _disappearingTokenSource.Token))
+                    DisappearingToken))
                 {
                     await _dialogService.ShowProgressDialogAsync(
                         false,
