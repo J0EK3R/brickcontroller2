@@ -14,7 +14,6 @@ namespace BrickController2.Droid.PlatformServices.GameController
         private readonly Dictionary<int, GamepadController> _availableControllers = [];
         private readonly IDictionary<Axis, float> _lastAxisValues = new Dictionary<Axis, float>();
         private readonly object _lockObject = new object();
-        private readonly Context _context;
         private readonly InputManager _inputManager;
 
         private event EventHandler<GameControllerEventArgs>? GameControllerEventInternal;
@@ -45,8 +44,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
         public GameControllerService(Context context)
         {
-            _context = context;
-            _inputManager = (InputManager)_context.GetSystemService(Context.InputService)!;
+            _inputManager = (InputManager)context.GetSystemService(Context.InputService)!;
         }
 
         /// <summary>
