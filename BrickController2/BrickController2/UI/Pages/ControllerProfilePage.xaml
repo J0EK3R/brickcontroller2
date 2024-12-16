@@ -17,6 +17,7 @@
         <ResourceDictionary>
             <converters:GameControllerEventTypeToImageConverter x:Key="EventTypeToImage"/>
             <converters:InverseBoolConverter x:Key="InverseBool"/>
+            <converters:IsStringNotNullOrEmptyConverter x:Key="IsStringNotNullOrEmptyConverter" />
         </ResourceDictionary>
     </local:PageBase.Resources>
 
@@ -67,8 +68,8 @@
                                     </Grid.ColumnDefinitions>
                                     <controls:ColorImage Grid.Column="0" Icon="{Binding ControllerEvent.EventType, Converter={StaticResource EventTypeToImage}}" Color="{DynamicResource PrimaryColor}" WidthRequest="30" HeightRequest="30" VerticalOptions="Center"/>
                                     <StackLayout Grid.Column="1" Orientation="Horizontal" VerticalOptions="Center">
-                                        <Label Text="{Binding ControllerEvent.ControllerId}" FontSize="Large" FontAttributes="Bold"/>
-                                        <Label Text=" - " FontSize="Large" FontAttributes="Bold"/>
+                                        <Label Text="{Binding ControllerEvent.ControllerId}" FontSize="Large" FontAttributes="Bold" IsVisible="{Binding ControllerEvent.ControllerId, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"/>
+                                        <Label Text=" - " FontSize="Large" FontAttributes="Bold" IsVisible="{Binding ControllerEvent.ControllerId, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"/>
                                         <Label Text="{Binding ControllerEvent.EventCode}" FontSize="Large" FontAttributes="Bold"/>
                                     </StackLayout>
                                 </Grid>
