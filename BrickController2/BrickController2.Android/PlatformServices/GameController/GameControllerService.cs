@@ -264,10 +264,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
         {
             lock (_lockObject)
             {
-                if (_availableControllers.ContainsKey(deviceId))
-                {
-                    _availableControllers.Remove(deviceId);
-                }
+                _availableControllers.Remove(deviceId);
             }
         }
 
