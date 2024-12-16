@@ -23,6 +23,6 @@ namespace BrickController2.PlatformServices.GameController
         }
 
         public IReadOnlyDictionary<(GameControllerEventType EventType, string EventCode), float> ControllerEvents { get; }
-        public string ControllerDeviceId => _controllerId;
+        public string ControllerId => _controllerId;
     }
 }

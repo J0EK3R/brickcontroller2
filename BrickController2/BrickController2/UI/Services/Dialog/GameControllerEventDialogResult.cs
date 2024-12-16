@@ -9,17 +9,17 @@ namespace BrickController2.UI.Services.Dialog
         {
         }
 
-        public GameControllerEventDialogResult(bool isOk, string controllerDeviceId, GameControllerEventType eventType, string eventCode)
+        public GameControllerEventDialogResult(bool isOk, string controllerId, GameControllerEventType eventType, string eventCode)
         {
             IsOk = isOk;
             EventType = eventType;
             EventCode = eventCode;
-            ControllerDeviceId = controllerDeviceId;
+            ControllerId = controllerId;
         }
 
         public bool IsOk { get; }
         public GameControllerEventType EventType { get; }
         public string EventCode { get; }
-        public string ControllerDeviceId { get; }
+        public string ControllerId { get; }
     }
 }

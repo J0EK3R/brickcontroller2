@@ -203,7 +203,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
-                    // ToDo: find ControllerDeviceId
+                    // ToDo: find ControllerId
                     string controllerId = GameControllerHelper.GetControllerIdFromIndex(0);
 
                     _lastControllerEventValueMap[name] = value;
@@ -220,7 +220,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
-                    // ToDo: find ControllerDeviceId
+                    // ToDo: find ControllerId
                     string controllerId = GameControllerHelper.GetControllerIdFromIndex(0);
 
                     _lastControllerEventValueMap[name] = value;
@@ -245,7 +245,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
-                    // ToDo: find ControllerDeviceId
+                    // ToDo: find ControllerId
                     string controllerId = GameControllerHelper.GetControllerIdFromIndex(0);
 
                     GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerId, GameControllerEventType.Axis, name, value));
@@ -268,7 +268,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
                 if (!_lastControllerEventValueMap.ContainsKey(name) || !AreAlmostEqual(_lastControllerEventValueMap[name], value))
                 {
-                    // ToDo: find ControllerDeviceId
+                    // ToDo: find ControllerId
                     string controllerId = GameControllerHelper.GetControllerIdFromIndex(0);
 
                     GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerId, GameControllerEventType.Axis, name, value));

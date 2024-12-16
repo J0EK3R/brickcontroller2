@@ -213,14 +213,14 @@ namespace BrickController2.CreationManagement
             }
         }
 
-        public async Task<ControllerEvent> AddOrGetControllerEventAsync(ControllerProfile controllerProfile, string controllerDeviceId, GameControllerEventType eventType, string eventCode)
+        public async Task<ControllerEvent> AddOrGetControllerEventAsync(ControllerProfile controllerProfile, string controllerId, GameControllerEventType eventType, string eventCode)
         {
             using (await _asyncLock.LockAsync())
             {
-                var controllerEvent = controllerProfile.ControllerEvents.FirstOrDefault(ce => ce.ControllerDeviceId == controllerDeviceId && ce.EventType == eventType && ce.EventCode == eventCode);
+                var controllerEvent = controllerProfile.ControllerEvents.FirstOrDefault(ce => ce.ControllerId == controllerId && ce.EventType == eventType && ce.EventCode == eventCode);
                 if (controllerEvent == null)
                 {
-                    controllerEvent = new ControllerEvent { ControllerDeviceId = controllerDeviceId, EventType = eventType, EventCode = eventCode };
+                    controllerEvent = new ControllerEvent { ControllerId = controllerId, EventType = eventType, EventCode = eventCode };
                     await _creationRepository.InsertControllerEventAsync(controllerProfile, controllerEvent);
                 }
 

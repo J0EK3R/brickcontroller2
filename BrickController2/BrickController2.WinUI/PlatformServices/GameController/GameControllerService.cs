@@ -53,19 +53,19 @@ public class GameControllerService : IGameControllerService
         }
     }
 
-    internal void RaiseEvent(IDictionary<(GameControllerEventType, string), float> events, string controllerDeviceId)
+    internal void RaiseEvent(IDictionary<(GameControllerEventType, string), float> events, string controllerId)
     {
         if (!events.Any())
         {
             return;
         }
 
-        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, events));
+        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerId, events));
     }
 
-    internal void RaiseEvent(string deviceId, string key, GameControllerEventType eventType, string controllerDeviceId, float value = 0.0f)
+    internal void RaiseEvent(string deviceId, string key, GameControllerEventType eventType, string controllerId, float value = 0.0f)
     {
-        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerDeviceId, eventType, key, value));
+        GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(controllerId, eventType, key, value));
     }
 
     private void InitializeControllers()

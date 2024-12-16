@@ -80,8 +80,8 @@ namespace BrickController2.BusinessLogic
             {
                 foreach (var controllerEvent in ActiveProfile.ControllerEvents)
                 {
-                    if ((string.IsNullOrEmpty(controllerEvent.ControllerDeviceId) ||      // for backward compatibility with undef ControllerDeviceId
-                        e.ControllerDeviceId == controllerEvent.ControllerDeviceId) &&
+                    if ((string.IsNullOrEmpty(controllerEvent.ControllerId) ||      // for backward compatibility with undef ControllerId
+                        e.ControllerId == controllerEvent.ControllerId) &&
                         gameControllerEvent.Key.EventType == controllerEvent.EventType &&
                         gameControllerEvent.Key.EventCode == controllerEvent.EventCode)
                     {

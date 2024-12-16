@@ -7,9 +7,9 @@ namespace BrickController2.UI.ViewModels
     {
         private float _value;
 
-        public GameControllerEventViewModel(string controllerDeviceId, GameControllerEventType eventType, string eventCode, float value)
+        public GameControllerEventViewModel(string controllerId, GameControllerEventType eventType, string eventCode, float value)
         {
-            ControllerDeviceId = controllerDeviceId;
+            ControllerId = controllerId;
             EventType = eventType;
             EventCode = eventCode;
             Value = value;
@@ -18,7 +18,7 @@ namespace BrickController2.UI.ViewModels
         public GameControllerEventType EventType { get; }
         public string EventCode { get; }
 
-        public string ControllerDeviceId { get; }
+        public string ControllerId { get; }
 
         public float Value
         {
