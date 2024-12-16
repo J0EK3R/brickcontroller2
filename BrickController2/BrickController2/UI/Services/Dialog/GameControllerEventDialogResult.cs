@@ -4,7 +4,10 @@ namespace BrickController2.UI.Services.Dialog
 {
     public class GameControllerEventDialogResult
     {
-        public const string NoControllerDeviceId = "NoControllerDeviceId";
+        public GameControllerEventDialogResult(bool isOk, GameControllerEventType eventType, string eventCode)
+            : this(isOk, string.Empty, eventType, eventCode)
+        {
+        }
 
         public GameControllerEventDialogResult(bool isOk, string controllerDeviceId, GameControllerEventType eventType, string eventCode)
         {
