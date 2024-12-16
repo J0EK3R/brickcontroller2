@@ -18,14 +18,22 @@ internal class GamepadController
     private readonly IDispatcherTimer _timer;
 
     private readonly Dictionary<string, float> _lastReadingValues = [];
-    private readonly int _controllerIndex;
-    private readonly string _controllerName;
-    private readonly string _uniquePersistentDeviceId;
 
-    public string UniquePersistentDeviceId => _uniquePersistentDeviceId;
-    public int ControllerIndex => _controllerIndex;
-    public string ControllerName => _controllerName;
-    public Gamepad Gamepad => _gamepad;
+    /// <summary>
+    /// zero-based Index of this controller inside the controller management
+    /// </summary>
+    private readonly int _controllerIndex;
+
+    /// <summary>
+    /// string to identify the controller like "Controller 1"
+    /// </summary>
+    private readonly string _controllerId;
+
+    /// <summary>
+    /// Unique and persistant identifier of device (for future usage i.e. to save some device specific settings)
+    /// this value won't change even if the input device is disconnected, reconnected, or reconfigured
+    /// </summary>
+    private readonly string _uniquePersistentDeviceId;
 
     public GamepadController(GameControllerService service, Gamepad gamepad, int controllerIndex, IDispatcherTimer timer)
         : this(service, gamepad, controllerIndex, timer, DefaultInterval)
@@ -39,11 +47,29 @@ internal class GamepadController
         _timer = timer;
         _controllerIndex = controllerIndex;
         _uniquePersistentDeviceId = _gamepad.GetUniquePersistentDeviceId();
-        _controllerName = GameControllerHelper.GetControllerDeviceId(controllerIndex);
+        _controllerId = GameControllerHelper.GetControllerIdFromIndex(controllerIndex);
 
         _timer.Interval = timerInterval;
         _timer.Tick += Timer_Tick;
     }
+
+    /// <summary>
+    /// Unique and persistant identifier of device
+    /// </summary>
+    public string UniquePersistentDeviceId => _uniquePersistentDeviceId;
+
+    /// <summary>
+    /// Index of this controller inside the controller management
+    /// </summary>
+    public int ControllerIndex => _controllerIndex;
+
+    /// <summary>
+    /// string to identify the controller like "Controller 1"
+    /// </summary>
+    public string ControllerID => _controllerId;
+
+    public Gamepad Gamepad => _gamepad;
+
 
     public void Start()
     {
@@ -69,7 +95,7 @@ internal class GamepadController
             .Where(HasChanged)
             .ToDictionary(x => (x.EventType, x.Name), x => x.Value);
 
-        _controllerService.RaiseEvent(currentEvents, ControllerName);
+        _controllerService.RaiseEvent(currentEvents, ControllerID);
     }
 
     private static bool AreAlmostEqual(float a, float b) => Math.Abs(a - b) < 0.001;

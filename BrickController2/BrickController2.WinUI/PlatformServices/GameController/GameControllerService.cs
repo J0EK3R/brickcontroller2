@@ -99,7 +99,7 @@ public class GameControllerService : IGameControllerService
             // JK: UniquePersistentDeviceId is not available
             //var deviceId = e.GetUniquePersistentDeviceId();
 
-            string deviceId = this.FindUniquePersistentDeviceId(e);
+            string deviceId = FindUniquePersistentDeviceId(e);
 
             if (deviceId is not null &&
                 _availableControllers.TryGetValue(deviceId, out var controller))
@@ -128,7 +128,7 @@ public class GameControllerService : IGameControllerService
                 // deviceId looks like "{wgi/nrid/]Xd\\h-M1mO]-il0l-4L\\-Gebf:^3->kBRhM-d4}\0"
                 var uniquePersistentDeviceId = gamepad.GetUniquePersistentDeviceId();
                 
-                int controllerIndex = GetUnusedControllerIndex(); // get first unused index begins at 1
+                int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index begins at 1
 
                 var newController = new GamepadController(this, gamepad, controllerIndex, dispatcher!.CreateTimer());
                 _availableControllers[uniquePersistentDeviceId] = newController;
@@ -138,11 +138,15 @@ public class GameControllerService : IGameControllerService
         }
     }
 
-    private int GetUnusedControllerIndex()
+    /// <summary>
+    /// returns the first unused index of device in controller management
+    /// </summary>
+    /// <returns>first unused index</returns>
+    private int GetFirstUnusedControllerIndex()
     {
         lock (_lockObject)
         {
-            int unusedIndex = 1;
+            int unusedIndex = 0;
             while(_availableControllers.Values.Any(gamepadController => gamepadController.ControllerIndex == unusedIndex))
             {
                 unusedIndex++;

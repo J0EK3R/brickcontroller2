@@ -54,7 +54,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
         {
             // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
             // current decision: on Create/Destroy
-            this.RefreshGameControllers();
+            RefreshGameControllers();
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
             // while MainActivity was paused the InputDeviceListener was unregistered
             // gamecontrollers could be added/removed so we have to Refresh
-            //this.RefreshGameControllers();
+            //RefreshGameControllers();
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
         /// <param name="deviceId">deviceId of InputDevice</param>
         public void MainActivityOnInputDeviceAdded(int deviceId)
         {
-            this.AddGameControllerDevice(deviceId);
+            AddGameControllerDevice(deviceId);
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
         /// <param name="deviceId">deviceId of InputDevice</param>
         public void MainActivityOnInputDeviceRemoved(int deviceId)
         {
-            this.RemoveGameControllerDevice(deviceId);
+            RemoveGameControllerDevice(deviceId);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
         /// <param name="deviceId">deviceId of InputDevice</param>
         public void MainActivityOnInputDeviceChanged(int deviceId)
         {
-            this.AddGameControllerDevice(deviceId);
+            AddGameControllerDevice(deviceId);
         }
 
         public bool OnKeyDown([GeneratedEnum] Keycode keyCode, KeyEvent e)
@@ -117,7 +117,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
                 e.RepeatCount == 0 &&
                 _availableControllers.TryGetValue(e.DeviceId, out GamepadController? gamepadController)) // fetch matching GamepadController from table
             {
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerId, GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
                 return true;
             }
 
@@ -130,7 +130,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
                 e.RepeatCount == 0 &&
                 _availableControllers.TryGetValue(e.DeviceId, out GamepadController? gamepadController)) // fetch matching GamepadController from table
             {
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerId, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
                 return true;
             }
             return false;
@@ -190,7 +190,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
                     events[(GameControllerEventType.Axis, axisCode.ToString())] = axisValue;
                 }
 
-                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, events));
+                GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerId, events));
                 return true;
             }
 
@@ -204,13 +204,13 @@ namespace BrickController2.Droid.PlatformServices.GameController
         {
             lock (_lockObject)
             {
-                this.ClearGameControllers();
+                ClearGameControllers();
 
                 int[] deviceIds = _inputManager?.GetInputDeviceIds() ?? Array.Empty<int>();
 
                 foreach (int deviceId in deviceIds)
                 {
-                    this.AddGameControllerDevice(deviceId);
+                    AddGameControllerDevice(deviceId);
                 }
             }
         }
@@ -226,7 +226,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
                 foreach (int deviceId in savedKeys)
                 {
-                    this.RemoveGameControllerDevice(deviceId);
+                    RemoveGameControllerDevice(deviceId);
                 }
             }
         }
@@ -246,7 +246,7 @@ namespace BrickController2.Droid.PlatformServices.GameController
                     if (gamepad.Sources.HasFlag(InputSourceType.Gamepad) ||
                         gamepad.Sources.HasFlag(InputSourceType.Joystick))
                     {
-                        int controllerIndex = GetUnusedControllerIndex(); // get first unused index begins at 1
+                        int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index
 
                         GamepadController newController = new GamepadController(this, gamepad, controllerIndex);
 
@@ -266,16 +266,20 @@ namespace BrickController2.Droid.PlatformServices.GameController
             {
                 if (_availableControllers.ContainsKey(deviceId))
                 {
-                    this._availableControllers.Remove(deviceId);
+                    _availableControllers.Remove(deviceId);
                 }
             }
         }
 
-        private int GetUnusedControllerIndex()
+        /// <summary>
+        /// returns the first unused index of device in controller management
+        /// </summary>
+        /// <returns>first unused index</returns>
+        private int GetFirstUnusedControllerIndex()
         {
             lock (_lockObject)
             {
-                int unusedIndex = 1;
+                int unusedIndex = 0;
                 while (_availableControllers.Values.Any(gamepadController => gamepadController.ControllerIndex == unusedIndex))
                 {
                     unusedIndex++;
