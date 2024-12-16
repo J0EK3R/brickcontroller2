@@ -115,10 +115,9 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
         public bool OnKeyDown([GeneratedEnum] Keycode keyCode, KeyEvent e)
         {
-            GamepadController? gamepadController;
             if (e.Source.HasFlag(InputSourceType.Gamepad) && 
                 e.RepeatCount == 0 &&
-                _availableControllers.TryGetValue(e.DeviceId, out gamepadController)) // fetch matching GamepadController from table
+                _availableControllers.TryGetValue(e.DeviceId, out GamepadController? gamepadController)) // fetch matching GamepadController from table
             {
                 GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, GameControllerEventType.Button, e.KeyCode.ToString(), 1.0F));
                 return true;
@@ -129,10 +128,9 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
         public bool OnKeyUp([GeneratedEnum] Keycode keyCode, KeyEvent e)
         {
-            GamepadController? gamepadController;
             if (e.Source.HasFlag(InputSourceType.Gamepad) && 
                 e.RepeatCount == 0 &&
-                _availableControllers.TryGetValue(e.DeviceId, out gamepadController)) // fetch matching GamepadController from table
+                _availableControllers.TryGetValue(e.DeviceId, out GamepadController? gamepadController)) // fetch matching GamepadController from table
             {
                 GameControllerEventInternal?.Invoke(this, new GameControllerEventArgs(gamepadController.ControllerName, GameControllerEventType.Button, e.KeyCode.ToString(), 0.0F));
                 return true;
@@ -142,10 +140,9 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
         public bool OnGenericMotionEvent(MotionEvent e)
         {
-            GamepadController? gamepadController;
             if (e.Source == InputSourceType.Joystick && 
                 e.Action == MotionEventActions.Move &&
-                _availableControllers.TryGetValue(e.DeviceId, out gamepadController)) // fetch matching GamepadController from table
+                _availableControllers.TryGetValue(e.DeviceId, out GamepadController? gamepadController)) // fetch matching GamepadController from table
             {
                 var events = new Dictionary<(GameControllerEventType, string), float>();
                 foreach (Axis axisCode in Enum.GetValues(typeof(Axis)))
