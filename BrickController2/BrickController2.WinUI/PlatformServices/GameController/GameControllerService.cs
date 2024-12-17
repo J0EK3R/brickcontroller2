@@ -128,7 +128,7 @@ public class GameControllerService : IGameControllerService
                 // deviceId looks like "{wgi/nrid/]Xd\\h-M1mO]-il0l-4L\\-Gebf:^3->kBRhM-d4}\0"
                 var uniquePersistentDeviceId = gamepad.GetUniquePersistentDeviceId();
                 
-                int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index begins at 1
+                int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index
 
                 var newController = new GamepadController(this, gamepad, controllerIndex, dispatcher!.CreateTimer());
                 _availableControllers[uniquePersistentDeviceId] = newController;
@@ -163,6 +163,5 @@ public class GameControllerService : IGameControllerService
     private string FindUniquePersistentDeviceId(Gamepad gamepad)
     {
         return _availableControllers.FirstOrDefault(entry => entry.Value.Gamepad == gamepad).Key;
-
     }
 }
