@@ -18,6 +18,11 @@ namespace BrickController2.Droid.PlatformServices.GameController
 
         private event EventHandler<GameControllerEventArgs>? GameControllerEventInternal;
 
+        public GameControllerService(Context context)
+        {
+            _inputManager = (InputManager)context.GetSystemService(Context.InputService)!;
+        }
+
         public event EventHandler<GameControllerEventArgs> GameControllerEvent
         {
             add
@@ -42,10 +47,8 @@ namespace BrickController2.Droid.PlatformServices.GameController
             }
         }
 
-        public GameControllerService(Context context)
-        {
-            _inputManager = (InputManager)context.GetSystemService(Context.InputService)!;
-        }
+        public bool IsControllerIdSupported => true;
+
 
         /// <summary>
         /// Handler called from MainActivity when MainActivity is created

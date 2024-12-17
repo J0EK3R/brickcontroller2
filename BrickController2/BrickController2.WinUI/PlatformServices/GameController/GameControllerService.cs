@@ -53,6 +53,8 @@ public class GameControllerService : IGameControllerService
         }
     }
 
+    public bool IsControllerIdSupported => true;
+
     internal void RaiseEvent(IDictionary<(GameControllerEventType, string), float> events, string controllerId)
     {
         if (!events.Any())

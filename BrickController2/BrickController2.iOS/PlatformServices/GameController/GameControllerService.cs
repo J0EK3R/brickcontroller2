@@ -69,6 +69,8 @@ namespace BrickController2.iOS.PlatformServices.GameController
             }
         }
 
+        public bool IsControllerIdSupported => false; // ToDo: implement ControllerManagement
+
         private void FindController()
         {
             lock (_lockObject)
