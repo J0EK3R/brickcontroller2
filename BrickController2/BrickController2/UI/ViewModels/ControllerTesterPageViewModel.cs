@@ -20,6 +20,8 @@ namespace BrickController2.UI.ViewModels
             _gameControllerService = gameControllerService;
         }
 
+        public bool IsControllerIdSupported => _gameControllerService.IsControllerIdSupported;
+
         public override void OnAppearing()
         {
             _gameControllerService.GameControllerEvent += GameControllerEventHandler!;
