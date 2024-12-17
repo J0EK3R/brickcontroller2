@@ -609,4 +609,7 @@
   <data name="Add" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="AddControllerEventWithControllerId" xml:space="preserve">
+    <value>Add a new controller event with ControllerId</value>
+  </data>
 </root>

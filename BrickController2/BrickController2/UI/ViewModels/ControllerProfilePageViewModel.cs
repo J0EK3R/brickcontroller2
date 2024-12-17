@@ -16,6 +16,7 @@ using BrickController2.PlatformServices.SharedFileStorage;
 using BrickController2.Helpers;
 using DeviceType = BrickController2.DeviceManagement.DeviceType;
 using BrickController2.CreationManagement.Sharing;
+using BrickController2.PlatformServices.GameController;
 
 namespace BrickController2.UI.ViewModels
 {
@@ -55,7 +56,8 @@ namespace BrickController2.UI.ViewModels
             ExportControllerProfileCommand = new SafeCommand(async () => await ExportControllerProfileAsync(), () => SharedFileStorageService.IsSharedStorageAvailable);
             CopyControllerProfileCommand = new SafeCommand(CopyControllerProfileAsync);
             RenameProfileCommand = new SafeCommand(async () => await RenameControllerProfileAsync());
-            AddControllerEventCommand = new SafeCommand(async () => await AddControllerEventAsync());
+            AddControllerEventCommand = new SafeCommand(async () => await AddControllerEventAsync(false));
+            AddControllerEventWithControllerIdCommand = new SafeCommand(async () => await AddControllerEventAsync(true));
             PlayCommand = new SafeCommand(async () => await PlayAsync());
             ControllerActionTappedCommand = new SafeCommand<ControllerActionViewModel>(async controllerActionViewModel => await NavigationService.NavigateToAsync<ControllerActionPageViewModel>(new NavigationParameters(("controlleraction", controllerActionViewModel.ControllerAction))));
             DeleteControllerEventCommand = new SafeCommand<ControllerEvent>(async controllerEvent => await DeleteControllerEventAsync(controllerEvent));
@@ -92,6 +94,7 @@ namespace BrickController2.UI.ViewModels
         public ICommand CopyControllerProfileCommand { get; }
         public ICommand RenameProfileCommand { get; }
         public ICommand AddControllerEventCommand { get; }
+        public ICommand AddControllerEventWithControllerIdCommand { get; }
         public ICommand PlayCommand { get; }
         public ICommand ControllerActionTappedCommand { get; }
         public ICommand DeleteControllerEventCommand { get; }
@@ -208,7 +211,7 @@ namespace BrickController2.UI.ViewModels
             }
         }
 
-        private async Task AddControllerEventAsync()
+        private async Task AddControllerEventAsync(bool addControllerId)
         {
             try
             {
@@ -232,7 +235,7 @@ namespace BrickController2.UI.ViewModels
                     ControllerEvent? controllerEvent = null;
                     await _dialogService.ShowProgressDialogAsync(
                         false,
-                        async (progressDialog, token) => controllerEvent = await _creationManager.AddOrGetControllerEventAsync(ControllerProfile, result.ControllerId, result.EventType, result.EventCode),
+                        async (progressDialog, token) => controllerEvent = await _creationManager.AddOrGetControllerEventAsync(ControllerProfile, addControllerId ? result.ControllerId : string.Empty, result.EventType, result.EventCode),
                         Translate("Creating"),
                         token: _disappearingTokenSource?.Token ?? default);
 
