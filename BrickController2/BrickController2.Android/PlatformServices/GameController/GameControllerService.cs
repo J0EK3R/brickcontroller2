@@ -6,6 +6,9 @@ using Android.Views;
 using Android.Hardware.Input;
 using Android.Content;
 using BrickController2.PlatformServices.GameController;
+using Newtonsoft.Json;
+using static Android.Hardware.Camera;
+using static Android.Renderscripts.ScriptGroup;
 
 namespace BrickController2.Droid.PlatformServices.GameController
 {
@@ -218,14 +221,30 @@ namespace BrickController2.Droid.PlatformServices.GameController
                 {
                     InputDevice gamepad = InputDevice.GetDevice(deviceId)!;
 
-                    if (gamepad.Sources.HasFlag(InputSourceType.Gamepad) ||
-                        gamepad.Sources.HasFlag(InputSourceType.Joystick))
+                    if (gamepad?.Sources.HasFlag(InputSourceType.Gamepad) == true || // null-check included
+                        gamepad?.Sources.HasFlag(InputSourceType.Joystick) == true)
                     {
-                        int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index
+                        if (gamepad?.Name?.StartsWith("uinput-") == true) // drop all gamepads with name starting with "uinput-"
+                        {
+                            // JK: Bug - Device 0 already taken by fingerprint reader on Android
+                            // https://github.com/godotengine/godot/issues/47656
+                            //
+                            // Input name       | Company Name
+                            // uinput-fpc       | Fingerprint Cards AB
+                            // uinput-goodix    | Goodix
+                            // uinput-synaptics | Synaptics
+                            // uinput-elan      | ElanTech
+                            // uinput-vfs       | Validity Sensors(acquired by Synaptics)
+                            // uinput-atrus     | Atrua Technologies
+                        }
+                        else
+                        {
+                            int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index
 
-                        GamepadController newController = new GamepadController(this, gamepad, controllerIndex);
+                            GamepadController newController = new GamepadController(this, gamepad!, controllerIndex);
 
-                        _availableControllers[deviceId] = newController;
+                            _availableControllers[deviceId] = newController;
+                        }
                     }
                 }
             }
