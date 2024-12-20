@@ -60,7 +60,7 @@ namespace BrickController2.UI.ViewModels
             CopyControllerProfileCommand = new SafeCommand(CopyControllerProfileAsync);
             RenameProfileCommand = new SafeCommand(async () => await RenameControllerProfileAsync());
             AddControllerEventCommand = new SafeCommand(async () => await AddControllerEventAsync(false));
-            AddControllerEventWithControllerIdCommand = new SafeCommand(async () => await AddControllerEventAsync(true));
+            AddControllerEventForSpecificControllerIdCommand = new SafeCommand(async () => await AddControllerEventAsync(true));
             PlayCommand = new SafeCommand(async () => await PlayAsync());
             ControllerActionTappedCommand = new SafeCommand<ControllerActionViewModel>(async controllerActionViewModel => await NavigationService.NavigateToAsync<ControllerActionPageViewModel>(new NavigationParameters(("controlleraction", controllerActionViewModel.ControllerAction))));
             DeleteControllerEventCommand = new SafeCommand<ControllerEvent>(async controllerEvent => await DeleteControllerEventAsync(controllerEvent));
@@ -99,7 +99,7 @@ namespace BrickController2.UI.ViewModels
         public ICommand CopyControllerProfileCommand { get; }
         public ICommand RenameProfileCommand { get; }
         public ICommand AddControllerEventCommand { get; }
-        public ICommand AddControllerEventWithControllerIdCommand { get; }
+        public ICommand AddControllerEventForSpecificControllerIdCommand { get; }
         public ICommand PlayCommand { get; }
         public ICommand ControllerActionTappedCommand { get; }
         public ICommand DeleteControllerEventCommand { get; }
