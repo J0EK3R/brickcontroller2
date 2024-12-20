@@ -128,11 +128,16 @@ public class GameControllerService : IGameControllerService
             foreach (var gamepad in gamepads)
             {
                 // deviceId looks like "{wgi/nrid/]Xd\\h-M1mO]-il0l-4L\\-Gebf:^3->kBRhM-d4}\0"
-                var uniquePersistentDeviceId = gamepad.GetUniquePersistentDeviceId();
-                
+                string? uniquePersistentDeviceId = gamepad?.GetUniquePersistentDeviceId();
+
+                if(string.IsNullOrEmpty(uniquePersistentDeviceId))
+                {
+                    continue;
+                }
+
                 int controllerIndex = GetFirstUnusedControllerIndex(); // get first unused index
 
-                var newController = new GamepadController(this, gamepad, controllerIndex, dispatcher!.CreateTimer());
+                var newController = new GamepadController(this, gamepad!, controllerIndex, dispatcher!.CreateTimer());
                 _availableControllers[uniquePersistentDeviceId] = newController;
 
                 newController.Start();
