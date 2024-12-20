@@ -55,36 +55,8 @@ namespace BrickController2.Droid.PlatformServices.GameController
         /// </summary>
         public void MainActivityOnCreate()
         {
-            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
-            // current decision: on Create/Destroy
+            // get all known gamecontrollers
             RefreshGameControllers();
-        }
-
-        /// <summary>
-        /// Handler called from MainActivity when MainActivity is destroy
-        /// </summary>
-        public void MainActivityOnDestroy()
-        {
-        }
-
-        /// <summary>
-        /// Handler called from MainActivity when MainActivity is paused 
-        /// </summary>
-        public void MainActivityOnPause()
-        {
-        }
-
-        /// <summary>
-        /// Handler called from MainActivity when MainActivity is resumed 
-        /// </summary>
-        public void MainActivityOnResume()
-        {
-            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
-            // current decision: on Create/Destroy
-
-            // while MainActivity was paused the InputDeviceListener was unregistered
-            // gamecontrollers could be added/removed so we have to Refresh
-            //RefreshGameControllers();
         }
 
         /// <summary>

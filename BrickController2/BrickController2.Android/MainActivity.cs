@@ -39,42 +39,15 @@ namespace BrickController2.Droid
 
             _inputManager = (InputManager?)GetSystemService(Context.InputService);
 
-            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
-            // current decision: on Create/Destroy
             _gameControllerService?.MainActivityOnCreate();
             _inputManager?.RegisterInputDeviceListener(this, null);
         }
 
         protected override void OnDestroy()
         {
-            // JK: OnDestroy was never called...
-
-            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
-            // current decision: on Create/Destroy
             _inputManager?.UnregisterInputDeviceListener(this);
-            _gameControllerService?.MainActivityOnDestroy();
 
             base.OnDestroy();
-        }
-
-        protected override void OnResume()
-        {
-            base.OnResume();
-
-            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
-            // current decision: on Create/Destroy
-            //_inputManager?.RegisterInputDeviceListener(this, null);
-            _gameControllerService?.MainActivityOnResume();
-        }
-
-        protected override void OnPause()
-        {
-            base.OnPause();
-
-            // JK: either register InputDeviceListener on Create/Destroy or Resume/Pause of MainActivity
-            // current decision: on Create/Destroy
-            //_inputManager?.UnregisterInputDeviceListener(this);
-            _gameControllerService?.MainActivityOnPause();
         }
 
         public void OnInputDeviceAdded(int deviceId)
