@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BrickController2.iOS.PlatformServices.ModelContextProtocol;
 using BrickController2.PlatformServices.GameController;
 using Foundation;
 using GameController;
@@ -9,18 +10,23 @@ namespace BrickController2.iOS.PlatformServices.GameController
 {
     internal class GameControllerService : GameControllerServiceBase
     {
+        private readonly McpServerService _mcpServerService;
         private NSObject? _didConnectNotification;
         private NSObject? _didDisconnectNotification;
 
-        public GameControllerService(ILogger<GameControllerService> logger) 
-            : base(logger)
+        public GameControllerService(ILogger<GameControllerService> logger,
+               McpServerService mcpServerService) : base(logger)
         {
+            _mcpServerService = mcpServerService;
         }
 
         public override bool IsControllerIdSupported => true;
 
         protected override void InitializeCurrentControllers()
         {
+            // add McpServer
+            AddMcpServerDevice();
+
             // get all available gamepads
             if (GCController.Controllers.Any())
             {
@@ -46,6 +52,9 @@ namespace BrickController2.iOS.PlatformServices.GameController
             });
 
             GCController.StartWirelessControllerDiscovery(() => { });
+
+            _mcpServerService.McpServerAdded += McpServerAdded;
+            _mcpServerService.McpServerRemoved += McpServerRemoved; ;
         }
 
 
@@ -56,6 +65,9 @@ namespace BrickController2.iOS.PlatformServices.GameController
             _didDisconnectNotification?.Dispose();
             _didConnectNotification = null;
             _didDisconnectNotification = null;
+
+            _mcpServerService.McpServerAdded -= McpServerAdded;
+            _mcpServerService.McpServerRemoved -= McpServerRemoved; ;
 
             base.RemoveAllControllers();
         }
@@ -85,6 +97,35 @@ namespace BrickController2.iOS.PlatformServices.GameController
                     // get first unused number and apply it
                     int controllerNumber = GetFirstUnusedControllerNumber();
                     var newController = new GamepadController(this, gamepad, controllerNumber);
+
+                    AddController(newController);
+                }
+            }
+        }
+
+        private void McpServerRemoved(object? sender, McpServer e)
+        {
+            lock (_lockObject)
+            {
+                if (TryRemove<McpServerController>(x => x.ControllerDevice is McpServer, out var controller))
+                {
+                    _logger.LogInformation("McpServer has been removed");
+                }
+            }
+        }
+
+        private void McpServerAdded(object? sender, McpServer e)
+        {
+            AddMcpServerDevice();
+        }
+
+        private void AddMcpServerDevice()
+        {
+            if (_mcpServerService?.Server != null)
+            {
+                lock (_lockObject)
+                {
+                    var newController = new McpServerController(this, _mcpServerService.Server);
 
                     AddController(newController);
                 }
