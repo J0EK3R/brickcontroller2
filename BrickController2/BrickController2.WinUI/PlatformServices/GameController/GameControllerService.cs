@@ -5,6 +5,7 @@ using Windows.Gaming.Input;
 using BrickController2.PlatformServices.GameController;
 using BrickController2.UI.Services.MainThread;
 using Microsoft.Extensions.Logging;
+using BrickController2.Windows.PlatformServices.ModelContextProtocol;
 
 namespace BrickController2.Windows.PlatformServices.GameController;
 
@@ -12,19 +13,25 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
 {
     private readonly IMainThreadService _mainThreadService;
     private readonly IDispatcherProvider _dispatcherProvider;
+    private readonly McpServerService _mcpServerService;
 
     public GameControllerService(IMainThreadService mainThreadService,
         IDispatcherProvider dispatcherProvider,
+        McpServerService mcpServerService,
         ILogger<GameControllerService> logger) : base(logger)
     {
         _mainThreadService = mainThreadService;
         _dispatcherProvider = dispatcherProvider;
+        _mcpServerService = mcpServerService;
     }
 
     public override bool IsControllerIdSupported => true;
 
     protected override void InitializeCurrentControllers()
     {
+        // add McpServer
+        AddMcpServerDevice();
+
         // get all available gamepads
         if (Gamepad.Gamepads.Any())
         {
@@ -34,6 +41,9 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
         // register gamepad events
         Gamepad.GamepadRemoved += Gamepad_GamepadRemoved;
         Gamepad.GamepadAdded += Gamepad_GamepadAdded;
+
+        _mcpServerService.McpServerAdded += McpServerAdded;
+        _mcpServerService.McpServerRemoved += McpServerRemoved; ;
     }
 
     protected override void RemoveAllControllers()
@@ -41,6 +51,9 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
         // cancel gamepad events
         Gamepad.GamepadRemoved -= Gamepad_GamepadRemoved;
         Gamepad.GamepadAdded -= Gamepad_GamepadAdded;
+
+        _mcpServerService.McpServerAdded -= McpServerAdded;
+        _mcpServerService.McpServerRemoved -= McpServerRemoved; ;
 
         // do removal
         base.RemoveAllControllers();
@@ -67,6 +80,28 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
         _ = _mainThreadService.RunOnMainThread(() => AddDevices([e]));
     }
 
+    private void McpServerRemoved(object? sender, McpServer e)
+    {
+        lock (_lockObject)
+        {
+            // ensure stopped in UI thread
+            _ = _mainThreadService.RunOnMainThread(() =>
+            {
+                if (TryRemove<McpServerController>(x => x.ControllerDevice is McpServer, out var controller))
+                {
+                    _logger.LogInformation("McpServer has been removed");
+                }
+            });
+        }
+    }
+
+    private void McpServerAdded(object? sender, McpServer e)
+    {
+        // ensure created in UI thread
+        _ = _mainThreadService.RunOnMainThread(() => AddMcpServerDevice());
+    }
+
+
     private void AddDevices(IEnumerable<Gamepad> gamepads)
     {
         lock (_lockObject)
@@ -85,6 +120,20 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
                 var newController = new GamepadController(this, gamepad!, rawController, controllerNumber, dispatcher!.CreateTimer());
 
                 // UniquePersistantDeviceId looks like "{wgi/nrid/]Xd\\h-M1mO]-il0l-4L\\-Gebf:^3->kBRhM-d4}\0"                
+                AddController(newController);
+            }
+        }
+    }
+
+    private void AddMcpServerDevice()
+    {
+        if (_mcpServerService?.Server != null)
+        {
+            lock (_lockObject)
+            {
+                var dispatcher = _dispatcherProvider.GetForCurrentThread();
+                var newController = new McpServerController(this, _mcpServerService.Server, dispatcher);
+
                 AddController(newController);
             }
         }

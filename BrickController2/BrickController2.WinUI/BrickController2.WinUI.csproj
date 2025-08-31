@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<PackageReference Include="Autofac" />
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
+		<PackageReference Include="EmbedIO" />
 		<PackageReference Include="Microsoft.Maui.Controls" />
 	</ItemGroup>
 
@@ -28,6 +29,10 @@
 		<ProjectReference Include="..\BrickController2\BrickController2.csproj" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  
 	<ItemGroup>
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
