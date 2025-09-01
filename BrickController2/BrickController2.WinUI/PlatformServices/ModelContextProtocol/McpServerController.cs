@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.Maui.Dispatching;
 using BrickController2.PlatformServices.GameController;
 using BrickController2.Windows.PlatformServices.GameController;
+using BrickController2.PlatformServices.ModelContextProtocol;
 
 namespace BrickController2.Windows.PlatformServices.ModelContextProtocol;
 
@@ -22,9 +23,9 @@ internal class McpServerController : GamepadControllerBase<McpServer>
         ControllerDevice.ChannelStatesUpdated += mcpServer_ChannelStatesUpdated;
 
         // initialize properties
-        Name = "McpServerDevice";
+        Name = "McpServer";
         ControllerNumber = -1;
-        ControllerId = "McpServerDevice";
+        ControllerId = "McpServer";
     }
 
     private void mcpServer_ChannelStatesUpdated(List<McpServer.ChannelValue> obj)

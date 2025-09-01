@@ -1,5 +1,6 @@
 ﻿using BrickController2.Droid.PlatformServices.GameController;
 using BrickController2.PlatformServices.GameController;
+using BrickController2.PlatformServices.ModelContextProtocol;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,9 +19,9 @@ namespace BrickController2.Droid.PlatformServices.ModelContextProtocol
             ControllerDevice.ChannelStatesUpdated += mcpServer_ChannelStatesUpdated;
 
             // initialize properties
-            Name = "McpServerDevice";
+            Name = "McpServer";
             ControllerNumber = -1;
-            ControllerId = "McpServerDevice";
+            ControllerId = "McpServer";
         }
 
         private void mcpServer_ChannelStatesUpdated(List<McpServer.ChannelValue> obj)

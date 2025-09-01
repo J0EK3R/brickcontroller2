@@ -2,6 +2,7 @@
 using System.Linq;
 using BrickController2.iOS.PlatformServices.ModelContextProtocol;
 using BrickController2.PlatformServices.GameController;
+using BrickController2.PlatformServices.ModelContextProtocol;
 using Foundation;
 using GameController;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,7 @@ namespace BrickController2.iOS.PlatformServices.GameController
         protected override void InitializeCurrentControllers()
         {
             // add McpServer
-            AddMcpServerDevice();
+            AddMcpServer();
 
             // get all available gamepads
             if (GCController.Controllers.Any())
@@ -116,10 +117,10 @@ namespace BrickController2.iOS.PlatformServices.GameController
 
         private void McpServerAdded(object? sender, McpServer e)
         {
-            AddMcpServerDevice();
+            AddMcpServer();
         }
 
-        private void AddMcpServerDevice()
+        private void AddMcpServer()
         {
             if (_mcpServerService?.Server != null)
             {

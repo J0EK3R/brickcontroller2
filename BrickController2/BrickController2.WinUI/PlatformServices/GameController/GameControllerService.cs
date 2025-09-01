@@ -6,6 +6,7 @@ using BrickController2.PlatformServices.GameController;
 using BrickController2.UI.Services.MainThread;
 using Microsoft.Extensions.Logging;
 using BrickController2.Windows.PlatformServices.ModelContextProtocol;
+using BrickController2.PlatformServices.ModelContextProtocol;
 
 namespace BrickController2.Windows.PlatformServices.GameController;
 
@@ -30,7 +31,7 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
     protected override void InitializeCurrentControllers()
     {
         // add McpServer
-        AddMcpServerDevice();
+        AddMcpServer();
 
         // get all available gamepads
         if (Gamepad.Gamepads.Any())
@@ -98,7 +99,7 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
     private void McpServerAdded(object? sender, McpServer e)
     {
         // ensure created in UI thread
-        _ = _mainThreadService.RunOnMainThread(() => AddMcpServerDevice());
+        _ = _mainThreadService.RunOnMainThread(() => AddMcpServer());
     }
 
 
@@ -125,7 +126,7 @@ internal class GameControllerService : GameControllerServiceBase, IGameControlle
         }
     }
 
-    private void AddMcpServerDevice()
+    private void AddMcpServer()
     {
         if (_mcpServerService?.Server != null)
         {

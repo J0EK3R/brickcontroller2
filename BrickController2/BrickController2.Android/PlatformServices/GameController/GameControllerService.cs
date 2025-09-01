@@ -5,6 +5,7 @@ using BrickController2.Droid.PlatformServices.ModelContextProtocol;
 using BrickController2.PlatformServices.GameController;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using BrickController2.PlatformServices.ModelContextProtocol;
 
 namespace BrickController2.Droid.PlatformServices.GameController
 {

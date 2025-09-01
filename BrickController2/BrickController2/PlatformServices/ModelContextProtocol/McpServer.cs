@@ -1,5 +1,4 @@
-﻿using BrickController2.PlatformServices.ModelContextProtocol;
-using EmbedIO;
+﻿using EmbedIO;
 using EmbedIO.Routing;
 using EmbedIO.WebApi;
 using System;
@@ -11,8 +10,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BrickController2.iOS.PlatformServices.ModelContextProtocol;
-
+namespace BrickController2.PlatformServices.ModelContextProtocol;
 public sealed class McpServer : McpServerBase, IDisposable
 {
     private const string ToolSetChannels = "set_channels";

@@ -21,7 +21,6 @@
 	<ItemGroup>
 		<PackageReference Include="Autofac" />
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
-		<PackageReference Include="EmbedIO" />
 		<PackageReference Include="Microsoft.Maui.Controls" />
 	</ItemGroup>
 
