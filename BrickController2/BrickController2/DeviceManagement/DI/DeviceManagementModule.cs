@@ -19,7 +19,6 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterType<DeviceManager>().As<IDeviceManager>().SingleInstance();
             builder.RegisterType<ManualDeviceManager>().As<IManualDeviceManager>().SingleInstance();
 
-            builder.RegisterType<SBrickDevice>().Keyed<Device>(DeviceType.SBrick);
             builder.RegisterType<BuWizzDevice>().Keyed<Device>(DeviceType.BuWizz);
             builder.RegisterType<BuWizz2Device>().Keyed<Device>(DeviceType.BuWizz2);
             builder.RegisterType<BuWizz3Device>().Keyed<Device>(DeviceType.BuWizz3);
@@ -43,7 +42,6 @@ namespace BrickController2.DeviceManagement.DI
             builder.RegisterDeviceManager<CaDADeviceManager>().As<IBluetoothLEAdvertiserDeviceScanInfo>();
             builder.RegisterDeviceManager<CircuitCubeDeviceManager>();
             builder.RegisterDeviceManager<PfxBrickDeviceManager>();
-            builder.RegisterDeviceManager<SBrickDeviceManager>();
 
             // execute registration per vendors
             builder.RegisterAssemblyModules<IVendorModule>(typeof(DeviceManagementModule).Assembly);
