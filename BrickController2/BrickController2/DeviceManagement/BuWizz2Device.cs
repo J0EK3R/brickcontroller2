@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BrickController2.DeviceManagement
 {
-    internal class BuWizz2Device : BluetoothDevice
+    internal class BuWizz2Device : BluetoothDevice, IDeviceType<BuWizz2Device>
     {
         private const int MAX_SEND_ATTEMPTS = 10;
 
@@ -55,6 +55,9 @@ namespace BrickController2.DeviceManagement
             // update output value again to apply settings
             _outputLevel = DefaultOutputLevel;
         }
+
+        public static string TypeName => "BuWizz 2";
+        public static DeviceType Type => DeviceType.BuWizz2;
 
         public override DeviceType DeviceType => DeviceType.BuWizz2;
         public override int NumberOfChannels => 4;
