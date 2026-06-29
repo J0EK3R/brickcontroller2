@@ -1,5 +1,6 @@
 ﻿using System;
 using BrickController2.PlatformServices.BluetoothLE;
+using BrickController2.UI.Services.AppIdentifier;
 
 namespace BrickController2.DeviceManagement.MouldKing;
 
@@ -8,6 +9,17 @@ namespace BrickController2.DeviceManagement.MouldKing;
 /// </summary>
 public class MouldKingDeviceManager : BluetoothDeviceManagerBase
 {
+    private const int AppIdentifierLength = 2; // MouldKing protocol defines 2 bytes for the app identifier
+
+    private readonly ReadOnlyMemory<byte> _appIdentifier;
+
+    public MouldKingDeviceManager(IAppIdentifierService appIdentifierService)
+    {
+        _appIdentifier = appIdentifierService.GetAppId(AppIdentifierLength);
+    }
+
+    public ReadOnlyMemory<byte> GetAppId() => _appIdentifier;
+
     protected override bool TryGetDeviceByManufacturerData(ScanResult scanResult,
         FoundDevice template,
         ushort manufacturerId,
