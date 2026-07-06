@@ -143,4 +143,18 @@ public class MouldKingVendorTests
             .WithInnerException<ArgumentException>()
             .Which.ParamName.Should().Be(nameof(address));
     }
+
+    [Theory]
+    [InlineData("MK_DIY_Address")]
+    public void RegisterDevice_MKDIY_ReturnedDevice(string address)
+    {
+        DeviceType deviceType = DeviceType.MK_DIY;
+        string name = "TestDevice";
+        byte[] deviceData = [1, 2, 3];
+
+        var device = _deviceFactory(deviceType, name, address, deviceData, []);
+
+        device.Should().NotBeNull();
+        device.Should().BeOfType<MK_DIY>();
+    }
 }
