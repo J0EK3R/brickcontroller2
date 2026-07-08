@@ -32,7 +32,7 @@ public class MouldKingVendorTests : VendorTestsBase
         builder.RegisterInstance(Mock.Of<IMKPlatformService>());
 
         // execute registration of vendor MouldKing
-        builder.RegisterAssemblyModules<MouldKingVendor>(typeof(DeviceManagementModule).Assembly);
+        builder.RegisterModule<MouldKingVendor>();
 
         return builder;
     }

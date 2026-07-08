@@ -32,7 +32,7 @@ public class PowerFunctionsVendorTests : VendorTestsBase
         builder.RegisterInstance(Mock.Of<IDeviceImageRegistry>()); // needed cause RegisterDevice<PowerFunctionsDevice>().WithImages("powerfunctions_image.png", "powerfunctions_image_small.png")
 
         // execute registration of vendor PowerFunctions
-        builder.RegisterAssemblyModules<PowerFunctionsVendor>(typeof(DeviceManagementModule).Assembly);
+        builder.RegisterModule<PowerFunctionsVendor>();
 
         return builder;
     }

@@ -32,7 +32,7 @@ public class JieStarVendorTests : VendorTestsBase
         builder.RegisterInstance(Mock.Of<IJieStarPlatformService>());
 
         // execute registration of vendor JIESTAR
-        builder.RegisterAssemblyModules<JieStarVendor>(typeof(DeviceManagementModule).Assembly);
+        builder.RegisterModule<JieStarVendor>();
 
         return builder;
     }

@@ -35,7 +35,7 @@ public class CaDAVendorTests : VendorTestsBase
         builder.RegisterInstance(Random.Shared); // MessageEncoderFactory needs Random.Shared as DI
 
         // execute registration of vendor CaDA
-        builder.RegisterAssemblyModules<CaDAVendor>(typeof(DeviceManagementModule).Assembly);
+        builder.RegisterModule<CaDAVendor>();
 
         return builder;
     }
