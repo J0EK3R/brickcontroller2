@@ -11,37 +11,32 @@ using PowerFunctionsVendor = BrickController2.DeviceManagement.PowerFunctions.Po
 
 namespace BrickController2.Tests.DeviceManagement.DI;
 
-public class PowerFunctionsVendorTests
+public class PowerFunctionsVendorTests : VendorTestsBase
 {
-    private DeviceFactory _deviceFactory;
+    private readonly DeviceFactory _deviceFactory;
 
     public PowerFunctionsVendorTests()
     {
-        // Arrange
-        var builder = new ContainerBuilder();
-        builder.RegisterInstance(Mock.Of<IDeviceRepository>());
-        builder.RegisterInstance(Mock.Of<IInfraredService>());
-        builder.RegisterInstance(Mock.Of<IPowerFunctionsManager>());
-        builder.RegisterInstance(Mock.Of<IDeviceImageRegistry>()); // needed cause RegisterDevice<PowerFunctionsDevice>().WithImages("powerfunctions_image.png", "powerfunctions_image_small.png")
-
-        builder.Register<DeviceFactory>(c =>
-        {
-            IComponentContext ctx = c.Resolve<IComponentContext>();
-            return (deviceType, name, address, deviceData, settings) => ctx.ResolveOptionalKeyed<Device>(deviceType,
-                new NamedParameter("name", name),
-                new NamedParameter("address", address),
-                new NamedParameter("deviceData", deviceData),
-                new NamedParameter("settings", settings));
-        });
-
-        // execute registration of vendor MouldKing
-        builder.RegisterAssemblyModules<PowerFunctionsVendor>(typeof(DeviceManagementModule).Assembly);
-
         // Act
-        var container = builder.Build();
+        var container = InitializeContainer().Build();
 
         _deviceFactory = container.Resolve<DeviceFactory>();
     }
+
+    protected override ContainerBuilder InitializeContainer()
+    {
+        var builder = base.InitializeContainer();
+
+        // Arrange
+        builder.RegisterInstance(Mock.Of<IInfraredService>());
+        builder.RegisterInstance(Mock.Of<IDeviceImageRegistry>()); // needed cause RegisterDevice<PowerFunctionsDevice>().WithImages("powerfunctions_image.png", "powerfunctions_image_small.png")
+
+        // execute registration of vendor PowerFunctions
+        builder.RegisterAssemblyModules<PowerFunctionsVendor>(typeof(DeviceManagementModule).Assembly);
+
+        return builder;
+    }
+
 
     [Theory]
     [InlineData("0", "PF Infra 1")]

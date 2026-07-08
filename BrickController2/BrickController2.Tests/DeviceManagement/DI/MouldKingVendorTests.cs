@@ -3,7 +3,6 @@ using BrickController2.DeviceManagement;
 using BrickController2.DeviceManagement.DI;
 using BrickController2.DeviceManagement.MouldKing;
 using BrickController2.PlatformServices.BluetoothLE;
-using BrickController2.UI.Services.AppIdentifier;
 using FluentAssertions;
 using Moq;
 using System;
@@ -12,40 +11,30 @@ using MouldKingVendor = BrickController2.DeviceManagement.MouldKing.MouldKing;
 
 namespace BrickController2.Tests.DeviceManagement.DI;
 
-public class MouldKingVendorTests
+public class MouldKingVendorTests : VendorTestsBase
 {
-    private DeviceFactory _deviceFactory;
+    private readonly DeviceFactory _deviceFactory;
 
     public MouldKingVendorTests()
     {
+        // Act
+        var container = InitializeContainer().Build();
+
+        _deviceFactory = container.Resolve<DeviceFactory>();
+    }
+
+    protected override ContainerBuilder InitializeContainer()
+    {
+        var builder = base.InitializeContainer();
+
         // Arrange
-        var builder = new ContainerBuilder();
-        builder.RegisterInstance(Mock.Of<IDeviceRepository>());
         builder.RegisterInstance(Mock.Of<IBluetoothLEService>());
         builder.RegisterInstance(Mock.Of<IMKPlatformService>());
-
-        Mock<IAppIdentifierService> appIdentifierService = new();
-        appIdentifierService.Setup(x => x.GetAppId(2)).Returns(new byte[] { 0x01, 0x02 });
-
-        builder.RegisterInstance(appIdentifierService.Object);
-
-        builder.Register<DeviceFactory>(c =>
-        {
-            IComponentContext ctx = c.Resolve<IComponentContext>();
-            return (deviceType, name, address, deviceData, settings) => ctx.ResolveOptionalKeyed<Device>(deviceType,
-                new NamedParameter("name", name),
-                new NamedParameter("address", address),
-                new NamedParameter("deviceData", deviceData),
-                new NamedParameter("settings", settings));
-        });
 
         // execute registration of vendor MouldKing
         builder.RegisterAssemblyModules<MouldKingVendor>(typeof(DeviceManagementModule).Assembly);
 
-        // Act
-        var container = builder.Build();
-
-        _deviceFactory = container.Resolve<DeviceFactory>();
+        return builder;
     }
 
     [Theory]
