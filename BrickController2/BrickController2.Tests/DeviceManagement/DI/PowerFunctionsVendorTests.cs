@@ -29,7 +29,7 @@ public class PowerFunctionsVendorTests : VendorTestsBase
 
         // Arrange
         builder.RegisterInstance(Mock.Of<IInfraredService>());
-        builder.RegisterInstance(Mock.Of<IDeviceImageRegistry>()); // needed cause RegisterDevice<PowerFunctionsDevice>().WithImages("powerfunctions_image.png", "powerfunctions_image_small.png")
+        builder.RegisterInstance(Mock.Of<IDeviceImageRegistry>()); // needed because RegisterDevice<PowerFunctionsDevice>().WithImages("powerfunctions_image.png", "powerfunctions_image_small.png")
 
         // execute registration of vendor PowerFunctions
         builder.RegisterModule<PowerFunctionsVendor>();
