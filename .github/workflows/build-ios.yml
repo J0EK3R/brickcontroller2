@@ -1,0 +1,71 @@
+name: Build BrickController iOS
+
+on:
+  push:
+    branches:
+      - default
+      - 'releases/**'
+    paths:
+      - '.github/**/*ios.yml'
+      - 'Directory.*.props'
+      - 'NuGet.config'
+      - 'BrickController2.slnx'
+      - 'BrickController2/BrickController2/**'
+      - 'BrickController2/BrickController2.iOS/**'
+  pull_request:
+    branches:
+      - default
+      - 'releases/**'
+    paths:
+      - '.github/**/*ios.yml'
+      - 'Directory.*.props'
+      - 'NuGet.config'
+      - 'BrickController2.slnx'
+      - 'BrickController2/BrickController2/**'
+      - 'BrickController2/BrickController2.iOS/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-26
+    name: BrickController iOS Simulator Build
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Install .NET MAUI Workload
+      run: dotnet workload install maui-ios
+
+    - name: Select compatible Xcode if available
+      run: |
+        if [ -d /Applications/Xcode_26.5.app/Contents/Developer ]; then
+          echo "DEVELOPER_DIR=/Applications/Xcode_26.5.app/Contents/Developer" >> "$GITHUB_ENV"
+        else
+          xcodebuild -version
+        fi
+
+    - name: Restore Dependencies
+      run: dotnet restore BrickController2/BrickController2.iOS/BrickController2.iOS.csproj -r iossimulator-arm64
+
+    - name: Build MAUI iOS Simulator App
+      run: >-
+        dotnet build BrickController2/BrickController2.iOS/BrickController2.iOS.csproj
+        -c Release
+        -f net10.0-ios
+        -r iossimulator-arm64
+        --no-restore
+        -p:EnableCodeSigning=false
+
+    - name: Upload iOS Simulator Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: brickcontroller-ios-simulator-ci-build
+        path: BrickController2/BrickController2.iOS/bin/Release/net10.0-ios/iossimulator-arm64/*.app
