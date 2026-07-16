@@ -1,0 +1,147 @@
+name: Build BrickController iOS-Device
+
+on:
+  # push:
+  #   branches:
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*ios.yml'
+  #     - 'Directory.*.props'
+  #     - 'NuGet.config'
+  #     - 'BrickController2.slnx'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.iOS/**'
+  # pull_request:
+  #   branches:
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*ios.yml'
+  #     - 'Directory.*.props'
+  #     - 'NuGet.config'
+  #     - 'BrickController2.slnx'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.iOS/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+  BUILD_PROVISIONING_PROFILE_BASE64: ${{ secrets.BUILD_PROVISIONING_PROFILE_BASE64 }}
+  KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+  APPLE_BUNDLE_ID: ${{ vars.APPLE_BUNDLE_ID || 'com.scn.BrickController2' }}
+
+jobs:
+  build-ios:
+    runs-on: macos-26
+    name: BrickController iOS Device Build
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Install .NET MAUI Workload
+      run: dotnet workload install maui-ios
+
+    - name: Select compatible Xcode if available
+      run: |
+        if [ -d /Applications/Xcode_26.5.app/Contents/Developer ]; then
+          echo "DEVELOPER_DIR=/Applications/Xcode_26.5.app/Contents/Developer" >> "$GITHUB_ENV"
+        else
+          xcodebuild -version
+        fi
+
+    - name: Restore Dependencies
+      run: dotnet restore BrickController2/BrickController2.iOS/BrickController2.iOS.csproj -r ios-arm64
+
+    - name: Import signing certificate
+      if: env.APPLE_CERTIFICATE_BASE64 != ''
+      run: |
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+        security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        security default-keychain -s "$KEYCHAIN_PATH"
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+        security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+    - name: Import provisioning profile
+      if: env.BUILD_PROVISIONING_PROFILE_BASE64 != ''
+      run: |
+        mkdir -p "$RUNNER_TEMP/profiles"
+        echo "$BUILD_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/profiles/profile.mobileprovision"
+        mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+        cp "$RUNNER_TEMP/profiles/profile.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/"
+
+    - name: Debug - list provisioning profiles + cert identities
+      run: |
+        echo "Provisioning profiles dir:"
+        ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
+
+        echo "Extracting UUID from mobileprovision:"
+        PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision | head -n1)
+        if [ -z "$PROFILE_PATH" ]; then
+          echo "No .mobileprovision found"
+          exit 1
+        fi
+        echo "Found profile: $PROFILE_PATH"
+        PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | grep -A 1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        echo "Extracted PROFILE_UUID=$PROFILE_UUID"
+
+        # echo "Installed code signing identities:"
+        # security find-identity -v -p codesigning || true
+
+    - name: Build signed MAUI iOS App for device
+      run: |
+        PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision | head -n1)
+        if [ -z "$PROFILE_PATH" ]; then
+          echo "No .mobileprovision found"
+          exit 1
+        fi
+        echo "Found profile: $PROFILE_PATH"
+
+        PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | grep -A 1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        echo "Using PROFILE_UUID=$PROFILE_UUID"
+        
+        if [ -z "$PROFILE_UUID" ]; then
+          echo "ERROR: Failed to extract UUID from provisioning profile"
+          exit 1
+        fi
+
+        dotnet build BrickController2/BrickController2.iOS/BrickController2.iOS.csproj \
+          -c Release \
+          -f net10.0-ios \
+          -r ios-arm64 \
+          --no-restore \
+          -p:EnableCodeSigning=true \
+          -p:CodesignKey="Apple Development" \
+          -p:CodesignProvision="$PROFILE_UUID" \
+          -p:CodesignEntitlements="BrickController2/BrickController2.iOS/Entitlements.plist" \
+          -p:CodesignExtraArgs="--timestamp --generate-entitlement-der" \
+          -p:ApplicationId=$APPLE_BUNDLE_ID \
+          -p:BundleIdentifier=$APPLE_BUNDLE_ID \
+          -p:CFBundleIdentifier=$APPLE_BUNDLE_ID \
+          -p:GenerateAppBundle=true \
+          -p:CreatePackage=true
+
+    - name: Package .ipa
+      if: success()
+      run: |
+        APP_PATH="BrickController2/BrickController2.iOS/bin/Release/net10.0-ios/ios-arm64/BrickController2.iOS.app"
+        IPA_PATH="$RUNNER_TEMP/BrickController2.ipa"
+        xcrun -log -sdk iphoneos PackageApplication -v "$APP_PATH" -o "$IPA_PATH"
+
+    - name: Upload iOS device artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: brickcontroller-ios-device-ci-build
+        path: ${{ runner.temp }}/BrickController2.ipa
