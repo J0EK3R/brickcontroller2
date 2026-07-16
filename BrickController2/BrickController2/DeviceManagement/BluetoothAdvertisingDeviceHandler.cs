@@ -319,6 +319,7 @@ namespace BrickController2.DeviceManagement
                 catch (Exception ex)
                 {
                     startupCompletionSource.TrySetException(ex);
+                    throw;
                 }
             });
 
