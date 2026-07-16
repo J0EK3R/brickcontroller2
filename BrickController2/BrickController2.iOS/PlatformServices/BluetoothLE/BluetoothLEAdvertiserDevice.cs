@@ -75,6 +75,7 @@ internal class BluetoothLEAdvertiserDevice : CBPeripheralManagerDelegate, IBluet
 
         TaskCompletionSource<NSError?>? advertisingStartedCompletionSource = null;
 
+        // lock to synchronize fields _peripheralManager, _advData and _advertisingStartedCompletion
         lock (_lock)
         {
             _advData = new StartAdvertisingOptions { ServicesUUID = servicesUUID };
@@ -124,6 +125,12 @@ internal class BluetoothLEAdvertiserDevice : CBPeripheralManagerDelegate, IBluet
         }
     }
 
+    /// <summary>
+    /// Start advertising if the peripheral manager is powered on and advertising data is set.
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ Must be called *within a lock* to synchronize the fields _peripheralManager, _advData and _advertisingStartedCompletion.
+    /// </remarks>
     private void StartAdvertisingInternal()
     {
         // Initialize peripheral manager if not already done.
@@ -146,12 +153,19 @@ internal class BluetoothLEAdvertiserDevice : CBPeripheralManagerDelegate, IBluet
         }
     }
 
+    /// <summary>
+    /// Stop advertising and reset advertising data and completion source.
+    /// </summary>
     private void StopAdvertiseInternal()
     {
-        _peripheralManager?.StopAdvertising();
-        // Reset data so that it does not start advertising automatically if the interface goes ON.
-        _advData = null;
-        _advertisingStartedCompletionSource?.TrySetCanceled();
-        _advertisingStartedCompletionSource = null;
+        // lock to synchronize fields _peripheralManager, _advData and _advertisingStartedCompletion
+        lock (_lock)
+        {
+            _peripheralManager?.StopAdvertising();
+            // Reset data so that it does not start advertising automatically if the interface goes ON.
+            _advData = null;
+            _advertisingStartedCompletionSource?.TrySetCanceled();
+            _advertisingStartedCompletionSource = null;
+        }
     }
 }
