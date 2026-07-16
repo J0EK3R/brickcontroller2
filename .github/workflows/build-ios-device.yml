@@ -100,6 +100,24 @@ jobs:
         # echo "Installed code signing identities:"
         # security find-identity -v -p codesigning || true
 
+    - name: Replace CFBundleIdentifier in Info.plist
+      shell: bash
+      run: |
+        PLIST="BrickController2/BrickController2.iOS/Info.plist"
+
+        echo "Info.plist:"
+        grep -A1 "<key>CFBundleIdentifier</key>" "$PLIST"
+
+        BUNDLE_ID="${{ env.APPLE_BUNDLE_ID }}"
+
+        echo "Setting CFBundleIdentifier to: $BUNDLE_ID"
+
+        # Ersetze den Wert innerhalb des <string>...</string> nach dem CFBundleIdentifier-Key
+        sed -i '' -e "/<key>CFBundleIdentifier<\/key>/{n;s|<string>.*</string>|<string>${BUNDLE_ID}</string>|;}" "$PLIST"
+
+        echo "Updated Info.plist:"
+        grep -A1 "<key>CFBundleIdentifier</key>" "$PLIST"
+        
     - name: Build signed MAUI iOS App for device
       run: |
         PROFILE_PATH=$(ls "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision | head -n1)
