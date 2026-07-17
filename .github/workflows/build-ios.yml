@@ -169,8 +169,6 @@ jobs:
         -p:CodesignKey="Apple Development" \
         -p:CodesignProvision="$PROFILE_UUID" \
         -p:CodesignEntitlements="Entitlements.plist" \
-        -p:PublishTrimmed=false \
-        -p:TrimMode=None \
         -p:EnableAssemblyILStripping=false
 
     - name: List build output
