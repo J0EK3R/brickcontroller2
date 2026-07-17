@@ -171,6 +171,19 @@ jobs:
         -p:CodesignEntitlements="Entitlements.plist" \
         -p:EnableAssemblyILStripping=false
 
+    - name: Analyse IPA
+      run: |
+        unzip BrickController2/BrickController2.iOS/bin/Release/${{ env.TARGET_FRAMEWORK }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2.iOS.ipa -d ipa_unpacked
+
+        echo "=== ENTITLEMENTS ==="
+        codesign -d --entitlements :- ipa_unpacked/Payload/BrickController2.iOS.app || true
+
+        echo "=== PROVISIONING PROFILE ==="
+        security cms -D -i ipa_unpacked/Payload/BrickController2.iOS.app/embedded.mobileprovision || true
+
+        echo "=== INFO.PLIST ==="
+        plutil -p ipa_unpacked/Payload/BrickController2.iOS.app/Info.plist || true
+
     - name: List build output
       run: ls -R BrickController2/BrickController2.iOS/bin/Release/${{ env.TARGET_FRAMEWORK }}/${{ env.TARGET_RUNTIME }}/publish/
 
