@@ -11,7 +11,12 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <ItemGroup>
+  <PropertyGroup>
+      <Entitlements>Entitlements.plist</Entitlements>
+      <MtouchLink>None</MtouchLink>
+  </PropertyGroup>
+
+    <ItemGroup>
 	  <BundleResource Remove="Resources\splash.svg" />
 	</ItemGroup>
 
