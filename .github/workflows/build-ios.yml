@@ -115,8 +115,8 @@ jobs:
         echo "Updated Info.plist:"
         grep -A1 "<key>CFBundleIdentifier</key>" "$PLIST"
 
-        echo "Full Info.plist:"
-        cat "$PLIST"
+        # echo "Full Info.plist:"
+        # cat "$PLIST"
 
     - name: Replace ApplicationId in csproj
       shell: bash
@@ -136,8 +136,8 @@ jobs:
         echo "Updated ApplicationId:"
         grep "<ApplicationId>" "$CSPROJ"
 
-        echo "Full Info.plist:"
-        cat "$CSPROJ"
+        # echo "Full Info.plist:"
+        # cat "$CSPROJ"
 
     - name: Restore Dependencies
       run: dotnet restore BrickController2/BrickController2.iOS/BrickController2.iOS.csproj
