@@ -1,29 +1,29 @@
 name: Build BrickController Android 
 
 on:
-  push:
-    branches:
-      - default
-      - 'releases/**'
-    paths:
-      - '.github/**/*android.yml'
-      - 'BrickController2/*.props'
-      - 'BrickController2/*.sln'
-      - 'BrickController2/BrickController2/**'
-      - 'BrickController2/BrickController2.Android/**'
-  pull_request:
-    branches:    
-      - default
-      - 'releases/**'
-    paths:
-      - '.github/**/*android.yml'
-      - 'BrickController2/*.props'
-      - 'BrickController2/*.sln'
-      - 'BrickController2/BrickController2/**'
-      - 'BrickController2/BrickController2.Android/**'
-  release:
-    types:
-      - published
+  # push:
+  #   branches:
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*android.yml'
+  #     - 'BrickController2/*.props'
+  #     - 'BrickController2/*.sln'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.Android/**'
+  # pull_request:
+  #   branches:    
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*android.yml'
+  #     - 'BrickController2/*.props'
+  #     - 'BrickController2/*.sln'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.Android/**'
+  # release:
+  #   types:
+  #     - published
   workflow_dispatch:
 
 permissions:

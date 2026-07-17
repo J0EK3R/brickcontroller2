@@ -1,29 +1,29 @@
 name: Build BrickController WinUI 
 
 on:
-  push:
-    branches:
-      - default
-      - 'releases/**'
-    paths:
-      - '.github/**/*windows.yml'
-      - 'BrickController2/*.props'
-      - 'BrickController2/*.sln'
-      - 'BrickController2/BrickController2/**'
-      - 'BrickController2/BrickController2.WinUI/**'
-  pull_request:
-    branches:    
-      - default
-      - 'releases/**'
-    paths:
-      - '.github/**/*windows.yml'
-      - 'BrickController2/*.props'
-      - 'BrickController2/*.sln'
-      - 'BrickController2/BrickController2/**'
-      - 'BrickController2/BrickController2.WinUI/**'
-  release:
-    types:
-      - published
+  # push:
+  #   branches:
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*windows.yml'
+  #     - 'BrickController2/*.props'
+  #     - 'BrickController2/*.sln'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.WinUI/**'
+  # pull_request:
+  #   branches:    
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*windows.yml'
+  #     - 'BrickController2/*.props'
+  #     - 'BrickController2/*.sln'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.WinUI/**'
+  # release:
+  #   types:
+  #     - published
   workflow_dispatch:
 
 permissions:

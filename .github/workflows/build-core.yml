@@ -1,26 +1,26 @@
 name: Build BrickController Core 
 
 on:
-  push:
-    branches:
-      - default
-      - 'releases/**'
-    paths:
-      - '.github/**/*core.yml'
-      - 'BrickController2/*.props'
-      - 'BrickController2/*.sln'
-      - 'BrickController2/BrickController2/**'
-      - 'BrickController2/BrickController2.Tests/**'
-  pull_request:
-    branches:    
-      - default
-      - 'releases/**'
-    paths:
-      - '.github/**/*core.yml'
-      - 'BrickController2/*.props'
-      - 'BrickController2/*.sln'
-      - 'BrickController2/BrickController2/**'
-      - 'BrickController2/BrickController2.Tests/**'
+  # push:
+  #   branches:
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*core.yml'
+  #     - 'BrickController2/*.props'
+  #     - 'BrickController2/*.sln'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.Tests/**'
+  # pull_request:
+  #   branches:    
+  #     - default
+  #     - 'releases/**'
+  #   paths:
+  #     - '.github/**/*core.yml'
+  #     - 'BrickController2/*.props'
+  #     - 'BrickController2/*.sln'
+  #     - 'BrickController2/BrickController2/**'
+  #     - 'BrickController2/BrickController2.Tests/**'
   workflow_dispatch:
 
 permissions:
