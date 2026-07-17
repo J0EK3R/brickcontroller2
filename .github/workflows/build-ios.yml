@@ -167,7 +167,7 @@ jobs:
         -p:ApplicationVersion="${{ github.run_number }}" \
         -p:ArchiveOnBuild=true \
         -p:CodesignKey="Apple Development" \
-        -p:CodesignProvision="$RUNNER_TEMP/profiles/profile.mobileprovision" \
+        -p:CodesignProvision="$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision" \
         -p:CodesignEntitlements="Entitlements.plist" \
         -p:EnableAssemblyILStripping=false
 
