@@ -173,7 +173,7 @@ jobs:
 
     - name: Analyse IPA
       run: |
-        unzip BrickController2/BrickController2.iOS/bin/Release/${{ env.TARGET_FRAMEWORK }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2.iOS.ipa -d ipa_unpacked
+        unzip -q BrickController2/BrickController2.iOS/bin/Release/${{ env.TARGET_FRAMEWORK }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2.iOS.ipa -d ipa_unpacked
 
         echo "=== ENTITLEMENTS ==="
         codesign -d --entitlements :- ipa_unpacked/Payload/BrickController2.iOS.app || true
