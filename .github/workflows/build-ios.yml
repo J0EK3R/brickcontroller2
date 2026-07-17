@@ -151,7 +151,7 @@ jobs:
         fi
         echo "Found profile: $PROFILE_PATH"
 
-        PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | grep -A 1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+        PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | grep -A 1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
         echo "Using PROFILE_UUID=$PROFILE_UUID"
         
         if [ -z "$PROFILE_UUID" ]; then
@@ -167,7 +167,7 @@ jobs:
         -p:ApplicationVersion="${{ github.run_number }}" \
         -p:ArchiveOnBuild=true \
         -p:CodesignKey="Apple Development" \
-        -p:CodesignProvision="$HOME/Library/MobileDevice/Provisioning Profiles/profile.mobileprovision" \
+        -p:CodesignProvision="$PROFILE_UUID" \
         -p:CodesignEntitlements="Entitlements.plist" \
         -p:EnableAssemblyILStripping=false
 
