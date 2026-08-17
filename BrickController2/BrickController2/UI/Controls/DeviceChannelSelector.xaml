@@ -320,6 +320,31 @@
                 <Image Grid.Column="1" Grid.Row="1" Source="{extensions:ImageResource Source=pfxbrick_image.png}" WidthRequest="130" HeightRequest="95" ZIndex="-1"/>
             </Grid>
 
+            <!-- MK3 -->
+            <Grid x:Name="MK3Section">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                </Grid>
+
+                <Grid Grid.Column="1">
+                    <Image Source="{extensions:ImageResource Source=mk3_image.png}" WidthRequest="40" HeightRequest="100" HorizontalOptions="Center" VerticalOptions="End" />
+                </Grid>
+
+                <Grid Grid.Column="2">
+                    <VerticalStackLayout>
+                        <controls:ChannelSelectorRadioButton x:Name="MK3Channel0" DeviceType="MK3" Channel="0" HorizontalOptions="Start" VerticalOptions="Start" Margin="0,50,0,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MK3Channel1" DeviceType="MK3" Channel="1" HorizontalOptions="Start" VerticalOptions="Start" Margin="0,0,0,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MK3Channel2" DeviceType="MK3" Channel="2" HorizontalOptions="Start" VerticalOptions="Start" Margin="0,0,0,0" />
+                        <controls:ChannelSelectorRadioButton x:Name="MK3Channel3" DeviceType="MK3" Channel="3" HorizontalOptions="Start" VerticalOptions="Start" Margin="0,0,0,0"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Grid>
+
             <!-- MK4 -->
             <Grid x:Name="MK4Section">
                 <Grid.ColumnDefinitions>
