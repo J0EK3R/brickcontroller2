@@ -19,7 +19,7 @@ internal class MK3 : MKBaseByte, IDeviceType<MK3>
     /// <summary>
     /// Base Telegram
     /// </summary>
-    private static readonly byte[] Telegram_Base_Device = [0x66, 0x7b, 0xa7, 0x80, 0x80, 0x80, 0x99];
+    private static readonly byte[] Telegram_Base_Device = [0x66, 0x7b, 0xa7, 0x80, 0x80, 0x80, 0x80, 0x99];
 
     /// <summary>
     /// after this timespan and all channel's values equal to zero the connect telegram is sent
