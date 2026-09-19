@@ -12,6 +12,8 @@ internal class CaDARaceCar : BluetoothAdvertisingDevice
 {
     private readonly IMessageEncoder _messageEncoder;
     private readonly OutputValuesGroup<Half> _outputValues = new(3);
+    private byte _lightsValue;
+
 
     public CaDARaceCar(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService, IMessageEncoderFactory messageEncoderFactory)
       : base(name, address, deviceData, deviceRepository, bleService)
@@ -26,18 +28,24 @@ internal class CaDARaceCar : BluetoothAdvertisingDevice
     /// </summary>
     protected override ushort ManufacturerId => CaDAProtocol.ManufacturerID;
 
-    public override int NumberOfChannels => 3;
+    public override int NumberOfChannels => 4;
 
     public override void SetOutput(int channelNo, float value)
     {
         CheckChannel(channelNo);
         value = CutOutputValue(value);
 
-        // check for change
-        if (_outputValues.SetOutput(channelNo, (Half)value))
+        switch (channelNo)
         {
-            // notify data changed
-            _bluetoothAdvertisingDeviceHandler.NotifyDataChanged();
+            case 2:
+                SetLight(0, value);
+                break;
+            case 3:
+                SetLight(1, value);
+                break;
+            default:
+                SetChannelValue(channelNo, value);
+                break;
         }
     }
 
@@ -45,6 +53,7 @@ internal class CaDARaceCar : BluetoothAdvertisingDevice
     {
         _outputValues.Initialize();
         _messageEncoder.Initialize();
+        _lightsValue = 0;
     }
 
     protected override void DisconnectDevice()
@@ -66,5 +75,30 @@ internal class CaDARaceCar : BluetoothAdvertisingDevice
     protected override BluetoothAdvertisingDeviceHandler GetBluetoothAdvertisingDeviceHandler()
     {
         return new BluetoothAdvertisingDeviceHandler(_bleService, ManufacturerId, TryGetTelegram, TimeSpan.MaxValue);
+    }
+
+    private void SetChannelValue(int channelNo, float value)
+    {
+        // check for change
+        if (_outputValues.SetOutput(channelNo, (Half)value))
+        {
+            // notify data changed
+            _bluetoothAdvertisingDeviceHandler.NotifyDataChanged();
+        }
+    }
+
+    private void SetLight(int bitOffset, float value)
+    {
+        if (value == 0) // reset Value
+        {
+            _lightsValue = (byte)(_lightsValue & ~(1 << bitOffset));
+
+        }
+        else // set Value
+        {
+            _lightsValue = (byte)(_lightsValue | (1 << bitOffset));
+        }
+
+        SetChannelValue(2, _lightsValue); // channel 2 is used for lights
     }
 }
