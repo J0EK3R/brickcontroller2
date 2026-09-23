@@ -69,20 +69,11 @@ jobs:
         -p:EnableAssemblyILStripping=false
         -p:EnableCodeSigning=false
 
-    - name: Package unsigned IPA
+    - name: Rename IPA
       run: |
-        PUBLISH_DIR="${{ env.PROJECT_FOLDER }}/bin/${{ env.BUILD_CONFIGURATION }}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}"
-        APP_BUNDLE=$(find "$PUBLISH_DIR" -maxdepth 1 -name "*.app" | head -n 1)
-        echo "Found app bundle: $APP_BUNDLE"
-
-        mkdir -p ipa-build/Payload
-        cp -R "$APP_BUNDLE" ipa-build/Payload/
-
-        cd ipa-build
-        zip -r -y ../BrickController2.iOS.unsigned.ipa Payload
-        cd ..
-
-        ls -la BrickController2.iOS.unsigned.ipa        
+        SRC="${{ env.PROJECT_FOLDER }}/bin/${{ env.BUILD_CONFIGURATION }}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2.iOS.ipa"
+        DST="${{ env.PROJECT_FOLDER }}/bin/${{ env.BUILD_CONFIGURATION }}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2-unsigned.IOS.ipa"
+        mv "$SRC" "$DST"
 
     - name: List build output
       run: ls -R ${{ env.PROJECT_FOLDER }}/bin/${{env.BUILD_CONFIGURATION}}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/
@@ -91,7 +82,7 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: brickcontroller-ios-ci-build
-        path: ${{ env.PROJECT_FOLDER }}/bin/${{env.BUILD_CONFIGURATION}}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2.iOS.ipa
+        path: ${{ env.PROJECT_FOLDER }}/bin/${{env.BUILD_CONFIGURATION}}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2-unsigned.IOS.ipa
         retention-days: 14
 
   publish-release:
@@ -115,12 +106,3 @@ jobs:
         files: ipa-artifacts/BrickController2.iOS.ipa
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    # - name: Upload app to TestFlight
-    #   uses: Apple-Actions/upload-testflight-build@v5
-    #   with:
-    #     app-path: 'ipa-artifacts/BrickController2.iOS.ipa'
-    #     issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-    #     api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-    #     api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
-
