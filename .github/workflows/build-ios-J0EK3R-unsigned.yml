@@ -68,7 +68,7 @@ jobs:
         -p:ApplicationVersion="${{ github.run_number }}"
         -p:ArchiveOnBuild=true
         -p:EnableAssemblyILStripping=false
-        -p:EnableCodeSigning=true
+        -p:EnableCodeSigning=false
 
     - name: List build output
       run: ls -R ${{ env.PROJECT_FOLDER }}/bin/${{env.BUILD_CONFIGURATION}}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/
