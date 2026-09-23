@@ -1,4 +1,4 @@
-name: Release BrickController iOS J0EK3R
+name: Release BrickController iOS J0EK3R - unsigned
 
 on:
   push:
