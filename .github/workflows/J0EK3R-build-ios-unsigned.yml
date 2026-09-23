@@ -1,0 +1,107 @@
+name: J0EK3R - Release BrickController iOS unsigned
+
+on:
+  push:
+    branches:
+      - default
+      - 'release/**'
+    paths:
+      - '.github/**/*ios.yml'
+      - '*.props'
+      - '*.slnx'
+      - 'BrickController2/BrickController2/**'
+      - 'BrickController2/BrickController2.iOS/**'
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BUILD_CONFIGURATION: 'Release'
+  PROJECT_FOLDER: "BrickController2/BrickController2.iOS"
+  TARGET_RUNTIME: 'ios-arm64'
+  APP_ID: ${{ vars.APPLE_BUNDLE_ID || 'cz.vico.brickcontrollerlegacy' }}
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    name: BrickController iOS Build
+
+    steps:
+    - name: Register log masks
+      env:
+        MASK_LIST: ${{ secrets.MASK_LIST }}
+      run: |
+        while IFS= read -r MASK; do
+          [ -n "$MASK" ] && echo "::add-mask::$MASK"
+        done <<< "$MASK_LIST"
+
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.ref }}
+    - name: Setup MAUI
+      id: setup-maui
+      uses: ./.github/actions/setup-maui
+      with:
+        platform: ios
+
+    - name: Setup Xcode
+      uses: ./.github/actions/setup-xcode
+      with:
+        version: ${{ vars.XCODE_VERSION }}
+            
+    - name: Restore Dependencies
+      run: dotnet restore ${{ env.PROJECT_FOLDER }}/BrickController2.iOS.csproj
+
+    - name: Build MAUI iOS
+      run: >-
+        dotnet publish ${{ env.PROJECT_FOLDER }}/BrickController2.iOS.csproj
+        --no-restore
+        -c ${{ env.BUILD_CONFIGURATION }}
+        -f ${{ steps.setup-maui.outputs.target-framework }}
+        -r ${{ env.TARGET_RUNTIME }}
+        -p:ApplicationId="${{ env.APP_ID }}"
+        -p:ApplicationVersion="${{ github.run_number }}"
+        -p:EnableAssemblyILStripping=false
+        -p:EnableCodeSigning=false
+
+    - name: Rename IPA
+      run: |
+        SRC="${{ env.PROJECT_FOLDER }}/bin/${{ env.BUILD_CONFIGURATION }}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2.iOS.ipa"
+        DST="${{ env.PROJECT_FOLDER }}/bin/${{ env.BUILD_CONFIGURATION }}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2-unsigned.IOS.ipa"
+        mv "$SRC" "$DST"
+
+    - name: List build output
+      run: ls -R ${{ env.PROJECT_FOLDER }}/bin/${{env.BUILD_CONFIGURATION}}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/
+
+    - name: Upload IOS Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: brickcontroller-ios-ci-build
+        path: ${{ env.PROJECT_FOLDER }}/bin/${{env.BUILD_CONFIGURATION}}/${{ steps.setup-maui.outputs.target-framework }}/${{ env.TARGET_RUNTIME }}/publish/BrickController2-unsigned.IOS.ipa
+        retention-days: 14
+
+  publish-release:
+    needs: build-ios
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: macos-latest
+    name: Publish iOS Release
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download IOS Artifact
+      uses: actions/download-artifact@v6
+      with:
+        name: brickcontroller-ios-ci-build
+        path: ipa-artifacts
+
+    - name: Upload Artifact to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ipa-artifacts/BrickController2-unsigned.IOS.ipa
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
