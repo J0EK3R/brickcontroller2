@@ -22,6 +22,7 @@ permissions:
 env:
   PROJECT_FOLDER: "BrickController2/BrickController2.WinUI"
   TARGET_RUNTIME: 'win-x64'
+  PUBLISH_OUTPUT: "publish-output"
 
 jobs:
   build-winui:
@@ -40,15 +41,6 @@ jobs:
         platform: windows10.0.19041.0
         workload-id: maui-windows
 
-    # - name: Decode Signing Certificate
-    #   shell: pwsh
-    #   run: |
-    #     Set-Content -Path cert.asc -Value "${{ secrets.SIGNING_CERTIFICATE_BASE_64_CONTENT }}" -NoNewline -Encoding Ascii
-    #     certutil -decode cert.asc cert.pfx
-
-    # - name: Install Signing Certificate
-    #   run: certutil -user -p "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" -Silent -importpfx cert.pfx NoRoot
-
     - name: Restore Dependencies
       run: dotnet restore ${{ env.PROJECT_FOLDER }}/BrickController2.WinUI.csproj
 
@@ -59,19 +51,39 @@ jobs:
         -p:ApplicationVersion="${{ github.run_number }}" `
         -p:Platform=x64
 
-    - name: Build MAUI WinUI App
+    # MSIX-Schritt entfällt komplett - stattdessen unpackaged Publish
+    - name: Publish unpackaged App
       run: dotnet publish ${{ env.PROJECT_FOLDER }}/BrickController2.WinUI.csproj `
         -c Release `
         -r ${{ env.TARGET_RUNTIME }} `
-        -p:AppxPackageSigningEnabled=false `
-        -p:GenerateAppxPackageOnBuild=true `
-        -p:Platform=x64
+        -p:WindowsPackageType=None `
+        -p:SelfContained=true `
+        -p:Platform=x64 `
+        -p:ApplicationVersion="${{ github.run_number }}" `
+        -o ${{ env.PUBLISH_OUTPUT }}
 
-    - name: Upload WinUI Artifact
+    - name: Install Inno Setup
+      run: choco install innosetup --no-progress -y
+
+    - name: Copy publish output into installer folder
+      shell: pwsh
+      run: |
+        $dest = "${{ env.PROJECT_FOLDER }}/Installer/PublishOutput"
+        New-Item -ItemType Directory -Force -Path $dest | Out-Null
+        Copy-Item -Path "${{ env.PUBLISH_OUTPUT }}/*" -Destination $dest -Recurse -Force
+
+    - name: Compile Installer
+      shell: pwsh
+      run: |
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+          "/DMyAppVersion=1.0.${{ github.run_number }}" `
+          "${{ env.PROJECT_FOLDER }}/Installer/setup.iss"
+
+    - name: Upload Installer Artifact
       uses: actions/upload-artifact@v7
       with:
         name: brickcontroller-winui-ci-build
-        path: ${{ env.PROJECT_FOLDER }}\AppPackages\**\BrickController*.msix
+        path: ${{ env.PROJECT_FOLDER }}/Installer/Output/*.exe
         retention-days: 14
 
   publish-release:
@@ -83,15 +95,15 @@ jobs:
       contents: write
 
     steps:
-    - name: Download WinUI Artifact
+    - name: Download Installer Artifact
       uses: actions/download-artifact@v6
       with:
         name: brickcontroller-winui-ci-build
-        path: msix-artifacts
+        path: installer-artifacts
 
     - name: Upload Artifact to Release
       uses: softprops/action-gh-release@v2
       with:
-        files: msix-artifacts/**/*.msix
+        files: installer-artifacts/**/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
