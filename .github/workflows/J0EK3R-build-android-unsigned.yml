@@ -44,10 +44,10 @@ jobs:
     - name: Restore Dependencies
       run: dotnet restore ${{ env.PROJECT_FOLDER }}/BrickController2.Android.csproj
 
-    # - name: Setup Android signing
-    #   shell: bash
-    #   working-directory: ${{ env.PROJECT_FOLDER }}
-    #   run: (printf '%s' "${{ secrets.KEYSTORE }}" | base64 --decode) > keystore.jks
+    - name: Setup Android signing
+      shell: bash
+      working-directory: ${{ env.PROJECT_FOLDER }}
+      run: (printf '%s' "${{ secrets.KEYSTORE }}" | base64 --decode) > keystore.jks
 
     - name: Build MAUI Android (APK)
       run: >-
@@ -55,9 +55,11 @@ jobs:
         -c Release
         -f ${{ steps.setup-maui.outputs.target-framework }}
         --no-restore
+        -p:AndroidKeyStore=true
         -p:AndroidPackageFormat=apk
+        -p:AndroidSigningKeyPass="${{ secrets.KEYSTORE_PASSWORD }}"
+        -p:AndroidSigningStorePass="${{ secrets.KEYSTORE_PASSWORD }}"
         -p:ApplicationVersion="${{ github.run_number }}"
-        -p:AndroidKeyStore=""
 
     - name: Build MAUI Android (AAB) for Release
       if: github.event_name == 'release' && github.event.action == 'published'
