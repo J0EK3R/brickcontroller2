@@ -51,7 +51,7 @@ jobs:
         -p:ApplicationVersion="${{ github.run_number }}" `
         -p:Platform=x64
 
-    # MSIX-Schritt entfällt komplett - stattdessen unpackaged Publish
+    # MSIX step removed entirely - unpackaged publish instead
     - name: Publish unpackaged App
       run: dotnet publish ${{ env.PROJECT_FOLDER }}/BrickController2.WinUI.csproj `
         -c Release `
@@ -64,6 +64,15 @@ jobs:
 
     - name: Install Inno Setup
       run: choco install innosetup --no-progress -y
+
+    - name: Write Inno Setup script from repo variable
+      shell: pwsh
+      env:
+        INNO_SETUP_SCRIPT: ${{ vars.INNO_SETUP_SCRIPT }}
+      run: |
+        $dest = "${{ env.PROJECT_FOLDER }}/Installer"
+        New-Item -ItemType Directory -Force -Path $dest | Out-Null
+        Set-Content -Path "$dest/setup.iss" -Value $env:INNO_SETUP_SCRIPT -NoNewline
 
     - name: Copy publish output into installer folder
       shell: pwsh
