@@ -14,6 +14,8 @@ using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
+using System;
+using System.Threading.Tasks;
 using Windows.Devices.Input;
 using ZXing.Net.Maui.Controls;
 
@@ -27,7 +29,19 @@ public partial class App : MauiWinUIApplication
     public App()
     {
         InitializeComponent();
+
+#if DEBUG
+        UnhandledException += (s, e) =>
+                PlatformServices.Native.NativeMessageBox.Show("UNHANDLED", $"UNHANDLED: {e.Exception}");
+
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                PlatformServices.Native.NativeMessageBox.Show("UNHANDLED DOMAIN", $"UNHANDLED DOMAIN: {e.ExceptionObject}");
+
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+                PlatformServices.Native.NativeMessageBox.Show("UNHANDLED TASK", $"UNHANDLED TASK: {e.Exception}");
+#endif
     }
+
     protected override MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
