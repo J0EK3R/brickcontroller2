@@ -16,6 +16,9 @@
 		<!-- We do not want XAML files to be processed as .NET MAUI XAML -->
 		<EnableDefaultMauiItems>false</EnableDefaultMauiItems>
 
+		<WindowsPackageType>None</WindowsPackageType>
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<SelfContained>true</SelfContained>         
 	</PropertyGroup>
 
 	<ItemGroup>
