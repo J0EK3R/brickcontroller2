@@ -75,21 +75,24 @@ namespace BrickController2.DeviceManagement
             return base.ConnectAsync(reconnect, onDeviceDisconnected, channelConfigurations, startOutputProcessing, requestDeviceInformation, token);
         }
 
-        public override void SetOutput(int channel, float value)
+        public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
         {
-            var rawValue = (Half)(100 * CutOutputValue(value));
-
-            _ = channel switch
+            foreach (var (channel, value) in outputs)
             {
-                // store A+B virtual channel value for PLAYVM
-                CHANNEL_VM => _playVmValues.SetOutput(PLAYVM_CHANNEL_DRIVE, rawValue),
-                // store C channel value for PLAYVM
-                CHANNEL_C when _applyPlayVmMode => _playVmValues.SetOutput(PLAYVM_CHANNEL_STEER, rawValue),
-                // Light channels 1 - 6 require absolute value
-                >= CHANNEL_1 and <= CHANNEL_6 => _outputValues.SetOutput(channel, Half.Abs(rawValue)),
-                // rest of ports: such as A, B or C when not in PLAYVM mode - use value as is
-                _ => _outputValues.SetOutput(CheckChannel(channel), rawValue)
-            };
+                var rawValue = (Half)(100 * CutOutputValue(value));
+
+                _ = channel switch
+                {
+                    // store A+B virtual channel value for PLAYVM
+                    CHANNEL_VM => _playVmValues.SetOutput(PLAYVM_CHANNEL_DRIVE, rawValue),
+                    // store C channel value for PLAYVM
+                    CHANNEL_C when _applyPlayVmMode => _playVmValues.SetOutput(PLAYVM_CHANNEL_STEER, rawValue),
+                    // Light channels 1 - 6 require absolute value
+                    >= CHANNEL_1 and <= CHANNEL_6 => _outputValues.SetOutput(channel, Half.Abs(rawValue)),
+                    // rest of ports: such as A, B or C when not in PLAYVM mode - use value as is
+                    _ => _outputValues.SetOutput(CheckChannel(channel), rawValue)
+                };
+            }
         }
 
         public override async Task ResetOutputAsync(int channel, float value, CancellationToken token)

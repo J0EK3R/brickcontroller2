@@ -42,13 +42,19 @@ namespace BrickController2.DeviceManagement
 
         public override float AccelarationStep => 1.0f / 7.0f;
 
-        public override void SetOutput(int channel, float value)
+        public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
         {
-            CheckChannel(channel);
-            value = CutOutputValue(value);
+            lock (_outputGroup)
+            {
+                foreach (var (channel, value) in outputs)
+                {
+                    CheckChannel(channel);
+                    float cutValue = CutOutputValue(value);
 
-            var intValue = (int)(value * 255);
-            _outputGroup.SetOutput(channel, intValue);
+                    var intValue = (int)(cutValue * 255);
+                    _outputGroup.SetOutput(channel, intValue);
+                }
+            }
         }
 
         public override bool CanSetOutputLevel => true;

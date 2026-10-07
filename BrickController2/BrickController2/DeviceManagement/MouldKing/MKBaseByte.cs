@@ -1,5 +1,6 @@
 ﻿using BrickController2.PlatformServices.BluetoothLE;
 using System;
+using System.Collections.Generic;
 
 namespace BrickController2.DeviceManagement.MouldKing;
 
@@ -63,28 +64,27 @@ internal abstract class MKBaseByte : BluetoothAdvertisingDevice
     public override string BatteryVoltageSign => string.Empty;
 
     /// <summary>
-    /// Sets the output value for the specified channel.
+    /// Sets the output values for multiple channels.
     /// </summary>
-    /// <remarks>This method updates the output value for the specified channel and ensures the value is
-    /// within the valid range. If the value changes, the method triggers a notification to indicate that data has been
-    /// updated.</remarks>
-    /// <param name="channelNo">The channel number for which the output value is being set. Must be a valid channel index.</param>
-    /// <param name="value">The output value to set. The value will be adjusted if it exceeds the allowable range.</param>
-    public override void SetOutput(int channelNo, float value)
+    /// <param name="channelValues">An enumerable collection of tuples containing the channel number and output value for each channel.</param>
+    override public void SetOutputs(IEnumerable<(int, float)> channelValues)
     {
-        CheckChannel(channelNo);
-        value = CutOutputValue(value);
-
-        // store the incoming value in the stored values array
-        _storedValues[channelNo] = value;
-
         lock (_outputLock)
         {
-            // call the channel specific set function
-            bool valueChanged = SetChannelOutput(channelNo, value);
+            bool anyValueChanged = false;
+            foreach (var (channelNo, value) in channelValues)
+            {
+                CheckChannel(channelNo);
+                float cutValue = CutOutputValue(value);
 
-            // check for change
-            if (valueChanged)
+                // store the incoming value in the stored values array
+                _storedValues[channelNo] = cutValue;
+
+                // call the channel specific set function
+                anyValueChanged |= SetChannelOutput(channelNo, cutValue);
+            }
+
+            if (anyValueChanged)
             {
                 _bluetoothAdvertisingDeviceHandler.NotifyDataChanged();
             }

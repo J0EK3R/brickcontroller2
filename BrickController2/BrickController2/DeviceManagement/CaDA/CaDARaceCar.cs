@@ -1,7 +1,9 @@
-﻿using System;
-using BrickController2.DeviceManagement.IO;
+﻿using BrickController2.DeviceManagement.IO;
 using BrickController2.PlatformServices.BluetoothLE;
 using BrickController2.Protocols;
+using System;
+using System.Collections.Generic;
+using System.Threading.Channels;
 
 namespace BrickController2.DeviceManagement.CaDA;
 
@@ -28,16 +30,26 @@ internal class CaDARaceCar : BluetoothAdvertisingDevice
 
     public override int NumberOfChannels => 4;
 
-    public override void SetOutput(int channelNo, float value)
+    public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
     {
-        CheckChannel(channelNo);
-        value = CutOutputValue(value);
-
-        // check for change
-        if (SetChannelOutput(channelNo, value))
+        lock (_outputValues)
         {
-            // notify data changed
-            _bluetoothAdvertisingDeviceHandler.NotifyDataChanged();
+            bool anyValueChanged = false;
+
+            foreach (var (channel, value) in outputs)
+            {
+                CheckChannel(channel);
+                float cutValue = CutOutputValue(value);
+
+                // check for change
+                anyValueChanged |= SetChannelOutput(channel, cutValue);
+            }
+
+            if (anyValueChanged)
+            {
+                // notify data changed
+                _bluetoothAdvertisingDeviceHandler.NotifyDataChanged();
+            }
         }
     }
 

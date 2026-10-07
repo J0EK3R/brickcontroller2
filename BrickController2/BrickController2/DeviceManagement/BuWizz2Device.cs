@@ -74,13 +74,18 @@ namespace BrickController2.DeviceManagement
 
         public override string BatteryVoltageSign => "V";
 
-        public override void SetOutput(int channel, float value)
+        public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
         {
-            CheckChannel(channel);
-            value = CutOutputValue(value);
-
-            var intValue = (int)(value * 255);
-            _outputGroup.SetOutput(channel, intValue);
+            lock (_outputGroup)
+            {
+                foreach (var (channel, value) in outputs)
+                {
+                    CheckChannel(channel);
+                    float setValue = CutOutputValue(value);
+                    var intValue = (int)(setValue * 255);
+                    _outputGroup.SetOutput(channel, intValue);
+                }
+            }
         }
 
         public override bool CanSetOutputLevel => true;

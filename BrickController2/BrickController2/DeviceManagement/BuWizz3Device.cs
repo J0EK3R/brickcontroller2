@@ -132,19 +132,19 @@ namespace BrickController2.DeviceManagement
             return await base.ConnectAsync(reconnect, onDeviceDisconnected, channelConfigurations, startOutputProcessing, requestDeviceInformation, token);
         }
 
-        public override void SetOutput(int channel, float value)
+        public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
         {
-            CheckChannel(channel);
-            value = CutOutputValue(value);
-
-            var sbyteValue = (sbyte)(value * 127);
-
             lock (_outputLock)
             {
-                if (_outputValues[channel] != sbyteValue)
+                foreach (var (channel, value) in outputs)
                 {
-                    _outputValues[channel] = sbyteValue;
-                    _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
+                    CheckChannel(channel);
+                    var sbyteValue = (sbyte)(CutOutputValue(value) * 127);
+                    if (_outputValues[channel] != sbyteValue)
+                    {
+                        _outputValues[channel] = sbyteValue;
+                        _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
+                    }
                 }
             }
         }

@@ -55,30 +55,36 @@ internal class SBrickLightDevice : BluetoothDevice
     public override int NumberOfChannels => LIGHT_PORTS_COUNT;
     protected override bool AutoConnectOnFirstConnect => false;
 
-    public override void SetOutput(int channel, float value)
+    public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
     {
-        // normalize value to 0..1 as it's light, not speed
-        value = CutOutputValue(Math.Abs(value));
-
-        var port = channel % LIGHT_PORTS_COUNT;
-        var baseChannel = LIGHT_SUBCHANNEL_COUNT * port;
-
-        if (channel < LIGHT_PORTS_COUNT)
+        lock (_bankOutputs0)
         {
-            // get channel color and transform to HSV model to modify lightness
-            var defaultColor = GetDefaultChannelColor(channel);
-            var color = defaultColor.WithValueFactor(value);
+            foreach (var (channel, value) in outputs)
+            {
+                // normalize value to 0..1 as it's light, not speed
+                float setValue = CutOutputValue(Math.Abs(value));
 
-            // each channel controls 3 subchannels-RGB
-            SetChannelOutput(baseChannel + LIGHT_SUBCHANNEL_RED, color.R);
-            SetChannelOutput(baseChannel + LIGHT_SUBCHANNEL_GREEN, color.G);
-            SetChannelOutput(baseChannel + LIGHT_SUBCHANNEL_BLUE, color.B);
-        }
-        else
-        {
-            // write directly
-            var subchannel = channel / LIGHT_PORTS_COUNT - 1;
-            SetChannelOutput(baseChannel + subchannel, value);
+                var port = channel % LIGHT_PORTS_COUNT;
+                var baseChannel = LIGHT_SUBCHANNEL_COUNT * port;
+
+                if (channel < LIGHT_PORTS_COUNT)
+                {
+                    // get channel color and transform to HSV model to modify lightness
+                    var defaultColor = GetDefaultChannelColor(channel);
+                    var color = defaultColor.WithValueFactor(setValue);
+
+                    // each channel controls 3 subchannels-RGB
+                    SetChannelOutput(baseChannel + LIGHT_SUBCHANNEL_RED, color.R);
+                    SetChannelOutput(baseChannel + LIGHT_SUBCHANNEL_GREEN, color.G);
+                    SetChannelOutput(baseChannel + LIGHT_SUBCHANNEL_BLUE, color.B);
+                }
+                else
+                {
+                    // write directly
+                    var subchannel = channel / LIGHT_PORTS_COUNT - 1;
+                    SetChannelOutput(baseChannel + subchannel, setValue);
+                }
+            }
         }
     }
 
