@@ -99,7 +99,7 @@ namespace BrickController2.DeviceManagement
             CancellationToken token);
         public abstract Task DisconnectAsync();
 
-        public abstract void SetOutput(int channel, float value);
+        public abstract void SetOutputs(IEnumerable<(int channel, float value)> outputs);
 
         public virtual bool CanSetOutputLevel => false;
         public virtual void SetOutputLevel(int value) { }

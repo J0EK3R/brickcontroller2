@@ -80,25 +80,32 @@ internal class PfxBrickDevice : BluetoothMacroBasedDevice
 
     protected override bool AutoConnectOnFirstConnect => false;
 
-    public override void SetOutput(int channel, float value)
+    public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
     {
-        CheckChannel(channel);
-        value = CutOutputValue(value);
+        lock (_motorOutputs)
+        {
+            foreach (var (channel, value) in outputs)
+            {
+                CheckChannel(channel);
+                float setValue = CutOutputValue(value);
 
-        if (channel >= PF_CHANNELS)
-        {
-            // Per light channel range: +- [0 .. 255]
-            var brightnessValue = (short)(value * 255);
-            int lightChannel = channel - PF_CHANNELS;
-            _lightOutputs.SetOutput(lightChannel, brightnessValue);
-        }
-        else
-        {
-            // Per motor channel range: +- percent
-            var percentValue = (short)(value * 100);
-            _motorOutputs.SetOutput(channel, percentValue);
+                if (channel >= PF_CHANNELS)
+                {
+                    // Per light channel range: +- [0 .. 255]
+                    var brightnessValue = (short)(setValue * 255);
+                    int lightChannel = channel - PF_CHANNELS;
+                    _lightOutputs.SetOutput(lightChannel, brightnessValue);
+                }
+                else
+                {
+                    // Per motor channel range: +- percent
+                    var percentValue = (short)(setValue * 100);
+                    _motorOutputs.SetOutput(channel, percentValue);
+                }
+            }
         }
     }
+
 
     public override Task<bool> ExecuteMacroAsync(MacroInvocation invocation, CancellationToken token)
     {
