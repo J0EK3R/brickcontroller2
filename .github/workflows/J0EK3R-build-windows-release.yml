@@ -1,0 +1,121 @@
+name: J0EK3R - Release BrickController WinUI unpacked build and installer
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+    paths:
+      - '.github/**/*windows.yml'
+      - '*.props'
+      - '*.slnx'
+      - 'BrickController2/BrickController2/**'
+      - 'BrickController2/BrickController2.WinUI/**'
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_FOLDER: "BrickController2/BrickController2.WinUI"
+  TARGET_RUNTIME: 'win-x64'
+  PUBLISH_OUTPUT: "publish-output"
+
+jobs:
+  build-winui:
+    runs-on: windows-latest
+    name: BrickController WinUI Build
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Setup MAUI
+      id: setup-maui
+      uses: ./.github/actions/setup-maui
+      with:
+        platform: windows10.0.19041.0
+        workload-id: maui-windows
+
+    - name: Restore Dependencies
+      run: dotnet restore ${{ env.PROJECT_FOLDER }}/BrickController2.WinUI.csproj
+
+    - name: Build
+      run: dotnet build ${{ env.PROJECT_FOLDER }}/BrickController2.WinUI.csproj `
+        -c Release `
+        -r ${{ env.TARGET_RUNTIME }} `
+        -p:ApplicationVersion="${{ github.run_number }}" `
+        -p:Platform=x64 `
+        -p:WindowsPackageType=None `
+        -p:WindowsAppSDKSelfContained=true
+
+    # MSIX step removed entirely - unpackaged publish instead
+    - name: Publish unpackaged App
+      run: dotnet publish ${{ env.PROJECT_FOLDER }}/BrickController2.WinUI.csproj `
+        -c Release `
+        -r ${{ env.TARGET_RUNTIME }} `
+        -p:WindowsPackageType=None `
+        -p:WindowsAppSDKSelfContained=true `
+        -p:SelfContained=true `
+        -p:Platform=x64 `
+        -p:ApplicationVersion="${{ github.run_number }}" `
+        -o ${{ env.PUBLISH_OUTPUT }}
+
+    - name: Install Inno Setup
+      run: choco install innosetup --no-progress -y
+
+    - name: Write Inno Setup script from repo variable
+      shell: pwsh
+      env:
+        INNO_SETUP_SCRIPT: ${{ vars.INNO_SETUP_SCRIPT }}
+      run: |
+        $dest = "${{ env.PROJECT_FOLDER }}/Installer"
+        New-Item -ItemType Directory -Force -Path $dest | Out-Null
+        Set-Content -Path "$dest/setup.iss" -Value $env:INNO_SETUP_SCRIPT -NoNewline
+
+    - name: Copy publish output into installer folder
+      shell: pwsh
+      run: |
+        $dest = "${{ env.PROJECT_FOLDER }}/Installer/PublishOutput"
+        New-Item -ItemType Directory -Force -Path $dest | Out-Null
+        Copy-Item -Path "${{ env.PUBLISH_OUTPUT }}/*" -Destination $dest -Recurse -Force
+
+    - name: Compile Installer
+      shell: pwsh
+      run: |
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+          "/DMyAppVersion=1.0.${{ github.run_number }}" `
+          "${{ env.PROJECT_FOLDER }}/Installer/setup.iss"
+
+    - name: Upload Installer Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: brickcontroller-winui-ci-build
+        path: ${{ env.PROJECT_FOLDER }}/Installer/Output/*.exe
+        retention-days: 14
+
+  publish-release:
+    needs: build-winui
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    name: Publish WinUI Release
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download Installer Artifact
+      uses: actions/download-artifact@v6
+      with:
+        name: brickcontroller-winui-ci-build
+        path: installer-artifacts
+
+    - name: Upload Artifact to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: installer-artifacts/**/*.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
