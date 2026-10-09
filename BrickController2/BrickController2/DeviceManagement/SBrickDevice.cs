@@ -38,24 +38,23 @@ namespace BrickController2.DeviceManagement
         public override float AccelarationStep => 1.0f / 7.0f;
         protected override bool AutoConnectOnFirstConnect => false;
 
-        public override void SetOutput(int channel, float value)
+        public override void SetOutputs(IEnumerable<(int channel, float value)> outputs)
         {
-            CheckChannel(channel);
-            value = CutOutputValue(value);
-
-            var intValue = (int)(value * 255);
-            
             lock (_outputLock)
             {
-                if (_outputValues[channel] != intValue)
+                foreach (var (channel, value) in outputs)
                 {
-                    _outputValues[channel] = intValue;
-                    if (intValue != 0)
+                    CheckChannel(channel);
+                    var intValue = (int)(CutOutputValue(value) * 255);
+                    if (_outputValues[channel] != intValue)
                     {
-                        _directions[channel] = intValue < 0 ? 1 : 0;
+                        _outputValues[channel] = intValue;
+                        if (intValue != 0)
+                        {
+                            _directions[channel] = intValue < 0 ? 1 : 0;
+                        }
+                        _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
                     }
-
-                    _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
                 }
             }
         }
