@@ -12,6 +12,11 @@ namespace BrickController2.DeviceManagement
     internal abstract class BluetoothAdvertisingDevice : Device, IBluetoothDevice
     {
         /// <summary>
+        /// Placeholder for the app id in the telegrams
+        /// </summary>
+        protected const byte APPID = 0x00;
+
+        /// <summary>
         /// BluetoothAdvertisingDeviceHandler
         /// </summary>
         protected readonly BluetoothAdvertisingDeviceHandler _bluetoothAdvertisingDeviceHandler;
@@ -20,11 +25,6 @@ namespace BrickController2.DeviceManagement
         /// reference to bleService object
         /// </summary>
         protected readonly IBluetoothLEService _bleService;
-
-        /// <summary>
-        /// object to lock the output data
-        /// </summary>
-        protected readonly object _outputLock = new object();
 
         protected BluetoothAdvertisingDevice(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
             : base(name, address, deviceRepository)
