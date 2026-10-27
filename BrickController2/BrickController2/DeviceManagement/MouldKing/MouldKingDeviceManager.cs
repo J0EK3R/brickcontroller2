@@ -21,6 +21,20 @@ public class MouldKingDeviceManager : BluetoothDeviceManagerBase,
 
     public ReadOnlyMemory<byte> GetAppId() => _appIdentifier;
 
+    protected override bool TryGetDeviceByServiceUiid(FoundDevice template, Guid serviceGuid, out FoundDevice device)
+    {
+        // this is prefered way however UUID might not be available on some platforms
+        device = serviceGuid switch
+        {
+            // MouldKing MKH4.0
+            { } when serviceGuid == MKH4.MOULD_KING_HUB_SCAN_SERVICE_UUID && !string.IsNullOrEmpty(template.DeviceName) => template with { DeviceType = DeviceType.MKH4 },
+
+            _ => default
+        };
+
+        return device.DeviceType != DeviceType.Unknown;
+    }
+
     protected override bool TryGetDeviceByManufacturerData(ScanResult scanResult,
         FoundDevice template,
         ushort manufacturerId,
@@ -32,10 +46,8 @@ public class MouldKingDeviceManager : BluetoothDeviceManagerBase,
             case 0xac33:
                 device = template with { DeviceType = DeviceType.MK_DIY };
                 return true;
-            case 0x004c:
-                device = template with { DeviceType = DeviceType.MKH4 };
-                return true;
         }
+
         // no match
         device = default;
         return false;

@@ -1,10 +1,11 @@
-﻿using System;
+﻿using BrickController2.PlatformServices.BluetoothLE;
+using BrickController2.Protocols;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
-using BrickController2.PlatformServices.BluetoothLE;
+using System.Threading.Tasks;
 
 namespace BrickController2.DeviceManagement.MouldKing;
 
@@ -28,8 +29,11 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private static readonly TimeSpan RESEND_DELAY = TimeSpan.FromMilliseconds(1000);
 
-    private static readonly Guid SERVICE_UUID_AE3A_UNKNOWN_SERVICE = new Guid("0000ae3a-0000-1000-8000-00805f9b34fb");
-    private static readonly Guid CHARACTERISTIC_UUID_AE3B_UNKNOWN_CHARACTERISTIC = new Guid("0000ae3b-0000-1000-8000-00805f9b34fb");
+    internal static readonly Guid MOULD_KING_HUB_SCAN_SERVICE_UUID = BluetoothLowEnergy.GetGuid(0xaf30);
+
+    private static readonly Guid MOULD_KING_HUB_SERVICE_UUID = BluetoothLowEnergy.GetGuid(0xae3a);
+    private static readonly Guid MOULD_KING_HUB_WRITE_NO_RESPONSE_UUID = BluetoothLowEnergy.GetGuid(0xae3b);
+    private static readonly Guid MOULD_KING_HUB_NOTIFY_UUID = BluetoothLowEnergy.GetGuid(0xae3c);
 
     private readonly int[] _lastOutputValues = new int[4];
     private readonly int[] _outputValues = new int[4];
@@ -37,7 +41,8 @@ internal class MKH4 : BluetoothDevice
 
     private int _sendAttemptsLeft;
 
-    private IGattCharacteristic? _characteristic_AE3B_CMD;
+    private IGattCharacteristic? _characteristic_AE3B_Write_No_Response;
+    private IGattCharacteristic? _characteristic_AE3C_Notify;
 
     public MKH4(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
         : base(name, address, deviceRepository, bleService)
@@ -69,15 +74,17 @@ internal class MKH4 : BluetoothDevice
 
     protected override Task<bool> ValidateServicesAsync(IEnumerable<IGattService>? services, CancellationToken token)
     {
-        var service_AE3A = services?.FirstOrDefault(s => s.Uuid == SERVICE_UUID_AE3A_UNKNOWN_SERVICE);
-        _characteristic_AE3B_CMD = service_AE3A?.Characteristics?.FirstOrDefault(c => c.Uuid == CHARACTERISTIC_UUID_AE3B_UNKNOWN_CHARACTERISTIC);
+        var service_AE3A = services?.FirstOrDefault(s => s.Uuid == MOULD_KING_HUB_SERVICE_UUID);
+        _characteristic_AE3B_Write_No_Response = service_AE3A?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_WRITE_NO_RESPONSE_UUID);
+        _characteristic_AE3C_Notify = service_AE3A?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_NOTIFY_UUID);
 
-        return Task.FromResult(_characteristic_AE3B_CMD != null);
+        return Task.FromResult(_characteristic_AE3B_Write_No_Response != null);
     }
 
     protected override void BeforeDisconnectCleanup()
     {
-        _characteristic_AE3B_CMD = null;
+        _characteristic_AE3B_Write_No_Response = null;
+        _characteristic_AE3C_Notify = null;
     }
 
     protected override async Task ProcessOutputsAsync(CancellationToken token)
@@ -112,10 +119,10 @@ internal class MKH4 : BluetoothDevice
                     _sendAttemptsLeft = sendAttemptsLeft > 0 ? sendAttemptsLeft - 1 : 0;
                 }
 
-                if (outputValues[0] != _lastOutputValues[0] || 
-                    outputValues[1] != _lastOutputValues[1] || 
-                    outputValues[2] != _lastOutputValues[2] || 
-                    outputValues[3] != _lastOutputValues[3] || 
+                if (outputValues[0] != _lastOutputValues[0] ||
+                    outputValues[1] != _lastOutputValues[1] ||
+                    outputValues[2] != _lastOutputValues[2] ||
+                    outputValues[3] != _lastOutputValues[3] ||
                     sendAttemptsLeft > 0 ||
                     lastSent.Elapsed > RESEND_DELAY)
                 {
@@ -162,9 +169,9 @@ internal class MKH4 : BluetoothDevice
         const int STATIC_CROSS_SUM =
             0x01 +                                                  // startoffset
             0xCC + 0xAA + 0xBB + 0x01 +                             // header
-            //0x80 + 0x80 + 0x80 + 0x80 +                           // dynamic part: Channel 0 .. Channel 3
+                                                                    //0x80 + 0x80 + 0x80 + 0x80 +                           // dynamic part: Channel 0 .. Channel 3
             0x80 + 0x80 + 0x80 + 0x80 + 0x80 + 0x80 + 0x80 + 0x80 + // ?
-            //0x00                                                  // lower byte of cross sum
+                                                                    //0x00                                                  // lower byte of cross sum
             0x33;                                                   // footer
 
         byte[] sendOutputBuffer = {
@@ -193,7 +200,7 @@ internal class MKH4 : BluetoothDevice
 
         try
         {
-            return await _bleDevice!.WriteNoResponseAsync(_characteristic_AE3B_CMD!, sendOutputBuffer, token);
+            return await _bleDevice!.WriteNoResponseAsync(_characteristic_AE3B_Write_No_Response!, sendOutputBuffer, token);
         }
         catch (Exception)
         {
