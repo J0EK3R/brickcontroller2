@@ -1,15 +1,18 @@
-﻿using System.Buffers.Binary;
-using System;
+﻿using System;
+using System.Buffers.Binary;
 
 namespace BrickController2.Protocols;
 
 public static class BluetoothLowEnergy
 {
     // advertisment data types
-    public const byte ADTYPE_INCOMPLETE_SERVICE_128BIT = 0x06; // Service: Additional 128-bit UUIDs
-    public const byte ADTYPE_COMPLETE_SERVICE_128BIT = 0x07;   // Service: Additional 128-bit UUIDs
-    public const byte ADTYPE_LOCAL_NAME_COMPLETE = 0x09;   // Complete local name
-    public const byte ADTYPE_MANUFACTURER_SPECIFIC = 0xFF; // Manufacturer specific data
+    public const byte ADTYPE_INCOMPLETE_SERVICE_16BIT = 0x02;  // Incomplete list of 16-bit service UUIDs
+    public const byte ADTYPE_COMPLETE_SERVICE_16BIT = 0x03;    // Complete list of 16-bit service UUIDs
+    public const byte ADTYPE_INCOMPLETE_SERVICE_128BIT = 0x06; // Incomplete list of 128-bit service UUIDs
+    public const byte ADTYPE_COMPLETE_SERVICE_128BIT = 0x07;   // Complete list of 128-bit service UUIDs
+    public const byte ADTYPE_LOCAL_NAME_SHORT = 0x08;          // Shortened local name
+    public const byte ADTYPE_LOCAL_NAME_COMPLETE = 0x09;       // Complete local name
+    public const byte ADTYPE_MANUFACTURER_SPECIFIC = 0xFF;     // Manufacturer specific data
 
     public static ushort GetUInt16(this ReadOnlySpan<byte> value, int index = 0)
         => BinaryPrimitives.ReadUInt16LittleEndian(value[index..]);
@@ -27,6 +30,22 @@ public static class BluetoothLowEnergy
             BinaryPrimitives.ReadInt16LittleEndian(data[(index + 10)..]),
             BinaryPrimitives.ReadInt16LittleEndian(data[(index + 8)..]),
             data[index + 7], data[index + 6], data[index + 5], data[index + 4], data[index + 3], data[index + 2], data[index + 1], data[index]);
+    }
+
+    public static Guid GetGuid_16BIT(this ReadOnlySpan<byte> data, int index = 0)
+    {
+        return GetGuid(BinaryPrimitives.ReadUInt16LittleEndian(data[(index)..]));
+    }
+
+    public static Guid GetGuid(ushort data)
+    {
+        // Bluetooth defines a Base UUID of 0000xxxx-0000-1000-8000-00805F9B34FB.
+        // A 16-bit UUID is a compressed representation in which the 16-bit value is substituted for the xxxx portion of the Base UUID.
+        return new Guid(
+            data,
+            0x0000,
+            0x1000,
+            0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB);
     }
 
     public static byte[] To128BitByteArray(this Guid guid)

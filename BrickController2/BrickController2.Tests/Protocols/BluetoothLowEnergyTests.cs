@@ -8,6 +8,21 @@ namespace BrickController2.Tests.Protocols;
 public class BluetoothLowEnergyTests
 {
     [Fact]
+    public void GetGuid_ushort_GuidProperlyReturned()
+    {
+        var guid = BluetoothLowEnergy.GetGuid(0xd123);
+        guid.Should().Be(new Guid("0000d123-0000-1000-8000-00805f9b34fb"));
+    }
+
+    [Fact]
+    public void GetGuid_Ble16BitByteArray_GuidProperlyReturned()
+    {
+        var guid = BluetoothLowEnergy.GetGuid_16BIT([0x23, 0xd1]);
+        guid.Should().Be(new Guid("0000d123-0000-1000-8000-00805f9b34fb"));
+    }
+
+
+    [Fact]
     public void GetGuid_Ble128BitByteArray_GuidProperlyReturned()
     {
         var guid = BluetoothLowEnergy.GetGuid([0x23, 0xd1, 0xbc, 0xea, 0x5f, 0x78, 0x23, 0x15, 0xde, 0xef, 0x12, 0x12, 0x23, 0x15, 0x00, 0x00]);

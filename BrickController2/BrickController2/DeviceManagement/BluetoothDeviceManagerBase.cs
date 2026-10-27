@@ -100,19 +100,37 @@ public abstract class BluetoothDeviceManagerBase : IBluetoothLEDeviceManager
 
     private bool TryGetDeviceInfoByService(FoundDevice template, ScanResult scanResult, out FoundDevice device)
     {
+        // 0x02: 16 bits Service UUID type
+        if (scanResult.TryGetData(ADTYPE_INCOMPLETE_SERVICE_16BIT, out var incomplete16BitServiceData))
+        {
+            if (TryGetDeviceByServiceUiid_16BIT(template, scanResult, incomplete16BitServiceData, out device))
+            {
+                return true;
+            }
+        }
+
+        // 0x03: 16 bits Service UUID type
+        if (scanResult.TryGetData(ADTYPE_COMPLETE_SERVICE_16BIT, out var complete16BitServiceData))
+        {
+            if (TryGetDeviceByServiceUiid_16BIT(template, scanResult, complete16BitServiceData, out device))
+            {
+                return true;
+            }
+        }
+
         // 0x06: 128 bits Service UUID type
         if (scanResult.TryGetData(ADTYPE_INCOMPLETE_SERVICE_128BIT, out var incompleteServiceData))
         {
-            if (TryGetDeviceByServiceUiid(template, scanResult, incompleteServiceData, out device))
+            if (TryGetDeviceByServiceUiid_128BIT(template, scanResult, incompleteServiceData, out device))
             {
                 return true;
             }
         }
         
         // 0x07: 128 bits Service UUID type
-        if (scanResult.TryGetData(ADTYPE_COMPLETE_SERVICE_128BIT, out var completeServiceData))
+        if (scanResult.TryGetData(ADTYPE_COMPLETE_SERVICE_128BIT, out var complete128BitServiceData))
         {
-            if (TryGetDeviceByServiceUiid(template, scanResult, completeServiceData, out device))
+            if (TryGetDeviceByServiceUiid_128BIT(template, scanResult, complete128BitServiceData, out device))
             {
                 return true;
             }
@@ -123,7 +141,24 @@ public abstract class BluetoothDeviceManagerBase : IBluetoothLEDeviceManager
         return false;
     }
 
-    private bool TryGetDeviceByServiceUiid(FoundDevice template, ScanResult scanResult, ReadOnlySpan<byte> serviceData, out FoundDevice device)
+    private bool TryGetDeviceByServiceUiid_16BIT(FoundDevice template, ScanResult scanResult, ReadOnlySpan<byte> serviceData, out FoundDevice device)
+    {
+        // go through all service UUIDs if needed
+        while (serviceData.Length >= 2)
+        {
+            var serviceGuid = BluetoothLowEnergy.GetGuid_16BIT(serviceData[..2]);
+            if (TryGetDeviceByServiceUiid(template, serviceGuid, out device))
+            {
+                return true;
+            }
+
+            serviceData = serviceData[2..];
+        }
+
+        device = default;
+        return false;
+    }
+    private bool TryGetDeviceByServiceUiid_128BIT(FoundDevice template, ScanResult scanResult, ReadOnlySpan<byte> serviceData, out FoundDevice device)
     {
         // go through all service UUIDs if needed
         while (serviceData.Length >= 16)

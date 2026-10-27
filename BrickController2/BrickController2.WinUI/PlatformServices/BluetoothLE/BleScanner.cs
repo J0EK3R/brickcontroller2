@@ -20,6 +20,8 @@ public class BleScanner
     private static readonly IReadOnlySet<byte> AdvertismentDataTypes = new HashSet<byte>(
     [
         BluetoothLEAdvertisementDataTypes.ManufacturerSpecificData,
+        BluetoothLEAdvertisementDataTypes.CompleteService16BitUuids,
+        BluetoothLEAdvertisementDataTypes.IncompleteService16BitUuids,
         BluetoothLEAdvertisementDataTypes.CompleteService128BitUuids,
         BluetoothLEAdvertisementDataTypes.IncompleteService128BitUuids,
         BluetoothLEAdvertisementDataTypes.CompleteLocalName
