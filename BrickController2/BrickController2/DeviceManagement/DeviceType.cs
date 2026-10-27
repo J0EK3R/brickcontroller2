@@ -29,5 +29,6 @@
         PowerBoxMBattery,
         PowerBoxASeries,
         MK3,
+        MKH4,
     }
 }

@@ -29,11 +29,12 @@ Manual adding is available only when the phone supports Bluetooth LE advertising
 | Added by scanning | Added manually |
 |---|---|
 | SBrick, SBrick Light, BuWizz 2 | |
-| BuWizz, BuWizz 3 | Mould King MK3, MK3.8, MK4, MK5, MK6 |
+| BuWizz, BuWizz 3 | |
 | LEGO Boost, Powered Up, Technic Hub, Technic Move, Duplo Train Hub, WeDo 2.0, remote control | JieStar SCM4, SCM8 |
 | Circuit Cubes | Power Box M Battery, A Series |
 | PFx Brick | Power Functions infrared |
-| Mould King MK DIY, CaDA Race Car | |
+| Mould King: MK DIY, Mould King MKH 4.0 | Mould King: MK 3.0, MK 3.8, MK 4.0, MK 5.0, MK6 |
+| CaDA Race Car | |
 
 ## Supported devices
 
@@ -44,7 +45,7 @@ Devices with a detailed help page are linked.
 - [Power Functions Infrared](../../devices/infrared/README.md)
 - LEGO®: [Boost](../../devices/boost/README.md), [Powered Up](../../devices/poweredup/README.md), [Technic Hub](../../devices/technichub/README.md), [Technic Move](../../devices/technicmove/README.md), [Duplo Train Hub](../../devices/duplotrainhub/README.md), [WeDo 2.0](../../devices/wedo2/README.md)
 - [Circuit Cubes](../../devices/circuitcubes/README.md)
-- Mould King: [MK 3.0](../../devices/mk3/README.md), [MK 3.8](../../devices/mk3_8/README.md), [MK 4.0](../../devices/mk4/README.md), [MK 5.0](../../devices/mk5/README.md), [MK 6.0](../../devices/mk6/README.md), [MK DIY](../../devices/mk_diy/README.md)
+- Mould King: [MK 3.0](../../devices/mk3/README.md), [MK 3.8](../../devices/mk3_8/README.md), [MK 4.0](../../devices/mk4/README.md), [MK 5.0](../../devices/mk5/README.md), [MK 6.0](../../devices/mk6/README.md), [MK DIY](../../devices/mk_diy/README.md), [MKH 4.0](../../devices/mkh4/README.md)
 - [CaDA Race Car](../../devices/cada_racecar/README.md)
 - JieStar: [SCM4](../../devices/jiestarscm4/README.md), [SCM8](../../devices/jiestarscm8/README.md)
 - PowerBox: [M Battery](../../devices/powerboxmbattery/README.md), [A Series](../../devices/powerboxaseries/README.md)
