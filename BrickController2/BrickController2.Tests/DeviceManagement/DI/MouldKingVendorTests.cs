@@ -163,4 +163,19 @@ public class MouldKingVendorTests : VendorTestsBase
         device.Should().NotBeNull();
         device.Should().BeOfType<MK_DIY>();
     }
+
+
+    [Theory]
+    [InlineData("MKH4_Address")]
+    public void RegisterDevice_MKH4_ReturnedDevice(string address)
+    {
+        DeviceType deviceType = DeviceType.MKH4;
+        string name = "TestDevice";
+        byte[] deviceData = [1, 2, 3];
+
+        var device = _deviceFactory(deviceType, name, address, deviceData, []);
+
+        device.Should().NotBeNull();
+        device.Should().BeOfType<MKH4>();
+    }
 }

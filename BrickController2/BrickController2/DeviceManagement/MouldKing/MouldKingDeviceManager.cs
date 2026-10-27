@@ -32,6 +32,9 @@ public class MouldKingDeviceManager : BluetoothDeviceManagerBase,
             case 0xac33:
                 device = template with { DeviceType = DeviceType.MK_DIY };
                 return true;
+            case 0x004c:
+                device = template with { DeviceType = DeviceType.MKH4 };
+                return true;
         }
         // no match
         device = default;

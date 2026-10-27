@@ -89,6 +89,7 @@ namespace BrickController2.UI.Controls
                 case DeviceType.MK4:
                 case DeviceType.MK6:
                 case DeviceType.MK_DIY:
+                case DeviceType.MKH4:
                     return Pick(_mkDefaultChannelLetters);
 
                 case DeviceType.MK5:
