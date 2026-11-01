@@ -1,4 +1,6 @@
-﻿using BrickController2.PlatformServices.BluetoothLE;
+﻿using BrickController2.DeviceManagement.IO;
+using BrickController2.Helpers;
+using BrickController2.PlatformServices.BluetoothLE;
 using BrickController2.Protocols;
 using System;
 using System.Collections.Generic;
@@ -11,22 +13,25 @@ using System.Threading.Tasks;
 namespace BrickController2.DeviceManagement.MouldKing;
 
 /// <summary>
-/// MouldKing H4
+/// MouldKing H4 (MKH4.0 module, e.g. from the 2D plotter set).
+/// Protocol: ASCII messages 'T' + payload length (2 hex digits) + command (1 hex digit) + payload + 'W',
+/// written to characteristic AE3B, answers/notifications are received on characteristic AE3C.
 /// </summary>
 internal class MKH4 : BluetoothDevice
 {
     /// <summary>
-    /// max number of transmission attempts
+    /// number of motor ports (A, B, C, D)
     /// </summary>
-    private const int MAX_SEND_ATTEMPTS = 10;
+    private const int CHANNEL_COUNT = 4;
 
     /// <summary>
-    /// delay after successfully data transmission
+    /// delay between two iterations of the output loop
     /// </summary>
     private static readonly TimeSpan SEND_DELAY = TimeSpan.FromMilliseconds(10);
 
     /// <summary>
-    /// After this time period has elapsed since the last transmission, the output values are sent again.
+    /// If nothing was sent for this time period, the last values are sent again as a safety net
+    /// (e.g. if a "stop" message got lost, the module would keep the old speed values otherwise).
     /// </summary>
     private static readonly TimeSpan RESEND_DELAY = TimeSpan.FromMilliseconds(1000);
 
@@ -37,15 +42,14 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// The original app repeats a request about every 30 ms (9 to 11 times in the captures)
-    /// until the response arrives.
+    /// until the response arrives. Requests are repeated the same way here.
     /// </summary>
     private const int REQUEST_MAX_ATTEMPTS = 20;
-
     private static readonly TimeSpan REQUEST_RETRY_DELAY = TimeSpan.FromMilliseconds(40);
 
     /// <summary>
     /// Leading hex digit of each channel in the T144 message. The README uses '0' for all channels,
-    /// the original app used '1' for the first channel and '0' for the fourth one. Meaning unknown.
+    /// the original app used '1' for the first channel and '0' for the third and fourth one. Meaning unknown.
     /// If channel A does not turn, try '1' for the first entry.
     /// </summary>
     private static readonly char[] CHANNEL_FLAGS = { '0', '0', '0', '0' };
@@ -56,12 +60,13 @@ internal class MKH4 : BluetoothDevice
     private const bool ENABLE_AE30_NOTIFICATIONS = false;
 
     /// <summary>
-    /// the original app acknowledges every notification with a single 0x01 byte
+    /// The original app acknowledges every notification with a single 0x01 byte.
     /// </summary>
     private static readonly byte[] AckByte = { 0x01 };
 
     internal static readonly Guid MOULD_KING_HUB_SCAN_SERVICE_UUID = BluetoothLowEnergy.GetGuid(0xaf30);
 
+    // service AE30: not used by the original app during the captured sessions, kept for reference
     private static readonly Guid MOULD_KING_HUB_SERVICE_AE30_UUID = BluetoothLowEnergy.GetGuid(0xae30);
     private static readonly Guid MOULD_KING_HUB_AE01_UUID = BluetoothLowEnergy.GetGuid(0xae01);
     private static readonly Guid MOULD_KING_HUB_AE02_UUID = BluetoothLowEnergy.GetGuid(0xae02);
@@ -69,14 +74,34 @@ internal class MKH4 : BluetoothDevice
     private static readonly Guid MOULD_KING_HUB_AE04_UUID = BluetoothLowEnergy.GetGuid(0xae04);
     private static readonly Guid MOULD_KING_HUB_AE05_UUID = BluetoothLowEnergy.GetGuid(0xae05);
     private static readonly Guid MOULD_KING_HUB_AE10_UUID = BluetoothLowEnergy.GetGuid(0xae10);
+
+    // service AE3A: the actual control service
     private static readonly Guid MOULD_KING_HUB_SERVICE_AE3A_UUID = BluetoothLowEnergy.GetGuid(0xae3a);
     private static readonly Guid MOULD_KING_HUB_WRITE_NO_RESPONSE_AE3B_UUID = BluetoothLowEnergy.GetGuid(0xae3b);
     private static readonly Guid MOULD_KING_HUB_NOTIFY_AE3C_UUID = BluetoothLowEnergy.GetGuid(0xae3c);
 
-    private readonly int[] _lastOutputValues = new int[4];
-    private readonly int[] _outputValues = new int[4];
-    private readonly object _outputLock = new object();
+    /// <summary>
+    /// Buffers the requested speed values of all channels (range -0x7FFF..0x7FFF).
+    /// It detects changes, repeats failed transmissions and remembers what was already applied.
+    /// </summary>
+    private readonly OutputValuesGroup<int> _outputValues = new(CHANNEL_COUNT);
 
+    /// <summary>
+    /// Copy of the values fetched from <see cref="_outputValues"/>. A span can not be used across an await,
+    /// so the values are copied into this array before they are sent. Only used by the output loop.
+    /// </summary>
+    private readonly int[] _snapshot = new int[CHANNEL_COUNT];
+
+    /// <summary>
+    /// Values that were sent successfully the last time, used for the periodic resend.
+    /// Only used by the output loop.
+    /// </summary>
+    private readonly int[] _lastSentValues = new int[CHANNEL_COUNT];
+
+    /// <summary>
+    /// Serializes all writes to AE3B, because the ACK bytes are written from the notification callback
+    /// while the output loop and the requests write at the same time.
+    /// </summary>
     private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
 
     // notifications can be split into several packets, so they are collected until the closing 'W'
@@ -90,8 +115,6 @@ internal class MKH4 : BluetoothDevice
 
     // bit set = motor port not connected (bit 0 = A ... bit 3 = D), from the T00CW response
     private int _motorNotConnectedMask = 0x0F;
-
-    private int _sendAttemptsLeft;
 
     private IGattCharacteristic? _characteristic_AE01;
     private IGattCharacteristic? _characteristic_AE02;
@@ -109,30 +132,29 @@ internal class MKH4 : BluetoothDevice
 
     public override DeviceType DeviceType => DeviceType.MKH4;
 
-    public override int NumberOfChannels => 4;
+    public override int NumberOfChannels => CHANNEL_COUNT;
 
     protected override bool AutoConnectOnFirstConnect => false;
 
+    /// <summary>
+    /// Stores the requested value of a channel. The value is not sent here,
+    /// the output loop (<see cref="ProcessOutputsAsync"/>) picks it up from the buffer.
+    /// </summary>
     public override void SetOutput(int channelNo, float value)
     {
-        CheckChannel(channelNo);
-        value = CutOutputValue(value);
+        // validate the channel index (CheckChannel returns the index if it is valid)
+        var channel = CheckChannel(channelNo);
 
-        // scale to -0x7FFF..0x7FFF
-        var intValue = (int)(value * 0x7FFF);
+        // limit the value to -1..1 and scale it to -0x7FFF..0x7FFF
+        var intValue = (int)(CutOutputValue(value) * 0x7FFF);
 
-        lock (_outputLock)
-        {
-            if (_outputValues[channelNo] != intValue)
-            {
-                _outputValues[channelNo] = intValue;
-                _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
-            }
-        }
+        // the group detects whether the value changed and schedules the transmission
+        _outputValues.SetOutput(channel, intValue);
     }
 
     protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService>? services, CancellationToken token)
     {
+        // ---- service AE30: looked up for completeness, the original app does not use it ----
         var service_AE30 = services?.FirstOrDefault(s => s.Uuid == MOULD_KING_HUB_SERVICE_AE30_UUID);
 
         // CanNotify = false
@@ -161,6 +183,7 @@ internal class MKH4 : BluetoothDevice
         // CanNotify = false
         _characteristic_AE10 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE10_UUID);
 
+        // ---- service AE3A: write characteristic (commands) and notify characteristic (responses) ----
         var service_AE3A = services?.FirstOrDefault(s => s.Uuid == MOULD_KING_HUB_SERVICE_AE3A_UUID);
 
         // CanNotify = false
@@ -170,9 +193,11 @@ internal class MKH4 : BluetoothDevice
         _characteristic_AE3C_Notify = service_AE3A?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_NOTIFY_AE3C_UUID);
         if (_characteristic_AE3C_Notify is not null)
         {
+            // the original app writes the CCCD of this characteristic right after the service discovery
             await _bleDevice!.EnableNotificationAsync(_characteristic_AE3C_Notify, token);
         }
 
+        // both characteristics are required for the protocol
         return _characteristic_AE3B_Write_No_Response != null && _characteristic_AE3C_Notify != null;
     }
 
@@ -188,12 +213,16 @@ internal class MKH4 : BluetoothDevice
 
         lock (_notificationLock)
         {
+            // append the new packet to what is left over from earlier packets
             _notificationBuffer.Append(Encoding.ASCII.GetString(data));
 
             // extract all complete messages ('T' ... 'W'), payloads only contain hex digits, '+' and '-'
+            // (the module may send several messages in one notification, e.g. "T017b1WT027300W")
             while (true)
             {
                 var text = _notificationBuffer.ToString();
+
+                // find the start of the next message, anything before it is garbage
                 var start = text.IndexOf('T');
                 if (start < 0)
                 {
@@ -201,10 +230,11 @@ internal class MKH4 : BluetoothDevice
                     break;
                 }
 
+                // find the end of the message
                 var end = text.IndexOf('W', start);
                 if (end < 0)
                 {
-                    // incomplete message, wait for the next packet
+                    // incomplete message, drop the garbage in front of it and wait for the next packet
                     _notificationBuffer.Remove(0, start);
                     break;
                 }
@@ -226,12 +256,13 @@ internal class MKH4 : BluetoothDevice
     /// <summary>
     /// Response format: 'T' + payload length (2 hex digits) + command (2 hex digits, 0x7X for request X) + payload + 'W'
     /// Examples: T01711W (ready), T067E410012W (version), T027C02W (motor status),
-    /// T027300W (position reached), T0A7A1-00336153W (motor position)
+    /// T027300W (position reached), T0A7A1-00336153W (motor position), T027800W (position reset)
     /// </summary>
     private void HandleMessage(string message)
     {
-        //Debug.WriteLine($"MKH4 notification: {message}");
+        Debug.WriteLine($"MKH4 notification: {message}");
 
+        // shortest possible message is "T" + 2 digits length + 2 digits command + "W"
         if (message.Length < 6)
         {
             return;
@@ -240,6 +271,7 @@ internal class MKH4 : BluetoothDevice
         var command = message.Substring(3, 2);
         var payload = message.Substring(5, message.Length - 6);
 
+        // remember the response and look for a request that waits for it
         TaskCompletionSource<string>? pending;
         lock (_responseLock)
         {
@@ -252,10 +284,51 @@ internal class MKH4 : BluetoothDevice
             // motor status: bit set = not connected, e.g. 02 = B not connected
             _motorNotConnectedMask = Convert.ToInt32(payload, 16);
         }
+        else if (command == "76")
+        {
+            // response to T006W, diagnostic only
+            LogStoredValue(payload);
+        }
 
+        // complete the waiting request (if any)
         pending?.TrySetResult(payload);
     }
 
+    /// <summary>
+    /// Diagnostic logging of the response to T006W. The module keeps this value permanently,
+    /// the original app updates it with T155... at the end of a calibration
+    /// (new value = old value + position of motor A). The meaning is unknown, so the value is only logged.
+    /// Payload: fixed prefix (12 hex digits) + sign + 8 hex digits, e.g. "0B0100030003+0279E999"
+    /// </summary>
+    private static void LogStoredValue(string payload)
+    {
+        try
+        {
+            // expected: 12 digit prefix, sign, 8 hex digits
+            if (payload.Length != 21 || (payload[12] != '+' && payload[12] != '-'))
+            {
+                Debug.WriteLine($"MKH4 stored value (unexpected format): {payload}");
+                return;
+            }
+
+            var prefix = payload.Substring(0, 12);
+            var value = Convert.ToInt64(payload.Substring(13), 16);
+            if (payload[12] == '-')
+            {
+                value = -value;
+            }
+
+            Debug.WriteLine($"MKH4 stored value (T006): prefix={prefix}, value={value} (0x{Math.Abs(value):X8})");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MKH4 stored value could not be parsed: {payload} ({ex.Message})");
+        }
+    }
+
+    /// <summary>
+    /// Sends the single 0x01 byte that the original app sends after each notification.
+    /// </summary>
     private async Task AcknowledgeAsync()
     {
         try
@@ -272,7 +345,7 @@ internal class MKH4 : BluetoothDevice
         }
         catch
         {
-            // ignore, ack is best effort
+            // ignore, the ack is best effort
         }
     }
 
@@ -280,6 +353,7 @@ internal class MKH4 : BluetoothDevice
     {
         try
         {
+            // forget everything left over from an earlier connection
             lock (_notificationLock)
             {
                 _notificationBuffer.Clear();
@@ -294,7 +368,7 @@ internal class MKH4 : BluetoothDevice
             await RequestAsync('1', "AABB", token).ConfigureAwait(false); // T041AABBW -> T01711W (ready)
             await RequestAsync('E', string.Empty, token).ConfigureAwait(false); // T00EW -> T067E410012W (version info)
             await RequestAsync('C', string.Empty, token).ConfigureAwait(false); // T00CW -> T027C02W (motor status)
-            await RequestAsync('6', string.Empty, token).ConfigureAwait(false); // T006W -> T15760B0100030003+02AD4AECW (meaning unknown)
+            await RequestAsync('6', string.Empty, token).ConfigureAwait(false); // T006W -> T15760B0100030003+0279E999W (stored value, logged only)
             await RequestAsync('F', "1", token).ConfigureAwait(false);          // T01F1W -> T017F1W
 
             if (requestDeviceInformation)
@@ -304,11 +378,12 @@ internal class MKH4 : BluetoothDevice
         }
         catch (OperationCanceledException)
         {
+            // the connection attempt was cancelled, let the caller handle it
             throw;
         }
         catch (Exception ex)
         {
-            //Debug.WriteLine($"MKH4 setup failed: {ex.Message}");
+            Debug.WriteLine($"MKH4 setup failed: {ex.Message}");
         }
 
         return true;
@@ -319,12 +394,14 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private async Task ReadDeviceInfo(CancellationToken token)
     {
+        // the version info was already requested during the init sequence
         string? payload;
         lock (_responseLock)
         {
             _lastResponses.TryGetValue("7E", out payload);
         }
 
+        // ask again if there is no answer yet
         payload ??= await RequestAsync('E', string.Empty, token).ConfigureAwait(false);
 
         if (payload is not null)
@@ -340,8 +417,9 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private void ApplyVersionInfo(string payload)
     {
-        //Debug.WriteLine($"MKH4 version payload: {payload}");
+        Debug.WriteLine($"MKH4 version payload: {payload}");
 
+        // three bytes = six hex digits are expected
         if (payload.Length != 6 || !payload.All(Uri.IsHexDigit))
         {
             return;
@@ -361,6 +439,9 @@ internal class MKH4 : BluetoothDevice
     private static string BuildMessage(char command, string payload = "")
         => $"T{payload.Length:X2}{command}{payload}W";
 
+    /// <summary>
+    /// Formats the speed of one channel as one flag digit followed by 4 hex digits.
+    /// </summary>
     private static string FormatSpeed(int value, char flag)
     {
         // value: -0x7FFF..0x7FFF, the direction bit 0x8000 is set for negative values
@@ -373,10 +454,14 @@ internal class MKH4 : BluetoothDevice
         return flag + speed.ToString("X4");
     }
 
+    /// <summary>
+    /// Writes a complete message, split into packets of at most 20 characters.
+    /// </summary>
     private async Task<bool> WriteMessageAsync(string message, CancellationToken token)
     {
         var bytes = Encoding.ASCII.GetBytes(message);
 
+        // no other write may be interleaved between the packets of one message
         await _writeLock.WaitAsync(token).ConfigureAwait(false);
         try
         {
@@ -407,9 +492,11 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private async Task<string?> RequestAsync(char command, string payload, CancellationToken token)
     {
+        // a request X is answered with a message with the command 7X
         var responseCommand = "7" + command;
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+        // register the request before sending, so the response can not be missed
         lock (_responseLock)
         {
             _pendingRequests[responseCommand] = tcs;
@@ -423,8 +510,10 @@ internal class MKH4 : BluetoothDevice
             {
                 token.ThrowIfCancellationRequested();
 
+                // (re)send the request, a failed write is simply tried again in the next round
                 await WriteMessageAsync(message, token).ConfigureAwait(false);
 
+                // wait a short time for the response before repeating the request
                 var completed = await Task.WhenAny(tcs.Task, Task.Delay(REQUEST_RETRY_DELAY, token)).ConfigureAwait(false);
                 if (completed == tcs.Task)
                 {
@@ -432,11 +521,12 @@ internal class MKH4 : BluetoothDevice
                 }
             }
 
-            //Debug.WriteLine($"MKH4 no response for {message}");
+            Debug.WriteLine($"MKH4 no response for {message}");
             return null;
         }
         finally
         {
+            // unregister the request, but only if it was not replaced by a newer one in the meantime
             lock (_responseLock)
             {
                 if (_pendingRequests.TryGetValue(responseCommand, out var current) && current == tcs)
@@ -449,19 +539,20 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Moves one motor to an absolute position (message T303, confirmed by "T027300W" when reached).
-    /// Not used by the BrickController2 UI yet. Note that the periodic resend of ProcessOutputsAsync
+    /// Not used by the BrickController2 UI yet. Note that the periodic resend of the output loop
     /// (T144) may interfere with a running position move.
     /// </summary>
     internal Task<bool> MoveToPositionAsync(int channelNo, float speed, int targetPosition, CancellationToken token)
     {
-        CheckChannel(channelNo);
+        var channelIndex = CheckChannel(channelNo);
 
+        // speed 0..1 scaled to 0..0x7FFF
         var speedValue = (int)(Math.Clamp(Math.Abs(speed), 0f, 1f) * 0x7FFF);
         var payload = new StringBuilder();
 
-        for (int channel = 0; channel < NumberOfChannels; channel++)
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
-            if (channel == channelNo)
+            if (channel == channelIndex)
             {
                 // direction bit 0x8000 is set for a positive target position, the position itself is unsigned
                 var speedField = speedValue | (targetPosition >= 0 ? 0x8000 : 0);
@@ -470,7 +561,7 @@ internal class MKH4 : BluetoothDevice
             }
             else
             {
-                // idle channel as sent by the original app
+                // idle channel as sent by the original app: speed 0, target position 0
                 payload.Append("8000");
                 payload.Append("00000000");
             }
@@ -484,12 +575,13 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     internal async Task<int?> GetPositionAsync(int channelNo, CancellationToken token)
     {
-        CheckChannel(channelNo);
+        var channelIndex = CheckChannel(channelNo);
 
-        var response = await RequestAsync('A', (1 << channelNo).ToString("X2"), token).ConfigureAwait(false);
+        // the motor is selected with a bitmask (bit 0 = A ... bit 3 = D) in two hex digits
+        var response = await RequestAsync('A', (1 << channelIndex).ToString("X2"), token).ConfigureAwait(false);
 
         // payload: motor digit (1..4), sign, 8 hex digits, e.g. "1-00336153"
-        if (response is null || response.Length != 10 || response[0] != (char)('1' + channelNo))
+        if (response is null || response.Length != 10 || response[0] != (char)('1' + channelIndex))
         {
             return null;
         }
@@ -498,13 +590,31 @@ internal class MKH4 : BluetoothDevice
         return response[1] == '-' ? -value : value;
     }
 
+    /// <summary>
+    /// Sets the current position of one motor to 0 (T028XXW -> T027800W, XX = motor bitmask,
+    /// e.g. T02804W for motor C as seen in the calibration capture of the original app).
+    /// Not used by the BrickController2 UI yet.
+    /// </summary>
+    internal async Task<bool> ResetPositionAsync(int channelNo, CancellationToken token)
+    {
+        var channelIndex = CheckChannel(channelNo);
+
+        // the motor is selected with a bitmask (bit 0 = A ... bit 3 = D) in two hex digits
+        var response = await RequestAsync('8', (1 << channelIndex).ToString("X2"), token).ConfigureAwait(false);
+
+        // any response means that the module has executed the command
+        return response is not null;
+    }
+
     protected override void BeforeDisconnectCleanup()
     {
+        // no response can arrive any more
         lock (_responseLock)
         {
             _pendingRequests.Clear();
         }
 
+        // the characteristics are invalid after the disconnect
         _characteristic_AE01 = null;
         _characteristic_AE02 = null;
         _characteristic_AE03 = null;
@@ -515,73 +625,53 @@ internal class MKH4 : BluetoothDevice
         _characteristic_AE3C_Notify = null;
     }
 
+    /// <summary>
+    /// Output loop: sends the buffered speed values whenever they changed.
+    /// </summary>
     protected override async Task ProcessOutputsAsync(CancellationToken token)
     {
         try
         {
-            lock (_outputLock)
-            {
-                for (int channelNo = 0; channelNo < NumberOfChannels; channelNo++)
-                {
-                    _outputValues[channelNo] = 0x00;
-                    _lastOutputValues[channelNo] = 0x01;
-                }
+            // reset all values to 0 and force an initial transmission,
+            // the original app also starts with an all-zero message
+            _outputValues.Initialize();
+            Array.Clear(_lastSentValues);
 
-                _sendAttemptsLeft = MAX_SEND_ATTEMPTS;
-            }
-
-            int[] outputValues = new int[NumberOfChannels];
-            int sendAttemptsLeft;
-            Stopwatch lastSent = Stopwatch.StartNew();
+            // time since the last successful transmission, used for the periodic resend
+            var lastSent = Stopwatch.StartNew();
 
             while (!token.IsCancellationRequested)
             {
-                lock (_outputLock)
+                if (TryGetOutputSnapshot())
                 {
-                    for (int channelNo = 0; channelNo < NumberOfChannels; channelNo++)
+                    // the values changed (or a previous attempt failed), so send them
+                    if (await SendOutputValuesAsync(_snapshot, token).ConfigureAwait(false))
                     {
-                        outputValues[channelNo] = _outputValues[channelNo];
+                        // tell the group that these values were applied, so they are not sent again
+                        _outputValues.Commit();
+
+                        // remember the sent values for the periodic resend
+                        _snapshot.CopyTo(_lastSentValues, 0);
+                        lastSent.Restart();
                     }
-
-                    sendAttemptsLeft = _sendAttemptsLeft;
-                    _sendAttemptsLeft = sendAttemptsLeft > 0 ? sendAttemptsLeft - 1 : 0;
                 }
-
-                if (outputValues[0] != _lastOutputValues[0] ||
-                    outputValues[1] != _lastOutputValues[1] ||
-                    outputValues[2] != _lastOutputValues[2] ||
-                    outputValues[3] != _lastOutputValues[3] ||
-                    sendAttemptsLeft > 0 ||
-                    lastSent.Elapsed > RESEND_DELAY)
+                else if (lastSent.Elapsed > RESEND_DELAY)
                 {
-                    if (await SendOutputValuesAsync(outputValues, token).ConfigureAwait(false))
+                    // nothing changed for a while: send the last values again as a safety net,
+                    // the group does not offer a periodic resend, so the own copy is used
+                    if (await SendOutputValuesAsync(_lastSentValues, token).ConfigureAwait(false))
                     {
                         lastSent.Restart();
-
-                        for (int channelNo = 0; channelNo < NumberOfChannels; channelNo++)
-                        {
-                            _lastOutputValues[channelNo] = outputValues[channelNo];
-                        }
-
-                        // reset attempts due to success
-                        lock (_outputLock)
-                        {
-                            _sendAttemptsLeft = 0;
-                        }
-
-                        // delay after success
-                        await Task.Delay(SEND_DELAY, token).ConfigureAwait(false);
                     }
                 }
-                else
-                {
-                    // delay: no change or no attempts left
-                    await Task.Delay(SEND_DELAY, token).ConfigureAwait(false);
-                }
+
+                // short pause between two iterations
+                await Task.Delay(SEND_DELAY, token).ConfigureAwait(false);
             }
         }
         catch
         {
+            // cancellation or connection loss ends the loop
         }
         finally
         {
@@ -590,12 +680,32 @@ internal class MKH4 : BluetoothDevice
         }
     }
 
+    /// <summary>
+    /// Fetches the values from the buffer into <see cref="_snapshot"/>.
+    /// Returns true if there is anything to send (changed values or a failed previous attempt).
+    /// This is a separate synchronous method, because the span returned by the group can not be used in an async method.
+    /// </summary>
+    private bool TryGetOutputSnapshot()
+    {
+        if (!_outputValues.TryGetValues(out var values))
+        {
+            return false;
+        }
+
+        values.CopyTo(_snapshot);
+        return true;
+    }
+
+    /// <summary>
+    /// Sends a stop message for all channels, best effort with a short timeout.
+    /// </summary>
     private async Task SendStopAsync()
     {
         try
         {
+            // the connection may be dying, so do not wait longer than half a second
             using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-            await WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(new int[NumberOfChannels])), cts.Token).ConfigureAwait(false);
+            await WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(new int[CHANNEL_COUNT])), cts.Token).ConfigureAwait(false);
         }
         catch
         {
@@ -603,15 +713,20 @@ internal class MKH4 : BluetoothDevice
         }
     }
 
-    private static string BuildSpeedPayload(int[] outputValues)
+    /// <summary>
+    /// Builds the payload of the simple motor start message: for each channel one flag digit and 4 hex digits speed.
+    /// </summary>
+    private static string BuildSpeedPayload(int[] values)
     {
-        // simple motor start: 4 x (flag digit + 4 hex digits speed)
-        return string.Concat(Enumerable.Range(0, 4).Select(channel => FormatSpeed(outputValues[channel], CHANNEL_FLAGS[channel])));
+        return string.Concat(Enumerable.Range(0, CHANNEL_COUNT).Select(channel => FormatSpeed(values[channel], CHANNEL_FLAGS[channel])));
     }
 
-    private Task<bool> SendOutputValuesAsync(int[] outputValues, CancellationToken token)
+    /// <summary>
+    /// Sends the speed values of all channels with one message.
+    /// </summary>
+    private Task<bool> SendOutputValuesAsync(int[] values, CancellationToken token)
     {
         // simple motor start: T144 + 4 x "FXXXX" + W
-        return WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(outputValues)), token);
+        return WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(values)), token);
     }
 }
