@@ -1,4 +1,6 @@
-﻿using BrickController2.DeviceManagement.IO;
+﻿using BrickController2.CreationManagement;
+using BrickController2.DeviceManagement.IO;
+using BrickController2.DeviceManagement.Lego;
 using BrickController2.Helpers;
 using BrickController2.PlatformServices.BluetoothLE;
 using BrickController2.Protocols;
@@ -10,12 +12,24 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using static BrickController2.CreationManagement.ControllerDefaults;
+
 namespace BrickController2.DeviceManagement.MouldKing;
 
 /// <summary>
 /// MouldKing H4 (MKH4.0 module, e.g. from the 2D plotter set).
 /// Protocol: ASCII messages 'T' + payload length (2 hex digits) + command (1 hex digit) + payload + 'W',
 /// written to characteristic AE3B, answers/notifications are received on characteristic AE3C.
+/// A channel is either a normal motor (speed control with T144) or a servo (position control with T303,
+/// requires a motor with encoder, e.g. a MK+ motor).
+///
+/// Position reference of servo channels:
+/// The position counter of the module is volatile. After a power cycle of the module it starts at 0 again,
+/// wherever the shaft is (verified by test: the same target moves the motor again after a power cycle).
+/// So the zero of the counter is the shaft position when the module was switched on (or the position where
+/// the counter was reset the last time with T028XX). The center of a servo channel is this zero plus the
+/// configured base angle. To get a fixed mechanical center, turn the shaft into that position
+/// before switching on the module (or calibrate with "center here" after each power cycle).
 /// </summary>
 internal class MKH4 : BluetoothDevice
 {
@@ -46,6 +60,28 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private const int REQUEST_MAX_ATTEMPTS = 20;
     private static readonly TimeSpan REQUEST_RETRY_DELAY = TimeSpan.FromMilliseconds(40);
+
+    /// <summary>
+    /// Number of encoder position units per degree of the motor shaft (594000 units per revolution).
+    /// This value was measured with a MK+ motor: set the base angle to 180 degrees, observe the real rotation
+    /// and scale the value (new value = old value * 180 / observed angle). Other motor types may differ.
+    /// </summary>
+    private const double POSITION_UNITS_PER_DEGREE = 1650.0;
+
+    /// <summary>
+    /// Speed (0..1) of position moves. The original app used 0x4FFF, which is about 0.625.
+    /// </summary>
+    private const float SERVO_SPEED = 0.625f;
+
+    /// <summary>
+    /// Max time to wait for the "position reached" message (T027300W) during calibration.
+    /// </summary>
+    private static readonly TimeSpan POSITION_REACHED_TIMEOUT = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Max time to wait for the "position reached" message when moving to the base angle after connecting.
+    /// </summary>
+    private static readonly TimeSpan CONNECT_POSITION_TIMEOUT = TimeSpan.FromSeconds(3);
 
     /// <summary>
     /// Leading hex digit of each channel in the T144 message. The README uses '0' for all channels,
@@ -81,10 +117,22 @@ internal class MKH4 : BluetoothDevice
     private static readonly Guid MOULD_KING_HUB_NOTIFY_AE3C_UUID = BluetoothLowEnergy.GetGuid(0xae3c);
 
     /// <summary>
-    /// Buffers the requested speed values of all channels (range -0x7FFF..0x7FFF).
+    /// Configuration (output type, base angle, max angle, ...) of each channel.
+    /// Filled in ConnectAsync the same way as WirelessProtocolBasedDevice does it,
+    /// because the base class BluetoothDevice does not pass the configurations on.
+    /// </summary>
+    private readonly StateStore<int, ChannelConfig> _channelConfigs = new();
+
+    /// <summary>
+    /// Buffers the requested speed values of all normal motor channels (range -0x7FFF..0x7FFF).
     /// It detects changes, repeats failed transmissions and remembers what was already applied.
     /// </summary>
     private readonly OutputValuesGroup<int> _outputValues = new(CHANNEL_COUNT);
+
+    /// <summary>
+    /// Buffers the requested target positions (absolute encoder positions) of all servo channels.
+    /// </summary>
+    private readonly OutputValuesGroup<int> _servoTargets = new(CHANNEL_COUNT);
 
     /// <summary>
     /// Copy of the values fetched from <see cref="_outputValues"/>. A span can not be used across an await,
@@ -93,10 +141,28 @@ internal class MKH4 : BluetoothDevice
     private readonly int[] _snapshot = new int[CHANNEL_COUNT];
 
     /// <summary>
+    /// Copy of the target positions fetched from <see cref="_servoTargets"/>. Only used by the output loop.
+    /// </summary>
+    private readonly int[] _servoSnapshot = new int[CHANNEL_COUNT];
+
+    /// <summary>
     /// Values that were sent successfully the last time, used for the periodic resend.
     /// Only used by the output loop.
     /// </summary>
     private readonly int[] _lastSentValues = new int[CHANNEL_COUNT];
+
+    /// <summary>
+    /// Position (in counter units) of the center of each servo channel, relative to the current zero of the
+    /// volatile module counter (= base angle of the channel configuration converted to position units).
+    /// </summary>
+    private readonly int[] _centerPositions = new int[CHANNEL_COUNT];
+
+    /// <summary>
+    /// True if the center position of a servo channel is known, so that targets can be calculated.
+    /// Until then SetOutput is ignored for the channel, otherwise the motor could run to a wrong position.
+    /// </summary>
+    private readonly bool[] _servoReady = new bool[CHANNEL_COUNT];
+    private readonly object _servoLock = new object();
 
     /// <summary>
     /// Serializes all writes to AE3B, because the ACK bytes are written from the notification callback
@@ -128,6 +194,12 @@ internal class MKH4 : BluetoothDevice
     public MKH4(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
         : base(name, address, deviceRepository, bleService)
     {
+        // default configuration (normal motors) until a connection delivers the real channel configuration,
+        // ChannelConfiguration is a value type, so "default" is used for "no configuration"
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        {
+            _channelConfigs.Set(channel, ChannelConfig.From(default));
+        }
     }
 
     public override DeviceType DeviceType => DeviceType.MKH4;
@@ -135,6 +207,118 @@ internal class MKH4 : BluetoothDevice
     public override int NumberOfChannels => CHANNEL_COUNT;
 
     protected override bool AutoConnectOnFirstConnect => false;
+
+    // ------------------------------------------------------------------------------------------
+    // channel capabilities (calibration and limits in the BrickController2 UI)
+    // ------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Every channel can be a normal motor. As servo (position control) it requires a motor with encoder.
+    /// Other types (such as stepper) are not supported.
+    /// </summary>
+    public override bool IsOutputTypeSupported(int channel, ChannelOutputType outputType)
+        => outputType switch
+        {
+            ChannelOutputType.NormalMotor => true,
+            ChannelOutputType.ServoMotor => true,
+            _ => false,
+        };
+
+    /// <summary>
+    /// The base angle of a servo channel can be set with the calibration slider (see <see cref="ResetOutputAsync"/>).
+    /// The channel type is not known before connecting, so every channel offers it.
+    /// </summary>
+    public override bool CanResetOutput(int channel) => true;
+
+    /// <summary>
+    /// The max servo angle is used as software limit of the position range (center +/- max angle).
+    /// The module itself gets no limits (the original app does not set them either).
+    /// </summary>
+    public override bool CanChangeMaxServoAngle(int channel) => true;
+
+    /// <summary>
+    /// "Auto calibration" does not search for mechanical end stops here (the meaning of the T02b command that
+    /// the original app sends before such a run is unknown). It defines the current shaft position as center,
+    /// see <see cref="AutoCalibrateOutputAsync"/>.
+    /// </summary>
+    public override bool CanAutoCalibrateOutput(int channel) => true;
+
+    /// <summary>
+    /// Takes over the channel configurations of the creation the same way WirelessProtocolBasedDevice does,
+    /// because the base class BluetoothDevice does not pass them on.
+    /// </summary>
+    public override Task<DeviceConnectionResult> ConnectAsync(
+        bool reconnect,
+        Action<Device> onDeviceDisconnected,
+        IEnumerable<ChannelConfiguration> channelConfigurations,
+        bool startOutputProcessing,
+        bool requestDeviceInformation,
+        CancellationToken token)
+    {
+        // forget the configuration of the previous connection
+        _channelConfigs.Clear();
+
+        // build a dictionary, but for supported output types only
+        var configs = new Dictionary<int, ChannelConfiguration>();
+        foreach (var channelConfiguration in channelConfigurations.Where(c => IsOutputTypeSupported(c.Channel, c.ChannelOutputType)))
+        {
+            // if multiple configurations target the same channel, keep the last one
+            configs[channelConfiguration.Channel] = channelConfiguration;
+        }
+
+        // store a configuration for every channel (the default for channels without one)
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        {
+            configs.TryGetValue(channel, out var config);
+            _channelConfigs.Set(channel, ChannelConfig.From(config));
+        }
+
+        return base.ConnectAsync(reconnect, onDeviceDisconnected, channelConfigurations, startOutputProcessing, requestDeviceInformation, token);
+    }
+
+    /// <summary>
+    /// Moves a servo channel to the base angle selected with the calibration slider and makes it the new center.
+    /// The value (-1..1) is scaled to degrees the same way as in the Technic Move implementation.
+    /// The angle is relative to the current zero of the volatile module counter, see the class description.
+    /// </summary>
+    public override async Task ResetOutputAsync(int channel, float value, CancellationToken token)
+    {
+        var channelIndex = CheckChannel(channel);
+
+        // value -1..1 -> base angle -180..180 degrees
+        var baseAngle = Convert.ToInt32(value * 180);
+
+        await MoveServoToBaseAngleAsync(channelIndex, baseAngle, POSITION_REACHED_TIMEOUT, token).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// "Center here": defines the current shaft position as zero of the module counter (T028XX)
+    /// and as center of the servo channel, so the base angle becomes 0.
+    /// Move the shaft to the wanted center position first (e.g. with the calibration slider), then call this.
+    /// The module counter is volatile, so this is valid until the module is switched off.
+    /// </summary>
+    public override async Task<(bool Success, float BaseServoAngle)> AutoCalibrateOutputAsync(int channel, CancellationToken token)
+    {
+        var channelIndex = CheckChannel(channel);
+
+        // the module counter becomes 0 at the current position
+        if (!await ResetPositionAsync(channelIndex, token).ConfigureAwait(false))
+        {
+            return (false, 0F);
+        }
+
+        // the current position is now the center
+        _centerPositions[channelIndex] = 0;
+        lock (_servoLock)
+        {
+            _servoReady[channelIndex] = true;
+        }
+
+        // keep the output loop in sync, so that it does not move the motor somewhere else afterwards
+        _servoTargets.SetOutput(channelIndex, 0);
+
+        return (true, 0F);
+    }
 
     /// <summary>
     /// Stores the requested value of a channel. The value is not sent here,
@@ -145,12 +329,109 @@ internal class MKH4 : BluetoothDevice
         // validate the channel index (CheckChannel returns the index if it is valid)
         var channel = CheckChannel(channelNo);
 
-        // limit the value to -1..1 and scale it to -0x7FFF..0x7FFF
-        var intValue = (int)(CutOutputValue(value) * 0x7FFF);
+        // limit the value to -1..1
+        value = CutOutputValue(value);
 
-        // the group detects whether the value changed and schedules the transmission
-        _outputValues.SetOutput(channel, intValue);
+        if (IsServoChannel(channel))
+        {
+            // position control
+            SetServoOutput(channel, value);
+            return;
+        }
+
+        // speed control: scale to -0x7FFF..0x7FFF, the group detects changes and schedules the transmission
+        _outputValues.SetOutput(channel, (int)(value * 0x7FFF));
     }
+
+    /// <summary>
+    /// Calculates the target position of a servo channel from the value (-1..1).
+    /// The range is limited by the max servo angle: center +/- max angle (software limit).
+    /// </summary>
+    private void SetServoOutput(int channel, float value)
+    {
+        // ignore the value as long as the center position is not known
+        lock (_servoLock)
+        {
+            if (!_servoReady[channel])
+            {
+                return;
+            }
+        }
+
+        // angle relative to the center, never larger than the configured max servo angle
+        var angle = value * GetMaxServoAngle(channel);
+        var target = _centerPositions[channel] + AngleToPosition(angle);
+
+        // the group detects whether the target changed and schedules the transmission
+        _servoTargets.SetOutput(channel, target);
+    }
+
+    /// <summary>
+    /// True if the channel is configured as servo (position control with encoder).
+    /// </summary>
+    private bool IsServoChannel(int channel) => _channelConfigs.Get(channel).OutputType == ChannelOutputType.ServoMotor;
+
+    /// <summary>
+    /// Max servo angle of the channel in degrees, falls back to the default if none is configured
+    /// (same logic as in WirelessProtocolBasedDevice).
+    /// </summary>
+    private int GetMaxServoAngle(int channel)
+    {
+        var maxServoAngle = _channelConfigs.Get(channel).MaxServoAngle;
+        return maxServoAngle > 0 ? maxServoAngle : DEFAULT_MAX_SERVO_ANGLE;
+    }
+
+    /// <summary>
+    /// True if at least one channel is configured as servo.
+    /// </summary>
+    private bool HasServoChannels()
+    {
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        {
+            if (IsServoChannel(channel))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Converts an angle in degrees to encoder position units.
+    /// </summary>
+    private static int AngleToPosition(double angle) => (int)Math.Round(angle * POSITION_UNITS_PER_DEGREE);
+
+    /// <summary>
+    /// Makes the given base angle the center of a servo channel and moves the motor there.
+    /// The base angle is relative to the current zero of the (volatile) module counter.
+    /// Returns true if the module confirmed that the position was reached.
+    /// </summary>
+    private async Task<bool> MoveServoToBaseAngleAsync(int channel, int baseAngle, TimeSpan timeout, CancellationToken token)
+    {
+        // the center is the base angle relative to the zero of the module counter
+        var center = AngleToPosition(baseAngle);
+
+        _centerPositions[channel] = center;
+        lock (_servoLock)
+        {
+            _servoReady[channel] = true;
+        }
+
+        // keep the output loop in sync, so that it does not move the motor somewhere else afterwards
+        _servoTargets.SetOutput(channel, center);
+
+        // move there directly, the output loop may not be running (e.g. on the calibration page)
+        var targets = new int?[CHANNEL_COUNT];
+        targets[channel] = center;
+        var payload = BuildPositionPayload(targets, SERVO_SPEED);
+
+        return payload is not null && await SendPositionAndWaitAsync(BuildMessage('3', payload), timeout, token).ConfigureAwait(false);
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // BLE services and notifications
+    // ------------------------------------------------------------------------------------------
 
     protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService>? services, CancellationToken token)
     {
@@ -256,7 +537,8 @@ internal class MKH4 : BluetoothDevice
     /// <summary>
     /// Response format: 'T' + payload length (2 hex digits) + command (2 hex digits, 0x7X for request X) + payload + 'W'
     /// Examples: T01711W (ready), T067E410012W (version), T027C02W (motor status),
-    /// T027300W (position reached), T0A7A1-00336153W (motor position), T027800W (position reset)
+    /// T027300W (position reached), T0A7A1-00336153W (motor position), T027800W (position reset),
+    /// T027408W (port is being driven, sent about every 90 ms while a motor runs)
     /// </summary>
     private void HandleMessage(string message)
     {
@@ -295,9 +577,10 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Diagnostic logging of the response to T006W. The module keeps this value permanently,
+    /// Diagnostic logging of the response to T006W. The module keeps this value between connections,
     /// the original app updates it with T155... at the end of a calibration
-    /// (new value = old value + position of motor A). The meaning is unknown, so the value is only logged.
+    /// (new value = old value + position of motor A). Unlike the position counter it is not reset to 0
+    /// by the module on its own. The meaning is unknown, so the value is only logged.
     /// Payload: fixed prefix (12 hex digits) + sign + 8 hex digits, e.g. "0B0100030003+0279E999"
     /// </summary>
     private static void LogStoredValue(string payload)
@@ -349,6 +632,10 @@ internal class MKH4 : BluetoothDevice
         }
     }
 
+    // ------------------------------------------------------------------------------------------
+    // connect setup and device info
+    // ------------------------------------------------------------------------------------------
+
     protected override async Task<bool> AfterConnectSetupAsync(bool requestDeviceInformation, CancellationToken token)
     {
         try
@@ -364,6 +651,11 @@ internal class MKH4 : BluetoothDevice
                 _lastResponses.Clear();
             }
 
+            lock (_servoLock)
+            {
+                Array.Clear(_servoReady);
+            }
+
             // init sequence observed in the original app, every request is repeated until it is answered
             await RequestAsync('1', "AABB", token).ConfigureAwait(false); // T041AABBW -> T01711W (ready)
             await RequestAsync('E', string.Empty, token).ConfigureAwait(false); // T00EW -> T067E410012W (version info)
@@ -374,6 +666,20 @@ internal class MKH4 : BluetoothDevice
             if (requestDeviceInformation)
             {
                 await ReadDeviceInfo(token).ConfigureAwait(false);
+            }
+
+            // servo channels: take over the configured base angle as center and move there,
+            // like the Technic Move implementation does. The module counter starts at 0 at the
+            // current shaft position after a power cycle, so the move is relative to that position.
+            for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+            {
+                if (!IsServoChannel(channel))
+                {
+                    continue;
+                }
+
+                var baseAngle = _channelConfigs.Get(channel).ServoBaseAngle;
+                await MoveServoToBaseAngleAsync(channel, baseAngle, CONNECT_POSITION_TIMEOUT, token).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -433,6 +739,10 @@ internal class MKH4 : BluetoothDevice
         FirmwareVersion = $"V{b0 & 0x0F}.{b2 >> 4}.{b2 & 0x0F}";
     }
 
+    // ------------------------------------------------------------------------------------------
+    // protocol helpers
+    // ------------------------------------------------------------------------------------------
+
     /// <summary>
     /// Message format: 'T' + payload length (2 hex digits) + command (1 hex digit) + payload + 'W'
     /// </summary>
@@ -452,6 +762,50 @@ internal class MKH4 : BluetoothDevice
         }
 
         return flag + speed.ToString("X4");
+    }
+
+    /// <summary>
+    /// Builds the payload of the position message (T303): for each channel 4 hex digits speed and 8 hex digits
+    /// target position. Channels without a target are idle (speed 0, position 0) as sent by the original app.
+    /// Returns null if no channel has a target.
+    /// </summary>
+    private static string? BuildPositionPayload(int?[] targets, float speed)
+    {
+        // speed 0..1 scaled to 0..0x7FFF
+        var speedValue = (int)(Math.Clamp(Math.Abs(speed), 0f, 1f) * 0x7FFF);
+
+        var payload = new StringBuilder();
+        var hasTarget = false;
+
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        {
+            if (targets[channel] is int target)
+            {
+                hasTarget = true;
+
+                // direction bit 0x8000 is set for a positive target position, the position itself is unsigned
+                var speedField = speedValue | (target >= 0 ? 0x8000 : 0);
+                payload.Append(speedField.ToString("X4"));
+                payload.Append(Math.Abs((long)target).ToString("X8"));
+            }
+            else
+            {
+                // idle channel
+                payload.Append("8000");
+                payload.Append("00000000");
+            }
+        }
+
+        return hasTarget ? payload.ToString() : null;
+    }
+
+    /// <summary>
+    /// Builds the payload of the simple motor start message (T144):
+    /// for each channel one flag digit and 4 hex digits speed.
+    /// </summary>
+    private static string BuildSpeedPayload(int[] values)
+    {
+        return string.Concat(Enumerable.Range(0, CHANNEL_COUNT).Select(channel => FormatSpeed(values[channel], CHANNEL_FLAGS[channel])));
     }
 
     /// <summary>
@@ -483,6 +837,43 @@ internal class MKH4 : BluetoothDevice
         finally
         {
             _writeLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Sends a position message and waits for the "position reached" notification (T027300W, command 73).
+    /// Returns true if it arrived within the timeout.
+    /// </summary>
+    private async Task<bool> SendPositionAndWaitAsync(string message, TimeSpan timeout, CancellationToken token)
+    {
+        var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // register before sending, so the notification can not be missed
+        lock (_responseLock)
+        {
+            _pendingRequests["73"] = tcs;
+        }
+
+        try
+        {
+            if (!await WriteMessageAsync(message, token).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            var completed = await Task.WhenAny(tcs.Task, Task.Delay(timeout, token)).ConfigureAwait(false);
+            return completed == tcs.Task;
+        }
+        finally
+        {
+            // unregister, but only if it was not replaced by a newer one in the meantime
+            lock (_responseLock)
+            {
+                if (_pendingRequests.TryGetValue("73", out var current) && current == tcs)
+                {
+                    _pendingRequests.Remove("73");
+                }
+            }
         }
     }
 
@@ -537,37 +928,24 @@ internal class MKH4 : BluetoothDevice
         }
     }
 
+    // ------------------------------------------------------------------------------------------
+    // position helpers
+    // ------------------------------------------------------------------------------------------
+
     /// <summary>
     /// Moves one motor to an absolute position (message T303, confirmed by "T027300W" when reached).
-    /// Not used by the BrickController2 UI yet. Note that the periodic resend of the output loop
-    /// (T144) may interfere with a running position move.
+    /// The position is relative to the current zero of the volatile module counter.
+    /// Not used by the BrickController2 UI. Note that a T144 message (normal motors) may cancel a running move.
     /// </summary>
     internal Task<bool> MoveToPositionAsync(int channelNo, float speed, int targetPosition, CancellationToken token)
     {
         var channelIndex = CheckChannel(channelNo);
 
-        // speed 0..1 scaled to 0..0x7FFF
-        var speedValue = (int)(Math.Clamp(Math.Abs(speed), 0f, 1f) * 0x7FFF);
-        var payload = new StringBuilder();
+        // only the selected channel gets a target, all others are idle
+        var targets = new int?[CHANNEL_COUNT];
+        targets[channelIndex] = targetPosition;
 
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
-        {
-            if (channel == channelIndex)
-            {
-                // direction bit 0x8000 is set for a positive target position, the position itself is unsigned
-                var speedField = speedValue | (targetPosition >= 0 ? 0x8000 : 0);
-                payload.Append(speedField.ToString("X4"));
-                payload.Append(Math.Abs((long)targetPosition).ToString("X8"));
-            }
-            else
-            {
-                // idle channel as sent by the original app: speed 0, target position 0
-                payload.Append("8000");
-                payload.Append("00000000");
-            }
-        }
-
-        return WriteMessageAsync(BuildMessage('3', payload.ToString()), token);
+        return WriteMessageAsync(BuildMessage('3', BuildPositionPayload(targets, speed)!), token);
     }
 
     /// <summary>
@@ -593,7 +971,8 @@ internal class MKH4 : BluetoothDevice
     /// <summary>
     /// Sets the current position of one motor to 0 (T028XXW -> T027800W, XX = motor bitmask,
     /// e.g. T02804W for motor C as seen in the calibration capture of the original app).
-    /// Not used by the BrickController2 UI yet.
+    /// This defines the zero of the module counter, which is the reference of the servo base angle.
+    /// The counter is volatile and starts at 0 again after a power cycle of the module.
     /// </summary>
     internal async Task<bool> ResetPositionAsync(int channelNo, CancellationToken token)
     {
@@ -606,12 +985,33 @@ internal class MKH4 : BluetoothDevice
         return response is not null;
     }
 
+    // ------------------------------------------------------------------------------------------
+    // disconnect
+    // ------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Called by the base class while the connection is still up (after the output loop was stopped).
+    /// The module keeps the last speed values (the original app does not resend them), so stop all motors.
+    /// </summary>
+    protected override async ValueTask BeforeDisconnectAsync(CancellationToken token)
+    {
+        await base.BeforeDisconnectAsync(token);
+
+        await SendStopAsync().ConfigureAwait(false);
+    }
+
     protected override void BeforeDisconnectCleanup()
     {
         // no response can arrive any more
         lock (_responseLock)
         {
             _pendingRequests.Clear();
+        }
+
+        // the centers have to be set again after the next connect
+        lock (_servoLock)
+        {
+            Array.Clear(_servoReady);
         }
 
         // the characteristics are invalid after the disconnect
@@ -625,8 +1025,12 @@ internal class MKH4 : BluetoothDevice
         _characteristic_AE3C_Notify = null;
     }
 
+    // ------------------------------------------------------------------------------------------
+    // output loop
+    // ------------------------------------------------------------------------------------------
+
     /// <summary>
-    /// Output loop: sends the buffered speed values whenever they changed.
+    /// Output loop: sends the buffered speed values (T144) and target positions (T303) whenever they changed.
     /// </summary>
     protected override async Task ProcessOutputsAsync(CancellationToken token)
     {
@@ -637,11 +1041,22 @@ internal class MKH4 : BluetoothDevice
             _outputValues.Initialize();
             Array.Clear(_lastSentValues);
 
+            // servo channels: hold the center position, the targets set during the connect setup were cleared above
+            _servoTargets.Initialize();
+            for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+            {
+                if (IsServoReady(channel))
+                {
+                    _servoTargets.SetOutput(channel, _centerPositions[channel]);
+                }
+            }
+
             // time since the last successful transmission, used for the periodic resend
             var lastSent = Stopwatch.StartNew();
 
             while (!token.IsCancellationRequested)
             {
+                // ---- normal motors: speed values ----
                 if (TryGetOutputSnapshot())
                 {
                     // the values changed (or a previous attempt failed), so send them
@@ -659,9 +1074,26 @@ internal class MKH4 : BluetoothDevice
                 {
                     // nothing changed for a while: send the last values again as a safety net,
                     // the group does not offer a periodic resend, so the own copy is used
-                    if (await SendOutputValuesAsync(_lastSentValues, token).ConfigureAwait(false))
+                    if (ShouldResendOutputValues())
                     {
+                        if (await SendOutputValuesAsync(_lastSentValues, token).ConfigureAwait(false))
+                        {
+                            lastSent.Restart();
+                        }
+                    }
+                    else
+                    {
+                        // nothing to resend, check again after the delay
                         lastSent.Restart();
+                    }
+                }
+
+                // ---- servo channels: target positions ----
+                if (TryGetServoSnapshot())
+                {
+                    if (await SendServoTargetsAsync(_servoSnapshot, token).ConfigureAwait(false))
+                    {
+                        _servoTargets.Commit();
                     }
                 }
 
@@ -671,17 +1103,39 @@ internal class MKH4 : BluetoothDevice
         }
         catch
         {
-            // cancellation or connection loss ends the loop
-        }
-        finally
-        {
-            // the module keeps the last speed values (the original app does not resend them), so stop all motors
-            await SendStopAsync().ConfigureAwait(false);
+            // cancellation or connection loss ends the loop,
+            // the stop message is sent by BeforeDisconnectAsync
         }
     }
 
     /// <summary>
-    /// Fetches the values from the buffer into <see cref="_snapshot"/>.
+    /// Decides whether the periodic resend of the last speed values is allowed.
+    /// Without servo channels the values (also zeros) are always resent as a safety net for a lost "stop".
+    /// With servo channels only running motors are refreshed, because a T144 message could cancel a position move.
+    /// </summary>
+    private bool ShouldResendOutputValues()
+    {
+        if (!HasServoChannels())
+        {
+            return true;
+        }
+
+        return _lastSentValues.Any(value => value != 0);
+    }
+
+    /// <summary>
+    /// True if the center position of the servo channel is known.
+    /// </summary>
+    private bool IsServoReady(int channel)
+    {
+        lock (_servoLock)
+        {
+            return _servoReady[channel];
+        }
+    }
+
+    /// <summary>
+    /// Fetches the speed values from the buffer into <see cref="_snapshot"/>.
     /// Returns true if there is anything to send (changed values or a failed previous attempt).
     /// This is a separate synchronous method, because the span returned by the group can not be used in an async method.
     /// </summary>
@@ -693,6 +1147,21 @@ internal class MKH4 : BluetoothDevice
         }
 
         values.CopyTo(_snapshot);
+        return true;
+    }
+
+    /// <summary>
+    /// Fetches the target positions from the buffer into <see cref="_servoSnapshot"/>.
+    /// Returns true if there is anything to send.
+    /// </summary>
+    private bool TryGetServoSnapshot()
+    {
+        if (!_servoTargets.TryGetValues(out var values))
+        {
+            return false;
+        }
+
+        values.CopyTo(_servoSnapshot);
         return true;
     }
 
@@ -714,19 +1183,33 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Builds the payload of the simple motor start message: for each channel one flag digit and 4 hex digits speed.
-    /// </summary>
-    private static string BuildSpeedPayload(int[] values)
-    {
-        return string.Concat(Enumerable.Range(0, CHANNEL_COUNT).Select(channel => FormatSpeed(values[channel], CHANNEL_FLAGS[channel])));
-    }
-
-    /// <summary>
-    /// Sends the speed values of all channels with one message.
+    /// Sends the speed values of all channels with one message (T144, simple motor start).
+    /// Servo channels always have the value 0 here.
     /// </summary>
     private Task<bool> SendOutputValuesAsync(int[] values, CancellationToken token)
     {
-        // simple motor start: T144 + 4 x "FXXXX" + W
         return WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(values)), token);
+    }
+
+    /// <summary>
+    /// Sends the target positions of all servo channels that have a known center with one message (T303).
+    /// </summary>
+    private Task<bool> SendServoTargetsAsync(int[] targets, CancellationToken token)
+    {
+        // only servo channels with a known center get a target
+        var positions = new int?[CHANNEL_COUNT];
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        {
+            positions[channel] = IsServoReady(channel) ? targets[channel] : null;
+        }
+
+        var payload = BuildPositionPayload(positions, SERVO_SPEED);
+        if (payload is null)
+        {
+            // no servo channel is ready, nothing to move
+            return Task.FromResult(true);
+        }
+
+        return WriteMessageAsync(BuildMessage('3', payload), token);
     }
 }
