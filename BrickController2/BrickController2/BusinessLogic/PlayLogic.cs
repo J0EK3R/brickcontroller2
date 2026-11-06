@@ -58,7 +58,7 @@ namespace BrickController2.BusinessLogic
                 var device = _deviceManager.GetDeviceById(mr.DeviceId);
                 return device == null         // device not found
                     || !device.SupportsMacros // no macro support
-                    || !device.AvailableMacros.Any(m => m.IsMatch(mr.MacroId, mr.Scope, mr.Choice));
+                    || !device.AvailableMacros.Any(m => m.IsMatch(mr.MacroId, mr.Scope, mr.Choice, mr.Channel));
             }))
             {
                 return CreationValidationResult.MissingMacro;
@@ -105,6 +105,8 @@ namespace BrickController2.BusinessLogic
                 return;
             }
 
+            Dictionary<Device,List<(int, float)>> deviceEventTable = new Dictionary<Device,List<(int, float)>>();
+
             foreach (var gameControllerEvent in e.InputDeviceEvents)
             {
                 foreach (var controllerEvent in ActiveProfile.ControllerEvents)
@@ -142,7 +144,14 @@ namespace BrickController2.BusinessLogic
                                 }
 
                                 var outputValue = ProcessButtonEvent(isPressed, controllerAction, device);
-                                device.SetOutput(channel, outputValue);
+
+                                // Store the output value for this device and channel
+                                if (!deviceEventTable.TryGetValue(device, out var deviceEvents))
+                                {
+                                    deviceEvents = new List<(int, float)>();
+                                    deviceEventTable[device] = deviceEvents;
+                                }
+                                deviceEvents.Add((channel, outputValue));
                             }
                             else if (gameControllerEvent.Key.EventType == InputDeviceEventType.Axis)
                             {
@@ -151,12 +160,27 @@ namespace BrickController2.BusinessLogic
                                 {
                                     StoreAxisOutputValue(axisValue, controllerAction.DeviceId, controllerAction.Channel, controllerEvent.EventType, controllerEvent.EventCode);
                                     var outputValue = CombineAxisOutputValues(controllerAction.DeviceId, controllerAction.Channel);
-                                    device.SetOutput(channel, outputValue);
+
+                                    // Store the output value for this device and channel
+                                    if (!deviceEventTable.TryGetValue(device, out var deviceEvents))
+                                    {
+                                        deviceEvents = new List<(int, float)>();
+                                        deviceEventTable[device] = deviceEvents;
+                                    }
+                                    deviceEvents.Add((channel, outputValue));
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            // After processing all events, set the outputs for each device
+            foreach (var kvp in deviceEventTable)
+            {
+                var device = kvp.Key;
+                var events = kvp.Value;
+                device.SetOutputs(events);
             }
         }
         
