@@ -18,11 +18,13 @@ namespace BrickController2.Windows.PlatformServices.BluetoothLE;
 internal sealed class WinRtAdvertisingPublisher : IAdvertisingPublisher
 {
     private readonly BluetoothLEAdvertisementPublisher _publisher;
+    private readonly ILogger _logger;
 
     /// <summary>Creates the wrapper and subscribes to the WinRT status event.</summary>
-    public WinRtAdvertisingPublisher(BluetoothLEAdvertisementPublisher publisher)
+    public WinRtAdvertisingPublisher(BluetoothLEAdvertisementPublisher publisher, ILogger logger)
     {
         _publisher = publisher;
+        _logger = logger;
         _publisher.StatusChanged += OnWinRtStatusChanged;
     }
 
@@ -44,9 +46,16 @@ internal sealed class WinRtAdvertisingPublisher : IAdvertisingPublisher
     /// <summary>Unsubscribes from the WinRT event (avoids leaks); the publisher itself has no Dispose.</summary>
     public void Dispose() => _publisher.StatusChanged -= OnWinRtStatusChanged;
 
-    /// <summary>Forwards the WinRT status change as platform independent status.</summary>
+    /// <summary>Forwards the WinRT status change as platform independent status; logs the error of an abort.</summary>
     private void OnWinRtStatusChanged(BluetoothLEAdvertisementPublisher sender, BluetoothLEAdvertisementPublisherStatusChangedEventArgs args)
-        => StatusChanged?.Invoke(Map(args.Status));
+    {
+        if (args.Status == BluetoothLEAdvertisementPublisherStatus.Aborted)
+        {
+            _logger.LogWarning("Advertisement publisher aborted, error {Error}", args.Error);
+        }
+
+        StatusChanged?.Invoke(Map(args.Status));
+    }
 
     /// <summary>Maps the WinRT status enum to the shared enum (same member names).</summary>
     private static AdvertisingPublisherStatus Map(BluetoothLEAdvertisementPublisherStatus status) => status switch
@@ -86,7 +95,7 @@ internal sealed class WinRtAdvertisingPublisherFactory : IAdvertisingPublisherFa
 
         // payload content only at trace level (it is sent very frequently)
         _logger.LogTrace("Created publisher, manufacturer 0x{Id:X4}, data {Data}", manufacturerId, Convert.ToHexString(rawData));
-        return new WinRtAdvertisingPublisher(publisher);
+        return new WinRtAdvertisingPublisher(publisher, _logger);
     }
 
     /// <inheritdoc />

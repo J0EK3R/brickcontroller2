@@ -33,6 +33,11 @@ internal sealed class FakeAdvertisingPublisher : IAdvertisingPublisher
     public void Start()
     {
         _factory.Log($"start#{Id}");
+        if (_factory.ThrowOnStart)
+        {
+            throw new InvalidOperationException("radio off");
+        }
+
         if (_factory.AbortOnStartWhenOthersRunning && _factory.RunningCount > 0)
         {
             Set(AdvertisingPublisherStatus.Aborted);
@@ -97,6 +102,7 @@ internal sealed class FakeAdvertisingPublisherFactory : IAdvertisingPublisherFac
     public int StartDelayMs { get; set; }
     public int StopDelayMs { get; set; }
     public bool NeverStart { get; set; }
+    public bool ThrowOnStart { get; set; }
     public bool AbortAllStarts { get; set; }
     public bool AbortOnStartWhenOthersRunning { get; set; }
     public bool InPlaceSupported { get; set; }

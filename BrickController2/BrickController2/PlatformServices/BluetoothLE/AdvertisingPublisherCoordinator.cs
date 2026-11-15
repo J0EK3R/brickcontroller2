@@ -40,7 +40,10 @@ namespace BrickController2.PlatformServices.BluetoothLE
         private readonly TimeSpan _minSwapInterval;
         private readonly ILogger? _logger;
 
-        /// <summary>Protects all mutable state below. Never held across an await.</summary>
+        /// <summary>
+        /// Protects all mutable state below (including _strategy, _interval, _power, _abortRetries,
+        /// _hasSwapped and _sinceLastSwap). Never held across an await.
+        /// </summary>
         private readonly object _gate = new();
 
         /// <summary>Cancels delays/waits when stopping or disposing.</summary>
@@ -54,6 +57,12 @@ namespace BrickController2.PlatformServices.BluetoothLE
 
         /// <summary>True between StartAsync and StopAsync/Dispose.</summary>
         private bool _active;
+
+        /// <summary>True once the first publisher is published; updates queued before that wait for it.</summary>
+        private bool _ready;
+
+        /// <summary>True after Dispose; the cancellation source is gone then.</summary>
+        private bool _disposed;
 
         /// <summary>Publisher that is (supposed to be) on air.</summary>
         private IAdvertisingPublisher? _current;
@@ -110,19 +119,30 @@ namespace BrickController2.PlatformServices.BluetoothLE
             CancellationToken token;
             lock (_gate)
             {
+                ObjectDisposedException.ThrowIf(_disposed, this);
                 _cts.Dispose();
                 _cts = new CancellationTokenSource();
                 token = _cts.Token;
                 _interval = interval;
                 _power = power;
                 _active = true;
+                _ready = false; // UpdateAsync only queues until the first publisher is published
                 _currentDead = false;
                 _abortRetries = 0;
                 _desired = new Payload(manufacturerId, rawData, ++_sequence, false);
             }
 
-            var publisher = await CreateAndStartAsync(manufacturerId, rawData, token).ConfigureAwait(false);
-            PublishCurrent(publisher);
+            try
+            {
+                var publisher = await CreateAndStartAsync(manufacturerId, rawData, token).ConfigureAwait(false);
+                PublishCurrent(publisher);
+            }
+            catch
+            {
+                // Start failed (e.g. radio off) or was cancelled: do not stay "active" with queued waiters
+                await StopAsync().ConfigureAwait(false);
+                throw;
+            }
         }
 
         /// <summary>
@@ -159,14 +179,25 @@ namespace BrickController2.PlatformServices.BluetoothLE
         public async Task StopAsync()
         {
             Task? worker;
+            TaskCompletionSource waiters;
             lock (_gate)
             {
                 _active = false;
+                _ready = false;
                 _pending = null;
                 _desired = null;
                 worker = _worker;
-                _cts.Cancel(); // wakes delays/waits of the worker so it ends quickly
+                if (!_disposed)
+                {
+                    _cts.Cancel(); // wakes delays/waits of the worker so it ends quickly
+                }
+
+                // nobody must hang on a payload that will never be applied (also covers "no worker yet")
+                waiters = _roundCompletion;
+                _roundCompletion = NewCompletion();
             }
+
+            waiters.TrySetResult();
 
             if (worker != null)
             {
@@ -198,13 +229,20 @@ namespace BrickController2.PlatformServices.BluetoothLE
             lock (_gate)
             {
                 _active = false;
+                _ready = false;
                 _pending = null;
                 _desired = null;
                 current = _current;
                 _current = null;
                 waiters = _roundCompletion;
                 _roundCompletion = NewCompletion();
-                _cts.Cancel();
+                if (!_disposed)
+                {
+                    _disposed = true;
+                    // Cancel first: a still running worker only sees an already cancelled token afterwards
+                    _cts.Cancel();
+                    _cts.Dispose();
+                }
             }
 
             waiters.TrySetResult();
@@ -213,10 +251,10 @@ namespace BrickController2.PlatformServices.BluetoothLE
 
         // ---------------------------------------------------------------- worker
 
-        /// <summary>Starts the worker loop if it is not running. Caller holds <see cref="_gate"/>.</summary>
+        /// <summary>Starts the worker loop if it is not running and the first publisher is on air. Caller holds <see cref="_gate"/>.</summary>
         private void EnsureWorkerLocked()
         {
-            if (_worker == null)
+            if (_worker == null && _ready)
             {
                 _worker = Task.Run(WorkerLoopAsync);
             }
@@ -279,6 +317,10 @@ namespace BrickController2.PlatformServices.BluetoothLE
             // rate limit: drop-free because newer payloads simply overwrite the pending slot meanwhile
             await WaitMinSwapIntervalAsync(payload.IsRetry, token).ConfigureAwait(false);
 
+            IAdvertisingPublisher? old;
+            bool dead;
+            AdvertisingUpdateStrategy strategy;
+
             // a newer payload may have arrived while waiting; use it instead (latest wins)
             lock (_gate)
             {
@@ -288,27 +330,23 @@ namespace BrickController2.PlatformServices.BluetoothLE
                     payload = _pending;
                     _pending = null;
                 }
-            }
 
-            _logger?.LogDebug("AdvUpdate #{Seq} swap start (strategy {Strategy}, {Len} bytes)", payload.Sequence, _strategy, payload.RawData.Length);
-
-            IAdvertisingPublisher? old;
-            bool dead;
-            lock (_gate)
-            {
                 old = _current;
                 dead = _currentDead;
+                strategy = _strategy;
             }
+
+            _logger?.LogDebug("AdvUpdate #{Seq} swap start (strategy {Strategy}, {Len} bytes)", payload.Sequence, strategy, payload.RawData.Length);
 
             if (old == null || dead)
             {
                 await ReplaceBrokenAsync(old, payload, token).ConfigureAwait(false);
             }
-            else if (_strategy == AdvertisingUpdateStrategy.InPlace && TryInPlace(old, payload))
+            else if (strategy == AdvertisingUpdateStrategy.InPlace && TryInPlace(old, payload))
             {
                 // payload swapped without touching the stack
             }
-            else if (_strategy != AdvertisingUpdateStrategy.StopStartAwaited)
+            else if (strategy != AdvertisingUpdateStrategy.StopStartAwaited)
             {
                 await MakeBeforeBreakAsync(old, payload, token).ConfigureAwait(false);
             }
@@ -317,8 +355,12 @@ namespace BrickController2.PlatformServices.BluetoothLE
                 await StopStartAsync(old, payload, token).ConfigureAwait(false);
             }
 
-            _hasSwapped = true;
-            _sinceLastSwap.Restart();
+            lock (_gate)
+            {
+                _hasSwapped = true;
+                _sinceLastSwap.Restart();
+            }
+
             _logger?.LogDebug("AdvUpdate #{Seq} applied (total {Ms} ms)", payload.Sequence, total.ElapsedMilliseconds);
         }
 
@@ -326,9 +368,12 @@ namespace BrickController2.PlatformServices.BluetoothLE
         private async Task WaitMinSwapIntervalAsync(bool isRetry, CancellationToken token)
         {
             var wait = TimeSpan.Zero;
-            if (_hasSwapped)
+            lock (_gate)
             {
-                wait = _minSwapInterval - _sinceLastSwap.Elapsed;
+                if (_hasSwapped)
+                {
+                    wait = _minSwapInterval - _sinceLastSwap.Elapsed;
+                }
             }
 
             if (isRetry && wait < AbortRetryDelay)
@@ -393,9 +438,21 @@ namespace BrickController2.PlatformServices.BluetoothLE
                 return;
             }
 
-            // The adapter does not allow two publishers (or the new one timed out): degrade permanently
-            _logger?.LogWarning("MakeBeforeBreak failed (status {Status}); falling back to StopStartAwaited", fresh?.Status);
-            _strategy = AdvertisingUpdateStrategy.StopStartAwaited;
+            if (fresh?.Status == AdvertisingPublisherStatus.Aborted)
+            {
+                // The adapter does not allow two publishers: degrade permanently
+                _logger?.LogWarning("Second publisher aborted; switching to StopStartAwaited permanently");
+                lock (_gate)
+                {
+                    _strategy = AdvertisingUpdateStrategy.StopStartAwaited;
+                }
+            }
+            else
+            {
+                // Start failed or only timed out (radio busy, stack hiccup): fall back for this swap only
+                _logger?.LogWarning("MakeBeforeBreak did not reach Started (status {Status}); using StopStartAwaited for this swap", fresh?.Status);
+            }
+
             StopAndDisposeQuietly(fresh);
             await StopStartAsync(old, payload, token).ConfigureAwait(false);
         }
@@ -444,19 +501,28 @@ namespace BrickController2.PlatformServices.BluetoothLE
         /// </summary>
         private async Task<IAdvertisingPublisher> CreateAndStartAsync(ushort manufacturerId, byte[] rawData, CancellationToken token)
         {
-            var publisher = _factory.Create(manufacturerId, rawData, _interval, _power);
+            AdvertisingInterval interval;
+            TxPowerLevel power;
+            lock (_gate)
+            {
+                interval = _interval;
+                power = _power;
+            }
+
+            var publisher = _factory.Create(manufacturerId, rawData, interval, power);
             publisher.StatusChanged += status => OnPublisherStatusChanged(publisher, status);
 
             var watch = Stopwatch.StartNew();
-            publisher.Start();
             AdvertisingPublisherStatus? reached;
             try
             {
+                publisher.Start(); // may throw (radio off, access denied)
                 reached = await WaitForStatusAsync(publisher, AdvertisingPublisherStatus.Started, token).ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch
             {
-                StopAndDisposeQuietly(publisher); // do not leave an orphaned publisher on air
+                // cancelled or Start() failed: do not leave an orphaned publisher (and its event subscription)
+                StopAndDisposeQuietly(publisher);
                 throw;
             }
 
@@ -464,7 +530,10 @@ namespace BrickController2.PlatformServices.BluetoothLE
 
             if (reached == AdvertisingPublisherStatus.Started)
             {
-                _abortRetries = 0;
+                lock (_gate)
+                {
+                    _abortRetries = 0;
+                }
             }
             else if (reached == null)
             {
@@ -486,6 +555,8 @@ namespace BrickController2.PlatformServices.BluetoothLE
                 {
                     _current = publisher;
                     _currentDead = publisher.Status == AdvertisingPublisherStatus.Aborted;
+                    _ready = true;
+                    EnsureWorkerLocked(); // serves updates that were queued while the first publisher started
                     return true;
                 }
             }
@@ -590,15 +661,19 @@ namespace BrickController2.PlatformServices.BluetoothLE
                 return;
             }
 
+            int retry;
             lock (_gate)
             {
+                // An abort of an old/failed-to-start publisher is handled by the strategy code. This includes an
+                // abort while the very first publisher is still starting (not yet current): no automatic retry
+                // then, recovery happens with the next payload.
                 if (!_active || !ReferenceEquals(publisher, _current))
                 {
-                    return; // an old/failed-to-start publisher; handled by the strategy code
+                    return;
                 }
 
                 _currentDead = true;
-                _logger?.LogError("Current advertising publisher aborted (retry {Retry}/{Max})", _abortRetries + 1, MaxAbortRetries);
+                retry = _abortRetries + 1;
 
                 if (_pending == null && _desired != null && _abortRetries < MaxAbortRetries)
                 {
@@ -607,6 +682,9 @@ namespace BrickController2.PlatformServices.BluetoothLE
                     EnsureWorkerLocked();
                 }
             }
+
+            // logged outside the lock
+            _logger?.LogError("Current advertising publisher aborted (retry {Retry}/{Max})", retry, MaxAbortRetries);
         }
 
         private static TaskCompletionSource NewCompletion()

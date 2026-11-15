@@ -254,4 +254,59 @@ public class AdvertisingPublisherCoordinatorTests
 
         condition().Should().BeTrue("condition should become true within {0} ms", timeoutMs);
     }
+
+    [Fact]
+    public async Task StartAsync_WhenPublisherStartThrows_DisposesPublisherAndRethrows()
+    {
+        using var sut = Create();
+        _factory.ThrowOnStart = true;
+
+        var act = () => sut.StartAsync(AdvertisingInterval.Min, TxPowerLevel.Max, 1, Data(1));
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _factory.Publishers.Should().HaveCount(1);
+        _factory.Publishers[0].Disposed.Should().BeTrue();
+        (await sut.UpdateAsync(1, Data(2)).WaitAsync(TimeSpan.FromSeconds(2)).ContinueWith(t => t.IsCompletedSuccessfully))
+            .Should().BeTrue("a failed start leaves the coordinator inactive and updates are no-ops");
+        _factory.Publishers.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhileFirstPublisherStarts_DoesNotLeakPublisher()
+    {
+        using var sut = Create(minSwapMs: 0);
+        _factory.StartDelayMs = 100;
+        _factory.StopDelayMs = 10;
+
+        var start = sut.StartAsync(AdvertisingInterval.Min, TxPowerLevel.Max, 1, Data(1));
+        await Task.Delay(30); // first publisher is created but not yet Started
+        var update = sut.UpdateAsync(1, Data(2));
+        await Task.WhenAll(start, update).WaitAsync(TimeSpan.FromSeconds(3));
+
+        // exactly one publisher stays on air and it carries the newer payload
+        _factory.Publishers.Count(p => p.Status == AdvertisingPublisherStatus.Started).Should().Be(1);
+        OnAirData().Should().Equal(Data(2));
+    }
+
+    [Fact]
+    public async Task MakeBeforeBreak_SecondPublisherOnlyTimesOut_DoesNotDowngradePermanently()
+    {
+        using var sut = Create(statusTimeoutMs: 100);
+        await sut.StartAsync(AdvertisingInterval.Min, TxPowerLevel.Max, 1, Data(0));
+
+        _factory.NeverStart = true; // second publisher only times out, it does not abort
+        _factory.StopDelayMs = 0;
+        await sut.UpdateAsync(1, Data(1));
+        _factory.NeverStart = false;
+        _factory.Log("recovered");
+
+        await sut.UpdateAsync(1, Data(2));
+
+        // after recovery the swap is make-before-break again: new started before the old one is stopped
+        var events = _factory.Events.SkipWhile(e => e != "recovered").ToList();
+        var lastId = _factory.Publishers.Last().Id;
+        var prevId = lastId - 1;
+        events.IndexOf($"started#{lastId}").Should().BeLessThan(events.IndexOf($"stop#{prevId}"));
+        OnAirData().Should().Equal(Data(2));
+    }
 }
