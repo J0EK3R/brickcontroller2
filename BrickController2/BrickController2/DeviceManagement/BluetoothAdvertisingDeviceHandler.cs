@@ -293,6 +293,10 @@ namespace BrickController2.DeviceManagement
             CancellationToken token = _outputTaskTokenSource.Token;
             var startupCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+            // Create the signal BEFORE the output task starts, so a NotifyDataChanged() raised while the platform
+            // advertiser is still starting is not lost.
+            _waitForNewData = new AutoResetEvent(false);
+
             _outputTask = Task.Run(async () =>
             {
                 try
@@ -302,7 +306,6 @@ namespace BrickController2.DeviceManagement
                     {
                         await _bleAdvertiserDevice.StartAdvertiseAsync(AdvertisingInterval, TxPowerLevel, _manufacturerId, currentData);
 
-                        _waitForNewData = new(false);
                         startupCompletionSource.TrySetResult(true);
 
                         await ProcessOutputsAsync(token);
