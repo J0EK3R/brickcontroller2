@@ -22,6 +22,7 @@
 		<PackageReference Include="Autofac" />
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
 		<PackageReference Include="Microsoft.Maui.Controls" />
+		<PackageReference Include="System.IO.Ports" />
 	</ItemGroup>
 
 	<ItemGroup>

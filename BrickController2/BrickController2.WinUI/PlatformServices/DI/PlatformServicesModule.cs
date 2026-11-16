@@ -4,12 +4,14 @@ using BrickController2.DeviceManagement.JieStar;
 using BrickController2.DeviceManagement.MouldKing;
 using BrickController2.DeviceManagement.PowerBox;
 using BrickController2.PlatformServices.BluetoothLE;
+using BrickController2.PlatformServices.BluetoothLE.UsbStick;
 using BrickController2.PlatformServices.InputDeviceService;
 using BrickController2.PlatformServices.Infrared;
 using BrickController2.PlatformServices.Localization;
 using BrickController2.PlatformServices.Permission;
 using BrickController2.PlatformServices.SharedFileStorage;
 using BrickController2.Windows.PlatformServices.BluetoothLE;
+using BrickController2.Windows.PlatformServices.BluetoothLE.UsbStick;
 using BrickController2.Windows.PlatformServices.DeviceManagement.CaDA;
 using BrickController2.Windows.PlatformServices.DeviceManagement.JieStar;
 using BrickController2.Windows.PlatformServices.DeviceManagement.MouldKing;
@@ -29,7 +31,13 @@ public class PlatformServicesModule : Module
     {
         builder.RegisterType<InfraredService>().As<IInfraredService>().SingleInstance();
         builder.RegisterType<GameControllerService>().As<IInputDeviceService>().As<IStartable>().SingleInstance(); // ensure it's started as soon as the container is built in Autofac
-        builder.RegisterType<BleService>().As<IBluetoothLEService>().SingleInstance();
+        // The Windows BLE service stays the implementation for scanning/GATT and the fallback advertiser;
+        // the decorator redirects advertiser devices to the USB advertising stick when one is available.
+        builder.RegisterType<BleService>().AsSelf().SingleInstance();
+        builder.RegisterType<RegistryStickLocator>().As<IStickLocator>().SingleInstance();
+        builder.RegisterType<UsbStickConnection>().AsSelf().SingleInstance();
+        builder.RegisterType<UsbAdvertiserService>().AsSelf().As<IUsbAdvertiserService>().SingleInstance();
+        builder.RegisterType<StickAwareBleService>().As<IBluetoothLEService>().SingleInstance();
         builder.RegisterType<LocalizationService>().As<ILocalizationService>().SingleInstance();
         if (AppInfo.Current.PackagingModel == AppPackagingModel.Unpackaged)
         {

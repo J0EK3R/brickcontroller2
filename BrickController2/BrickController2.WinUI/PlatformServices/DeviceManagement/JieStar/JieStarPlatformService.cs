@@ -14,10 +14,12 @@ public class JieStarPlatformService : IJieStarPlatformService
         rfPayload = new byte[PayloadLength];
         int payloadLength = CryptTools.GetRfPayload(JieStarProtocol.SeedArray, JieStarProtocol.HeaderArray, rawData, HeaderOffset, JieStarProtocol.CTXValue1, ctxValue2, rfPayload, PayloadOffset);
 
-        // fill rest of array
+        // fill rest of array. The filler value is derived from the position WITHOUT the Windows offset, so that
+        // the bytes equal those of the Android service once the offset is removed (USB stick advertiser, see
+        // StickPayloadNormalizer). The 3 offset bytes themselves are not part of the on-air payload of the stick.
         for (int index = payloadLength + PayloadOffset; index < PayloadLength; index++)
         {
-            rfPayload[index] = (byte)(index + 1);
+            rfPayload[index] = (byte)(index - PayloadOffset + 1);
         }
 
         return true;
