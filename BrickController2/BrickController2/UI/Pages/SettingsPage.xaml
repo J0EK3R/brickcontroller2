@@ -35,6 +35,9 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Theme -->
@@ -53,6 +56,12 @@
                     <Switch Grid.Column="1" Grid.Row="4" IsToggled="{Binding IsOrientationSensorEnabled}" HorizontalOptions="End" VerticalOptions="Center" IsVisible="{Binding IsOrientationSensorSupported}"/>
 
                     <BoxView Grid.ColumnSpan="2" Grid.Row="5" Style="{StaticResource DividerBoxViewStyle}" Margin="5,10,5,10"/>
+
+                    <!-- USB advertiser (Windows only): mode Auto/Off and status of the USB stick -->
+                    <Label Grid.Column="0" Grid.Row="6" Text="{extensions:Translate UsbAdvertiser}" FontSize="Large" VerticalOptions="Center" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
+                    <Button Grid.Column="1" Grid.Row="6" Text="{Binding CurrentUsbAdvertiserMode}" Command="{Binding SelectUsbAdvertiserModeCommand}" Style="{StaticResource PickerButtonStyle}" HorizontalOptions="FillAndExpand" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
+                    <Label Grid.ColumnSpan="2" Grid.Row="7" Text="{Binding UsbStickStatusText}" FontSize="Small" Margin="0,5,0,0" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
+                    <BoxView Grid.ColumnSpan="2" Grid.Row="8" Style="{StaticResource DividerBoxViewStyle}" Margin="5,10,5,10" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
                 </Grid>
 
             </Grid>

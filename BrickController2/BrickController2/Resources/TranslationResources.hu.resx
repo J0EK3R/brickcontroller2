@@ -945,4 +945,22 @@
   <data name="HelpForward" xml:space="preserve">
     <value>Következő oldal</value>
   </data>
+  <data name="UsbAdvertiser" xml:space="preserve">
+    <value>USB advertiser</value>
+  </data>
+  <data name="UsbStickDisabled" xml:space="preserve">
+    <value>Az USB-eszköz nincs használatban (Ki)</value>
+  </data>
+  <data name="UsbStickConnected" xml:space="preserve">
+    <value>USB-eszköz csatlakoztatva:</value>
+  </data>
+  <data name="UsbStickNotFound" xml:space="preserve">
+    <value>Az USB-eszköz nem található</value>
+  </data>
+  <data name="UsbStickLost" xml:space="preserve">
+    <value>Az USB-eszköz megszakadt, várakozás az újracsatlakoztatásra</value>
+  </data>
+  <data name="UsbStickIncompatible" xml:space="preserve">
+    <value>Az USB-eszköz firmware-verziója nem kompatibilis</value>
+  </data>
 </root>

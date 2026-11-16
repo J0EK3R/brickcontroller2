@@ -1672,6 +1672,60 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to USB advertiser.
+        /// </summary>
+        internal static string UsbAdvertiser {
+            get {
+                return ResourceManager.GetString("UsbAdvertiser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick not used (Off).
+        /// </summary>
+        internal static string UsbStickDisabled {
+            get {
+                return ResourceManager.GetString("UsbStickDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick connected:.
+        /// </summary>
+        internal static string UsbStickConnected {
+            get {
+                return ResourceManager.GetString("UsbStickConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick not found.
+        /// </summary>
+        internal static string UsbStickNotFound {
+            get {
+                return ResourceManager.GetString("UsbStickNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick lost, waiting for it to be plugged in again.
+        /// </summary>
+        internal static string UsbStickLost {
+            get {
+                return ResourceManager.GetString("UsbStickLost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick has an incompatible firmware version.
+        /// </summary>
+        internal static string UsbStickIncompatible {
+            get {
+                return ResourceManager.GetString("UsbStickIncompatible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Output level.
         /// </summary>
         internal static string OutputLevel {
