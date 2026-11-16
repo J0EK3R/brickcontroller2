@@ -330,18 +330,17 @@ public class UsbStickConnectionTests
     }
 
     [Fact]
-    public async Task Ping_GapBetweenFramesStaysBelow250ms_WithInterleavedUpdates()
+    public async Task Ping_GapBetweenFramesStaysBelow250ms_WhenSilentAfterUpdateJustPastTick()
     {
         using var h = new StickHarness();
         var lease = await h.ConnectAndLeaseAsync();
         await lease.StartAsync(32, 127, 0xFFF0, Payload);
 
-        // Updates at an irregular rhythm that lands just before PING ticks.
-        for (int i = 0; i < 40; i++)
-        {
-            await lease.UpdateAsync(0xFFF0, [(byte)i, 1, 2]);
-            await h.PumpAsync(TimeSpan.FromMilliseconds(i % 2 == 0 ? 90 : 190));
-        }
+        // One update shortly after a PING tick, then silence: only PING may keep the stick alive.
+        // With the old logic (tick = interval, skip if last send < interval) the gap reaches ~400 ms.
+        await h.PumpAsync(TimeSpan.FromMilliseconds(201));
+        await lease.UpdateAsync(0xFFF0, [1, 2, 3]);
+        await h.PumpAsync(TimeSpan.FromSeconds(1));
 
         var times = h.Stick!.Received.Select(r => r.Time).ToList();
         times.Zip(times.Skip(1), (a, b) => b - a).Should().OnlyContain(gap => gap <= TimeSpan.FromMilliseconds(250));
