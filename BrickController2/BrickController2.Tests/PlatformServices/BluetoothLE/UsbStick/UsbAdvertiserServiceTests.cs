@@ -43,6 +43,18 @@ public class UsbAdvertiserServiceTests
     }
 
     [Fact]
+    public void Mode_CorruptedPreference_FallsBackToAuto()
+    {
+        var prefs = new Mock<IPreferencesService>();
+        prefs.Setup(p => p.Get(It.IsAny<string>(), It.IsAny<UsbAdvertiserMode>(), It.IsAny<string?>()))
+            .Throws(new System.ArgumentException("Requested value 'garbage' was not found."));
+        using var h = new StickHarness(plugged: false);
+        var service = new UsbAdvertiserService(h.Connection, prefs.Object, NullLoggerFactory.Instance);
+
+        service.Mode.Should().Be(UsbAdvertiserMode.Auto);
+    }
+
+    [Fact]
     public void TryCreate_NoStick_ReturnsNullSoWindowsAdvertiserIsUsed()
     {
         var (service, h) = Create(plugged: false);

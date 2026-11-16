@@ -57,3 +57,9 @@ stick when it opens. Changing the setting affects devices created afterwards.
 * `IsBluetoothOnAsync` still reflects the Windows radio: with Bluetooth switched off in Windows BC2 asks to
   turn it on even if a stick is present.
 * Hardware tests are pending (the stick was not available during development).
+* Device creation is synchronous, so the stick probe waits at most 1 s. With two or more silent ESP32
+  boards plugged in (each probed with 3 HELLOs of 200 ms) the wait can time out; that device is then
+  created on the Windows advertiser although the probe may find the stick right afterwards. The same
+  happens for the first device right after a replug within the 10 s negative probe cache, or while an
+  idle stick is being woken up. Devices created later use the stick; open the settings page (forces a
+  probe) before starting the toys to avoid this.

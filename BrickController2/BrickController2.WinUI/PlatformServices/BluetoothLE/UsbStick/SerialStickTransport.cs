@@ -49,10 +49,20 @@ internal sealed class SerialStickTransport : IStickTransport
         // Must be set before Open(): never touch the control lines (see class comment).
         port.DtrEnable = false;
         port.RtsEnable = false;
-        port.Open();
 
-        // The ROM bootloader may print text after a reset; the parser skips garbage, but start clean.
-        port.DiscardInBuffer();
+        try
+        {
+            port.Open();
+
+            // The ROM bootloader may print text after a reset; the parser skips garbage, but start clean.
+            port.DiscardInBuffer();
+        }
+        catch
+        {
+            // Do not leave the half-open SerialPort to the finalizer (it would keep the COM port busy).
+            port.Dispose();
+            throw;
+        }
 
         _port = port;
         _readCancellation = new CancellationTokenSource();
@@ -106,10 +116,14 @@ internal sealed class SerialStickTransport : IStickTransport
             while (!token.IsCancellationRequested)
             {
                 int count = await port.BaseStream.ReadAsync(buffer, token).ConfigureAwait(false);
-                if (count > 0)
+                if (count == 0)
                 {
-                    DataReceived?.Invoke(buffer[..count]);
+                    // End of stream: the device is gone. Report it like a read error (no busy loop).
+                    ReportDisconnect();
+                    return;
                 }
+
+                DataReceived?.Invoke(buffer[..count]);
             }
         }
         catch (OperationCanceledException)
@@ -119,10 +133,16 @@ internal sealed class SerialStickTransport : IStickTransport
         catch (Exception)
         {
             // Unplugged device: ReadAsync throws IOException / UnauthorizedAccessException.
-            if (Interlocked.Exchange(ref _closing, 1) == 0)
-            {
-                Disconnected?.Invoke();
-            }
+            ReportDisconnect();
+        }
+    }
+
+    /// <summary>Raises <see cref="Disconnected"/> once, unless the port is being closed on purpose.</summary>
+    private void ReportDisconnect()
+    {
+        if (Interlocked.Exchange(ref _closing, 1) == 0)
+        {
+            Disconnected?.Invoke();
         }
     }
 }

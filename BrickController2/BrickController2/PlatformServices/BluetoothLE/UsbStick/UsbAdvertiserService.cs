@@ -36,7 +36,7 @@ public sealed class UsbAdvertiserService : IUsbAdvertiserService
     /// <inheritdoc />
     public UsbAdvertiserMode Mode
     {
-        get => _preferences.Get(ModePreferenceKey, UsbAdvertiserMode.Auto);
+        get => ReadMode();
         set
         {
             if (Mode == value)
@@ -47,6 +47,20 @@ public sealed class UsbAdvertiserService : IUsbAdvertiserService
             _preferences.Set(ModePreferenceKey, value);
             _logger.LogInformation("USB advertiser mode set to {Mode}", value);
             StatusChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>Reads the stored mode; a corrupted preference value falls back to Auto instead of throwing.</summary>
+    private UsbAdvertiserMode ReadMode()
+    {
+        try
+        {
+            return _preferences.Get(ModePreferenceKey, UsbAdvertiserMode.Auto);
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException or InvalidCastException)
+        {
+            _logger.LogWarning("Invalid USB advertiser mode preference, using Auto: {Message}", ex.Message);
+            return UsbAdvertiserMode.Auto;
         }
     }
 
@@ -89,7 +103,9 @@ public sealed class UsbAdvertiserService : IUsbAdvertiserService
 
     /// <summary>
     /// Runs the (usually instant) probe from the synchronous device creation. Runs on the thread pool and
-    /// waits at most one second so the UI cannot hang on a misbehaving port.
+    /// waits at most one second so the UI cannot hang on a misbehaving port. Known limitation: several
+    /// silent ESP32 candidates (3 x 200 ms HELLO each) can exceed that second; the device is then created on
+    /// the Windows advertiser although the probe may still find the stick afterwards (see doc/UsbAdvertiser.md).
     /// </summary>
     private bool ProbeBlocking()
     {

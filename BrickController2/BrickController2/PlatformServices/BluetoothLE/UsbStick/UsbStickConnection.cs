@@ -288,27 +288,37 @@ public sealed class UsbStickConnection : IDisposable
             return;
         }
 
-        if (Status.State == UsbStickState.Connected)
+        // No STOP_ALL here: every lease already stopped its own set before releasing itself, and a
+        // STOP_ALL written late could stop the set of a lease acquired in the meantime.
+        StartIdleTimerIfUnused();
+    }
+
+    /// <summary>
+    /// With no lease left: a connected stick closes after the idle delay, a lost stick (reconnect loop
+    /// cancelled) becomes NotFound. Safe to call at any time; does nothing while leases exist.
+    /// </summary>
+    private void StartIdleTimerIfUnused()
+    {
+        bool markNotFound = false;
+        lock (_stateLock)
         {
-            try
+            if (_leases.Count > 0 || _disposed)
             {
-                await RequestAckAsync(StickProtocol.TypeStopAll, []).ConfigureAwait(false);
-            }
-            catch (StickException ex)
-            {
-                _logger.LogDebug("USB stick: STOP_ALL failed: {Message}", ex.Message);
+                return;
             }
 
-            lock (_stateLock)
+            if (_state == UsbStickState.Connected)
             {
-                if (_leases.Count == 0 && _state == UsbStickState.Connected && !_disposed)
-                {
-                    _idleTimer?.Dispose();
-                    _idleTimer = _clock.CreateTimer(_ => _ = CloseIdleAsync(), null, IdleCloseDelay, Timeout.InfiniteTimeSpan);
-                }
+                _idleTimer?.Dispose();
+                _idleTimer = _clock.CreateTimer(_ => _ = CloseIdleAsync(), null, IdleCloseDelay, Timeout.InfiniteTimeSpan);
+            }
+            else if (_state == UsbStickState.Lost)
+            {
+                markNotFound = true;
             }
         }
-        else if (Status.State == UsbStickState.Lost)
+
+        if (markNotFound)
         {
             SetState(UsbStickState.NotFound);
         }
@@ -392,7 +402,11 @@ public sealed class UsbStickConnection : IDisposable
             // PING at min(200 ms, keepalive / 5): well below the keepalive / 4 required by the protocol.
             _pingInterval = TimeSpan.FromMilliseconds(Math.Max(20, Math.Min(MaxPingInterval.TotalMilliseconds, info.KeepAliveMs / 5.0)));
             _pingTimer?.Dispose();
-            _pingTimer = _clock.CreateTimer(_ => OnPingTimer(), null, _pingInterval, _pingInterval);
+            // The timer ticks at half the interval and a tick only skips when a frame went out within the last
+            // half interval. A frame sent just before a tick therefore delays the next frame by at most
+            // 2 x interval / 2 = interval (200 ms), staying below the 250 ms of protocol.md section 11.
+            TimeSpan tick = _pingInterval / 2;
+            _pingTimer = _clock.CreateTimer(_ => OnPingTimer(), null, tick, tick);
         }
 
         chosen.EventReceived += OnEvent;
@@ -463,7 +477,8 @@ public sealed class UsbStickConnection : IDisposable
                 interval = _pingInterval;
             }
 
-            if (session == null || session.TimeSinceLastSend < interval)
+            // Skip only if a frame was written within the last half interval (the timer ticks at that rate).
+            if (session == null || session.TimeSinceLastSend < interval / 2)
             {
                 return;
             }
@@ -613,6 +628,10 @@ public sealed class UsbStickConnection : IDisposable
                 if (connected)
                 {
                     await ResumeLeasesAsync().ConfigureAwait(false);
+
+                    // The last lease may have been released while the connect was already running:
+                    // then nobody needs the port, so let it close (and stop PING) after the idle delay.
+                    StartIdleTimerIfUnused();
                     return;
                 }
 

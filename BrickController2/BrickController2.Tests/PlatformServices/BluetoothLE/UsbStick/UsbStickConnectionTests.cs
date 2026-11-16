@@ -307,15 +307,16 @@ public class UsbStickConnectionTests
     }
 
     [Fact]
-    public async Task LastLeaseReleased_SendsStopAllAndClosesPortAfterIdleTime()
+    public async Task LastLeaseReleased_StopsSetAndClosesPortAfterIdleTime()
     {
         using var h = new StickHarness();
         var lease = await h.ConnectAndLeaseAsync();
         await lease.StartAsync(32, 127, 0xFFF0, Payload);
 
         lease.Dispose();
-        await h.PumpUntilAsync(() => h.Stick!.Requests(StickProtocol.TypeStopAll).Count == 1);
-        h.Stick!.Sets.Should().BeEmpty();
+        await h.PumpUntilAsync(() => h.Connection.LeaseCount == 0);
+        h.Stick!.Sets.Should().BeEmpty("the lease stops its own set");
+        h.Stick.Requests(StickProtocol.TypeStopAll).Should().BeEmpty("STOP_ALL is redundant and could race with a new lease");
         h.Connection.Status.State.Should().Be(UsbStickState.Connected);
 
         await h.PumpAsync(TimeSpan.FromSeconds(6));
@@ -326,6 +327,63 @@ public class UsbStickConnectionTests
         // the next device reopens the stick on demand
         (await h.RunAsync(h.Connection.TryConnectAsync())).Should().BeTrue();
         h.Connection.TryAcquireLease().Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Ping_GapBetweenFramesStaysBelow250ms_WithInterleavedUpdates()
+    {
+        using var h = new StickHarness();
+        var lease = await h.ConnectAndLeaseAsync();
+        await lease.StartAsync(32, 127, 0xFFF0, Payload);
+
+        // Updates at an irregular rhythm that lands just before PING ticks.
+        for (int i = 0; i < 40; i++)
+        {
+            await lease.UpdateAsync(0xFFF0, [(byte)i, 1, 2]);
+            await h.PumpAsync(TimeSpan.FromMilliseconds(i % 2 == 0 ? 90 : 190));
+        }
+
+        var times = h.Stick!.Received.Select(r => r.Time).ToList();
+        times.Zip(times.Skip(1), (a, b) => b - a).Should().OnlyContain(gap => gap <= TimeSpan.FromMilliseconds(250));
+    }
+
+    [Fact]
+    public async Task LastLeaseReleasedDuringReconnect_ClosesPortAndStopsPing()
+    {
+        using var h = new StickHarness();
+        var lease = await h.ConnectAndLeaseAsync();
+        await lease.StartAsync(32, 127, 0xFFF0, Payload);
+
+        // Pull the cable, then plug in again so the reconnect loop connects.
+        h.Locator.Ports.Clear();
+        h.Locator.Created.Last().Unplug();
+        await h.PumpUntilAsync(() => h.Connection.Status.State == UsbStickState.Lost);
+        var newStick = h.Plug("COM12");
+
+        // Release the lease at the moment the reconnect succeeds (cancel arrives too late for the loop).
+        await h.PumpUntilAsync(() => h.Connection.Status.State == UsbStickState.Connected);
+        lease.Dispose();
+        await h.PumpUntilAsync(() => h.Connection.LeaseCount == 0);
+
+        (await h.PumpUntilAsync(() => h.Connection.Status.State == UsbStickState.Idle)).Should().BeTrue();
+        h.Locator.Created.Last().IsOpen.Should().BeFalse();
+        int pings = newStick.Requests(StickProtocol.TypePing).Count;
+        await h.PumpAsync(TimeSpan.FromSeconds(1));
+        newStick.Requests(StickProtocol.TypePing).Count.Should().Be(pings, "PING stops with the closed port");
+    }
+
+    [Fact]
+    public async Task LastLeaseReleasedWhileLost_EndsAsNotFound()
+    {
+        using var h = new StickHarness();
+        var lease = await h.ConnectAndLeaseAsync();
+        h.Locator.Ports.Clear();
+        h.Locator.Created.Last().Unplug();
+        await h.PumpUntilAsync(() => h.Connection.Status.State == UsbStickState.Lost);
+
+        lease.Dispose();
+
+        (await h.PumpUntilAsync(() => h.Connection.Status.State == UsbStickState.NotFound)).Should().BeTrue();
     }
 
     [Fact]
