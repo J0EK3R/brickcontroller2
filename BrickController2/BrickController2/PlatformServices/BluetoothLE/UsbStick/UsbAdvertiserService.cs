@@ -73,8 +73,8 @@ public sealed class UsbAdvertiserService : IUsbAdvertiserService
         : _connection.TryConnectAsync(forceProbe: true);
 
     /// <summary>
-    /// True when the setting is Auto and a stick is connected or can be connected right now. Fully async
-    /// (never blocks the caller); a failed probe is cached by the connection for 10 s, so repeated calls
+    /// True when the setting is Auto and a stick is connected or can be connected right now. Fully async, the whole probe runs on the thread pool
+    /// (never blocks the UI thread); a failed probe is cached by the connection for 10 s, so repeated calls
     /// (e.g. from every page that checks Bluetooth) stay cheap.
     /// </summary>
     public async Task<bool> IsStickAvailableAsync()
@@ -86,7 +86,9 @@ public sealed class UsbAdvertiserService : IUsbAdvertiserService
 
         try
         {
-            return _connection.IsConnected || await _connection.TryConnectAsync().ConfigureAwait(false);
+            // TryConnectAsync starts with synchronous work (port enumeration, registry read, port open) before
+            // its first await; Task.Run moves all of it off the caller's (UI) thread so it can never block the UI.
+            return _connection.IsConnected || await Task.Run(() => _connection.TryConnectAsync()).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
