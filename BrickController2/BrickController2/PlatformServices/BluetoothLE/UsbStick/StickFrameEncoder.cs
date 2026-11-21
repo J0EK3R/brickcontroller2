@@ -77,4 +77,73 @@ internal static class StickFrameEncoder
 
     /// <summary>GET_STATUS payload: set_id (0xFF = device summary).</summary>
     public static byte[] GetStatusPayload(byte setId) => [setId];
+    // ---- protocol 1.1 (GATT) request payloads ----
+
+    /// <summary>SCAN_START payload: flags, interval, window (0.625 ms units), refresh_ms. 0 = firmware default.</summary>
+    public static byte[] ScanStartPayload(byte flags, ushort interval, ushort window, ushort refreshMs)
+    {
+        var payload = new byte[7];
+        payload[0] = flags;
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(1), interval);
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(3), window);
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(5), refreshMs);
+        return payload;
+    }
+
+    /// <summary>CONNECT payload: conn_id, addr[6], addr_type, flags, timeout_ms, itvl_min, itvl_max (0 = default).</summary>
+    public static byte[] ConnectPayload(byte connId, ReadOnlySpan<byte> address, byte addressType, byte flags, ushort timeoutMs, ushort intervalMin, ushort intervalMax)
+    {
+        var payload = new byte[15];
+        payload[0] = connId;
+        address.CopyTo(payload.AsSpan(1, StickAddress.Length));
+        payload[7] = addressType;
+        payload[8] = flags;
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(9), timeoutMs);
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(11), intervalMin);
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(13), intervalMax);
+        return payload;
+    }
+
+    /// <summary>Payload of the requests that only carry a conn_id (DISCONNECT, DISCOVER).</summary>
+    public static byte[] ConnIdPayload(byte connId) => [connId];
+
+    /// <summary>READ payload: conn_id, handle.</summary>
+    public static byte[] ReadPayload(byte connId, ushort handle)
+    {
+        var payload = new byte[3];
+        payload[0] = connId;
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(1), handle);
+        return payload;
+    }
+
+    /// <summary>WRITE / WRITE_CMD payload: conn_id, handle, data (1..max_value_len bytes).</summary>
+    public static byte[] WritePayload(byte connId, ushort handle, ReadOnlySpan<byte> data)
+    {
+        var payload = new byte[3 + data.Length];
+        payload[0] = connId;
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(1), handle);
+        data.CopyTo(payload.AsSpan(3));
+        return payload;
+    }
+
+    /// <summary>SUBSCRIBE payload: conn_id, cccd_handle, mode (0 off, 1 notify, 2 indicate).</summary>
+    public static byte[] SubscribePayload(byte connId, ushort cccdHandle, byte mode)
+    {
+        var payload = new byte[4];
+        payload[0] = connId;
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(1), cccdHandle);
+        payload[3] = mode;
+        return payload;
+    }
+
+    /// <summary>SET_FAILSAFE payload: conn_id, slot, handle, data (0..20 bytes, empty clears the slot).</summary>
+    public static byte[] SetFailsafePayload(byte connId, byte slot, ushort handle, ReadOnlySpan<byte> data)
+    {
+        var payload = new byte[4 + data.Length];
+        payload[0] = connId;
+        payload[1] = slot;
+        BinaryPrimitives.WriteUInt16LittleEndian(payload.AsSpan(2), handle);
+        data.CopyTo(payload.AsSpan(4));
+        return payload;
+    }
 }

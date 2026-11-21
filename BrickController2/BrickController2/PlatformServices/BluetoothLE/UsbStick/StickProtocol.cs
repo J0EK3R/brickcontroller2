@@ -18,6 +18,26 @@ internal enum StickStatus : byte
     PayloadTooLarge = 8,
     BleError = 9,
     NoResources = 10,
+
+    // ---- protocol 1.1 (GATT) ----
+
+    /// <summary>A procedure is already running on this connection, or the controller has no buffer.</summary>
+    Busy = 11,
+
+    /// <summary>The conn_id has no connected link.</summary>
+    NotConnected = 12,
+
+    /// <summary>A GATT procedure did not finish within 5 s (the stick also terminates the link).</summary>
+    Timeout = 13,
+
+    /// <summary>The peer answered with an ATT error (ACK extra = att_error).</summary>
+    AttError = 14,
+
+    /// <summary>The link was lost while the request was pending.</summary>
+    Disconnected = 15,
+
+    /// <summary>The feature is disabled in this firmware build.</summary>
+    NotSupported = 16,
 }
 
 /// <summary>
@@ -55,6 +75,35 @@ internal static class StickProtocol
     public const byte TypeSetStop = 0x12;
     public const byte TypeStopAll = 0x13;
     public const byte TypeGetStatus = 0x14;
+
+    // GATT requests (protocol 1.1, host -> stick)
+    public const byte TypeScanStart = 0x30;
+    public const byte TypeScanStop = 0x31;
+    public const byte TypeConnect = 0x32;
+    public const byte TypeDisconnect = 0x33;
+    public const byte TypeDiscover = 0x34;
+    public const byte TypeRead = 0x35;
+    public const byte TypeWrite = 0x36;
+    public const byte TypeWriteCmd = 0x37;
+    public const byte TypeSubscribe = 0x38;
+    public const byte TypeGetGattStatus = 0x39;
+    public const byte TypeSetFailsafe = 0x3A;
+
+    // GATT responses (stick -> host)
+    public const byte TypeReadRsp = 0xA0;
+    public const byte TypeGattStatusRsp = 0xA1;
+
+    // GATT events (stick -> host, SEQ 0)
+    public const byte TypeEvtNotify = 0xC0;
+    public const byte TypeEvtConnected = 0xC1;
+    public const byte TypeEvtDisconnected = 0xC2;
+    public const byte TypeEvtScanReport = 0xC3;
+    public const byte TypeEvtGattService = 0xC4;
+    public const byte TypeEvtGattChar = 0xC5;
+    public const byte TypeEvtDiscoverDone = 0xC6;
+    public const byte TypeEvtScanStopped = 0xC7;
+    public const byte TypeEvtDropped = 0xC8;
+
     public const byte TypeAck = 0x80;
     public const byte TypeHelloRsp = 0x81;
     public const byte TypePong = 0x82;
@@ -69,7 +118,43 @@ internal static class StickProtocol
     public const byte ProtoMajor = 1;
 
     /// <summary>Protocol minor version implemented by this host.</summary>
-    public const byte ProtoMinor = 0;
+    public const byte ProtoMinor = 1;
+
+    /// <summary>First protocol minor version that contains the GATT messages.</summary>
+    public const byte GattMinor = 1;
+
+    /// <summary>HELLO_RSP gatt_flags bit0: the stick can scan.</summary>
+    public const byte GattFlagScan = 0x01;
+
+    /// <summary>HELLO_RSP gatt_flags bit1: the stick can act as GATT central.</summary>
+    public const byte GattFlagCentral = 0x02;
+
+    /// <summary>HELLO_RSP gatt_flags bit2: the stick supports SET_FAILSAFE.</summary>
+    public const byte GattFlagFailsafe = 0x04;
+
+    /// <summary>conn_id / addr_type value "auto": the stick picks the address type from its scan cache.</summary>
+    public const byte AddressTypeAuto = 0xFF;
+
+    /// <summary>CONNECT flags bit0: background connect (no timeout, runs until connected or DISCONNECT).</summary>
+    public const byte ConnectFlagBackground = 0x01;
+
+    /// <summary>SCAN_START flags bit0: active scan (request scan responses).</summary>
+    public const byte ScanFlagActive = 0x01;
+
+    /// <summary>EVT_DISCONNECTED reason: connect attempt timed out on the stick.</summary>
+    public const byte ReasonConnectTimeout = 0xF0;
+
+    /// <summary>EVT_DISCONNECTED reason: cancelled by DISCONNECT while connecting.</summary>
+    public const byte ReasonCancelled = 0xF1;
+
+    /// <summary>EVT_DISCONNECTED reason: stopped by the stick's safety logic (timeout, HELLO, button).</summary>
+    public const byte ReasonSafetyStop = 0xF2;
+
+    /// <summary>EVT_DISCONNECTED reason: stick internal error (procedure timeout, discovery failure).</summary>
+    public const byte ReasonStickError = 0xF3;
+
+    /// <summary>MTU assumed when the stick reports none (ATT default).</summary>
+    public const int DefaultMtu = 23;
 
     /// <summary>Keep-alive timeout requested in HELLO (the stick answers with the effective value).</summary>
     public const ushort RequestedKeepAliveMs = 1000;
