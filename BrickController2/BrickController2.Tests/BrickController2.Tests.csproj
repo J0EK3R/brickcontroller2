@@ -17,5 +17,12 @@
     <ProjectReference Include="..\BrickController2.Tools\BrickController2.Tools.csproj" />
     <ProjectReference Include="..\BrickController2\BrickController2.csproj" />
   </ItemGroup>
-	
+
+  <ItemGroup>
+    <!-- The real Android and WinUI platform services are compiled into the tests (they only depend on shared code)
+         to verify that the USB stick payload normalisation turns the WinUI layout into the Android layout. -->
+    <Compile Include="..\BrickController2.Android\PlatformServices\DeviceManagement\**\*PlatformService.cs" Link="UsbStickLinked\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\BrickController2.WinUI\PlatformServices\DeviceManagement\**\*PlatformService.cs" Link="UsbStickLinked\WinUI\%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>
