@@ -10,7 +10,7 @@ namespace BrickController2.Tests.PlatformServices.BluetoothLE.UsbStick;
 /// </summary>
 internal sealed class StickHarness : IDisposable
 {
-    public StickHarness(bool plugged = true, int maxSets = 5)
+    public StickHarness(bool plugged = true, int maxSets = 5, int maxConns = 0)
     {
         Clock = new ManualTimeProvider();
         Locator = new FakeStickLocator();
@@ -18,7 +18,7 @@ internal sealed class StickHarness : IDisposable
 
         if (plugged)
         {
-            Stick = Plug("COM7", maxSets);
+            Stick = Plug("COM7", maxSets, maxConns);
         }
     }
 
@@ -32,9 +32,9 @@ internal sealed class StickHarness : IDisposable
     public FakeStickDevice? Stick { get; private set; }
 
     /// <summary>Plugs a new stick into the given port and returns it (replaces an older one).</summary>
-    public FakeStickDevice Plug(string port, int maxSets = 5)
+    public FakeStickDevice Plug(string port, int maxSets = 5, int maxConns = 0)
     {
-        var device = new FakeStickDevice(Clock, maxSets);
+        var device = new FakeStickDevice(Clock, maxSets, maxConns);
         Locator.Ports[port] = device;
         Stick = device;
         return device;
@@ -50,6 +50,22 @@ internal sealed class StickHarness : IDisposable
         }
 
         return Connection.TryAcquireLease() ?? throw new InvalidOperationException("No lease.");
+    }
+
+    /// <summary>Connects the stick and fails the test if it does not answer (no lease taken).</summary>
+    public async Task ConnectStickAsync()
+    {
+        if (!await RunAsync(Connection.TryConnectAsync(forceProbe: true)))
+        {
+            throw new InvalidOperationException("Stick did not connect.");
+        }
+    }
+
+    /// <summary>Connects the stick and reserves a GATT link (conn_id) on it.</summary>
+    public async Task<StickGattLink> ConnectAndAcquireLinkAsync()
+    {
+        await ConnectStickAsync();
+        return Connection.TryAcquireLink() ?? throw new InvalidOperationException("No GATT link available.");
     }
 
     /// <summary>

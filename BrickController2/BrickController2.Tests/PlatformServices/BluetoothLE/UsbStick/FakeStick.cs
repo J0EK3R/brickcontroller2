@@ -13,7 +13,7 @@ namespace BrickController2.Tests.PlatformServices.BluetoothLE.UsbStick;
 /// format (using the production parser/encoder, which are verified against the golden vectors), keeps
 /// a session, a set table and the keep-alive timeout, and records everything it receives.
 /// </summary>
-internal sealed class FakeStickDevice
+internal sealed partial class FakeStickDevice
 {
     private readonly ManualTimeProvider _clock;
     private readonly StickFrameParser _parser;
@@ -22,10 +22,11 @@ internal sealed class FakeStickDevice
     private TimeSpan _lastValidFrame;
     private int _keepAliveMs = 1000;
 
-    public FakeStickDevice(ManualTimeProvider clock, int maxSets = 5)
+    public FakeStickDevice(ManualTimeProvider clock, int maxSets = 5, int maxConns = 0)
     {
         _clock = clock;
         MaxSets = maxSets;
+        MaxConns = maxConns;
         _parser = new StickFrameParser(clock);
         _lastValidFrame = clock.Now;
 
@@ -79,6 +80,7 @@ internal sealed class FakeStickDevice
         {
             HasSession = false;
             Sets.Clear();
+            ResetGatt();
         }
     }
 
@@ -91,6 +93,7 @@ internal sealed class FakeStickDevice
         }
 
         SendEvent(StickProtocol.TypeEvtButton, []);
+        DropAllLinks(StickProtocol.ReasonSafetyStop);
     }
 
     /// <summary>Simulates a BLE controller error: the set vanishes and the stick reports it.</summary>
@@ -133,11 +136,15 @@ internal sealed class FakeStickDevice
     private void HandleRequest(StickFrame frame)
     {
         byte[]? response = null;
+        List<byte[]> followUps;
         lock (_lock)
         {
             response = frame.Type switch
             {
                 StickProtocol.TypeHello => HandleHello(frame),
+                _ when !HasSession && (IsGattRequest(frame.Type) || frame.Type is StickProtocol.TypePing or StickProtocol.TypeSetStart or StickProtocol.TypeSetUpdate or StickProtocol.TypeSetStop or StickProtocol.TypeStopAll)
+                    => Ack(frame, StickStatus.NoSession),
+                _ when IsGattRequest(frame.Type) => HandleGatt(frame),
                 _ when !HasSession && frame.Type is StickProtocol.TypePing or StickProtocol.TypeSetStart or StickProtocol.TypeSetUpdate or StickProtocol.TypeSetStop or StickProtocol.TypeStopAll
                     => Ack(frame, StickStatus.NoSession),
                 StickProtocol.TypePing => Respond(frame, StickProtocol.TypePong, [(byte)(Sets.Count > 0 ? 1 : 0), (byte)ActiveMask(), (byte)(ActiveMask() >> 8), 0, 0, 0, 0, 0, 0]),
@@ -153,11 +160,19 @@ internal sealed class FakeStickDevice
                 DropNextResponses--;
                 response = null;
             }
+
+            followUps = TakeFollowUps();
         }
 
         if (response != null)
         {
             Transport?.Receive(response);
+        }
+
+        // Events caused by the request go out after its response (protocol: ACK first, then events).
+        foreach (byte[] frameBytes in followUps)
+        {
+            Transport?.Receive(frameBytes);
         }
     }
 
@@ -169,12 +184,19 @@ internal sealed class FakeStickDevice
         }
 
         Sets.Clear();
+        ResetGatt();
         HasSession = true;
         _keepAliveMs = Math.Clamp(frame.Payload[2] | (frame.Payload[3] << 8), 200, 10000);
 
         var payload = new List<byte>();
         payload.AddRange(Magic);
-        payload.AddRange([0, 1, 0, 0, 1, 0, (byte)MaxSets, 24, 27, 32, 0, 0x00, 0x40, (byte)_keepAliveMs, (byte)(_keepAliveMs >> 8), 0x24, 0x0A, 0xBC, 0x11, 0x22, 0x33]);
+        payload.AddRange([0, 1, (byte)(GattEnabled ? 1 : 0), 0, 1, 0, (byte)MaxSets, 24, 27, 32, 0, 0x00, 0x40, (byte)_keepAliveMs, (byte)(_keepAliveMs >> 8), 0x24, 0x0A, 0xBC, 0x11, 0x22, 0x33]);
+        if (GattEnabled)
+        {
+            // protocol 1.1: gatt_flags (scan + central + failsafe), max_conns, max_value_len, max_scan_data, failsafe_slots
+            payload.AddRange([7, (byte)MaxConns, 56, 31, 4]);
+        }
+
         return Respond(frame, StickProtocol.TypeHelloRsp, payload.ToArray());
     }
 
@@ -227,7 +249,7 @@ internal sealed class FakeStickDevice
     private static byte[] Respond(StickFrame request, byte type, byte[] payload)
         => StickFrameEncoder.Encode(type, request.Seq, payload);
 
-    private void SendEvent(byte type, byte[] payload)
+    internal void SendEvent(byte type, byte[] payload)
         => Transport?.Receive(StickFrameEncoder.Encode(type, 0, payload));
 
     /// <summary>Firmware keep-alive: no valid frame for keepalive_ms ends the session and stops all sets.</summary>
@@ -241,6 +263,7 @@ internal sealed class FakeStickDevice
             {
                 HasSession = false;
                 Sets.Clear();
+                ResetGatt();
             }
         }
 

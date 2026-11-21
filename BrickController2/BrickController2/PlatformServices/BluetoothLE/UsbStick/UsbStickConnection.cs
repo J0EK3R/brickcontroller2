@@ -42,8 +42,10 @@ public sealed record UsbStickStatus(UsbStickState State, string? PortName, strin
 /// <item>finds the stick (HELLO probe of every candidate port) and keeps one session open,</item>
 /// <item>sends a PING every min(200 ms, keepalive/5) independent of data changes,</item>
 /// <item>hands out up to <c>max_sets</c> set leases (one per advertising device),</item>
-/// <item>detects unplug / keep-alive loss and reconnects with backoff, resuming all leased sets,</item>
-/// <item>closes the port again after a short idle time so other tools can use the stick.</item>
+/// <item>hands out up to <c>max_conns</c> GATT links (one per GATT device) and shares one BLE scan between scanners,</item>
+/// <item>detects unplug / keep-alive loss and reconnects with backoff, resuming all leased sets and the scan
+/// (GATT links are NOT resumed: they end and the device reconnect logic of BC2 takes over),</item>
+/// <item>closes the port again after a short idle time (no lease, link or scan) so other tools can use the stick.</item>
 /// </list>
 /// All timing uses a <see cref="TimeProvider"/> so tests run without sleeping.
 /// </summary>
@@ -71,6 +73,12 @@ public sealed class UsbStickConnection : IDisposable
     private readonly object _stateLock = new();
 
     private readonly List<StickSetLease> _leases = new();
+    private readonly Dictionary<byte, StickGattLink> _links = new();
+    private readonly List<StickScanner> _scanners = new();
+
+    // Serialises SCAN_START / SCAN_STOP so that scanners starting and stopping concurrently stay consistent.
+    private readonly SemaphoreSlim _scanGate = new(1, 1);
+    private bool _scanOnStick;
     private StickSession? _session;
     private StickInfo? _info;
     private string? _portName;
@@ -121,6 +129,47 @@ public sealed class UsbStickConnection : IDisposable
 
     /// <summary>True while a session is open.</summary>
     public bool IsConnected => Status.State == UsbStickState.Connected;
+
+    /// <summary>Number of GATT links currently reserved (connecting, connected or not yet released).</summary>
+    public int LinkCount
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _links.Count;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Number of GATT links the stick supports (<c>max_conns</c> of the last HELLO_RSP); 0 when unknown or without GATT.
+    /// </summary>
+    public int MaxLinks => Info is { SupportsGatt: true } info ? info.MaxConns : 0;
+
+    /// <summary>True while at least one scanner waits for scan reports.</summary>
+    public bool IsScanning
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _scanners.Count > 0;
+            }
+        }
+    }
+
+    /// <summary>True when the session is open, the stick supports GATT and a conn_id is free.</summary>
+    public bool HasFreeLink
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return CanUseGattLocked() && FindFreeConnIdLocked() != null;
+            }
+        }
+    }
 
     /// <summary>Number of currently leased advertising sets.</summary>
     public int LeaseCount
@@ -209,6 +258,77 @@ public sealed class UsbStickConnection : IDisposable
         }
     }
 
+    /// <summary>
+    /// Reserves the lowest free <c>conn_id</c> (below <c>max_conns</c> of the stick, whatever that is). Returns null when
+    /// no session is open, the stick has no GATT support or all connection slots are in use.
+    /// </summary>
+    internal StickGattLink? TryAcquireLink()
+    {
+        StickGattLink link;
+        lock (_stateLock)
+        {
+            if (!CanUseGattLocked())
+            {
+                return null;
+            }
+
+            byte? freeId = FindFreeConnIdLocked();
+            if (freeId == null)
+            {
+                _logger.LogInformation("USB stick: all {Count} GATT links are in use", _info!.MaxConns);
+                return null;
+            }
+
+            link = new StickGattLink(this, freeId.Value, _clock, _logger);
+            _links.Add(freeId.Value, link);
+
+            // New activity cancels a pending idle close.
+            _idleTimer?.Dispose();
+            _idleTimer = null;
+        }
+
+        RaiseStatusChanged();
+        return link;
+    }
+
+    /// <summary>Must be called with <see cref="_stateLock"/> held.</summary>
+    private bool CanUseGattLocked() => !_disposed && _state == UsbStickState.Connected && _info is { SupportsGatt: true };
+
+    /// <summary>Lowest conn_id below max_conns that is not reserved; must be called with <see cref="_stateLock"/> held.</summary>
+    private byte? FindFreeConnIdLocked()
+    {
+        for (int id = 0; id < _info!.MaxConns; id++)
+        {
+            if (!_links.ContainsKey((byte)id))
+            {
+                return (byte)id;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Called by a link on dispose: frees its conn_id (only if it still owns it: after a stick loss a new
+    /// link may already use the same id) and lets the idle timer run when nothing else is in use.
+    /// </summary>
+    internal Task ReleaseLinkAsync(StickGattLink link)
+    {
+        bool removed;
+        lock (_stateLock)
+        {
+            removed = _links.TryGetValue(link.ConnId, out var owner) && ReferenceEquals(owner, link) && _links.Remove(link.ConnId);
+        }
+
+        if (removed)
+        {
+            RaiseStatusChanged();
+            StartIdleTimerIfUnused();
+        }
+
+        return Task.CompletedTask;
+    }
+
     public void Dispose()
     {
         StickSession? session;
@@ -261,6 +381,34 @@ public sealed class UsbStickConnection : IDisposable
     }
 
     /// <summary>
+    /// Sends a request exactly once (no retransmission, needed for GATT writes) and waits for any response
+    /// frame (ACK or a specific response such as READ_RSP). Any NO_SESSION answer marks the stick as lost.
+    /// </summary>
+    /// <param name="type">Request type.</param>
+    /// <param name="payload">Request payload.</param>
+    /// <param name="timeout">How long to wait for the response.</param>
+    /// <param name="cancellationToken">Stops waiting (the request stays on the wire).</param>
+    /// <exception cref="StickTransportException">There is no open session or it failed.</exception>
+    /// <exception cref="StickTimeoutException">No response within the timeout.</exception>
+    internal async Task<StickFrame> RequestOnceAsync(byte type, byte[] payload, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        StickSession session;
+        lock (_stateLock)
+        {
+            session = _session ?? throw new StickTransportException("USB stick is not connected.");
+        }
+
+        StickFrame frame = await session.RequestAsync(type, payload, timeout, 1, cancellationToken).ConfigureAwait(false);
+        if (StickResponseDecoder.TryDecodeAck(frame, out var ack) && ack.Status == StickStatus.NoSession)
+        {
+            await MarkLostAsync("stick reported NO_SESSION").ConfigureAwait(false);
+            throw new StickTransportException("The stick ended the session.");
+        }
+
+        return frame;
+    }
+
+    /// <summary>
     /// Called by a lease on dispose: frees the set id; after the last lease all sets are stopped and
     /// the port is closed after an idle delay.
     /// </summary>
@@ -274,7 +422,7 @@ public sealed class UsbStickConnection : IDisposable
                 return;
             }
 
-            wasLast = _leases.Count == 0;
+            wasLast = _leases.Count == 0 && _scanners.Count == 0;
 
             if (wasLast)
             {
@@ -294,7 +442,13 @@ public sealed class UsbStickConnection : IDisposable
     }
 
     /// <summary>
-    /// With no lease left: a connected stick closes after the idle delay, a lost stick (reconnect loop
+    /// Everything that needs the port to stay open: advertising leases, GATT links and scanners.
+    /// Must be called with <see cref="_stateLock"/> held.
+    /// </summary>
+    private int UserCountLocked() => _leases.Count + _links.Count + _scanners.Count;
+
+    /// <summary>
+    /// With no lease, link or scan left: a connected stick closes after the idle delay, a lost stick (reconnect loop
     /// cancelled) becomes NotFound. Safe to call at any time; does nothing while leases exist.
     /// </summary>
     private void StartIdleTimerIfUnused()
@@ -302,7 +456,7 @@ public sealed class UsbStickConnection : IDisposable
         bool markNotFound = false;
         lock (_stateLock)
         {
-            if (_leases.Count > 0 || _disposed)
+            if (UserCountLocked() > 0 || _disposed)
             {
                 return;
             }
@@ -515,11 +669,21 @@ public sealed class UsbStickConnection : IDisposable
     /// <summary>Handles asynchronous events of the stick (runs on the transport thread, never blocks).</summary>
     private void OnEvent(StickFrame frame)
     {
-        if (!StickResponseDecoder.TryDecodeEvent(frame, out var stickEvent))
+        if (StickResponseDecoder.TryDecodeEvent(frame, out var stickEvent))
         {
-            return; // unknown events are ignored (protocol.md section 5)
+            OnLegacyEvent(stickEvent);
+        }
+        else if (StickResponseDecoder.TryDecodeGatt(frame, out var message))
+        {
+            RouteGattMessage(message);
         }
 
+        // anything else is ignored (protocol.md section 5)
+    }
+
+    /// <summary>Events of protocol 1.0 (set stopped, button, keep-alive timeout).</summary>
+    private void OnLegacyEvent(StickEvent stickEvent)
+    {
         StickSetLease[] leases;
         lock (_stateLock)
         {
@@ -536,6 +700,7 @@ public sealed class UsbStickConnection : IDisposable
                     lease.OnStoppedByUser();
                 }
 
+                OnStickStoppedGatt();
                 break;
 
             case StickEventKind.SetStopped:
@@ -549,6 +714,96 @@ public sealed class UsbStickConnection : IDisposable
         }
     }
 
+    /// <summary>
+    /// Routes a protocol 1.1 event to the link (by conn_id) or the scanners. Runs on the transport thread:
+    /// only cheap, non blocking work happens here (notifications go into the link's channel).
+    /// </summary>
+    private void RouteGattMessage(StickGattMessage message)
+    {
+        switch (message)
+        {
+            case StickScanReport report:
+                StickScanner[] scanners;
+                lock (_stateLock)
+                {
+                    scanners = _scanners.ToArray();
+                }
+
+                foreach (var scanner in scanners)
+                {
+                    scanner.OnReport(report);
+                }
+
+                break;
+
+            case StickScanStopped stopped:
+                _logger.LogWarning("USB stick: scan stopped by the stick (reason {Reason}, rc {Rc})", stopped.Reason, stopped.Rc);
+                lock (_stateLock)
+                {
+                    _scanOnStick = false;
+                }
+
+                break;
+
+            case StickDropped dropped:
+                _logger.LogDebug("USB stick dropped {Count} frames of kind {Kind}", dropped.Count, dropped.Kind);
+                break;
+
+            case StickNotify n:
+                FindLink(n.ConnId)?.OnMessage(message);
+                break;
+
+            case StickConnected c:
+                FindLink(c.ConnId)?.OnMessage(message);
+                break;
+
+            case StickDisconnected d:
+                FindLink(d.ConnId)?.OnMessage(message);
+                break;
+
+            case StickGattServiceEvent sv:
+                FindLink(sv.ConnId)?.OnMessage(message);
+                break;
+
+            case StickGattCharEvent ch:
+                FindLink(ch.ConnId)?.OnMessage(message);
+                break;
+
+            case StickDiscoverDone dd:
+                FindLink(dd.ConnId)?.OnMessage(message);
+                break;
+
+            // READ_RSP / GATT_STATUS_RSP are responses (matched by SEQ); a late one is of no interest.
+        }
+    }
+
+    private StickGattLink? FindLink(byte connId)
+    {
+        lock (_stateLock)
+        {
+            return _links.GetValueOrDefault(connId);
+        }
+    }
+
+    /// <summary>
+    /// The stick ended all GATT activity on its own while the session stays (button): links are dead, the scan is
+    /// off, and nothing is restarted automatically (the user pressed the safety button on purpose).
+    /// </summary>
+    private void OnStickStoppedGatt()
+    {
+        StickGattLink[] links;
+        lock (_stateLock)
+        {
+            links = _links.Values.ToArray();
+            _scanOnStick = false;
+        }
+
+        foreach (var link in links)
+        {
+            link.OnStickLost();
+        }
+    }
+
     private void OnSessionClosed(string reason) => _ = MarkLostAsync(reason);
 
     /// <summary>
@@ -559,6 +814,7 @@ public sealed class UsbStickConnection : IDisposable
     {
         StickSession? session;
         bool reconnect;
+        StickGattLink[] links;
         lock (_stateLock)
         {
             if (_state != UsbStickState.Connected || _disposed)
@@ -572,12 +828,25 @@ public sealed class UsbStickConnection : IDisposable
             _pingTimer = null;
             _idleTimer?.Dispose();
             _idleTimer = null;
-            reconnect = _leases.Count > 0;
+
+            // GATT links are not resumed: the stick drops all of them. They are forgotten here (their conn_ids
+            // become free for the new session) and told that the link is gone.
+            links = _links.Values.ToArray();
+            _links.Clear();
+            _scanOnStick = false;
+
+            // Advertising sets and the scan are stateless and resume after the reconnect.
+            reconnect = _leases.Count > 0 || _scanners.Count > 0;
         }
 
         _logger.LogWarning("USB stick lost: {Reason}", reason);
         session?.Dispose();
         SetState(reconnect ? UsbStickState.Lost : UsbStickState.NotFound);
+
+        foreach (var link in links)
+        {
+            link.OnStickLost();
+        }
 
         if (reconnect)
         {
@@ -610,7 +879,7 @@ public sealed class UsbStickConnection : IDisposable
 
         try
         {
-            while (!token.IsCancellationRequested && LeaseCount > 0)
+            while (!token.IsCancellationRequested && ResumableUserCount > 0)
             {
                 await Task.Delay(delay, _clock, token).ConfigureAwait(false);
 
@@ -644,19 +913,162 @@ public sealed class UsbStickConnection : IDisposable
         }
     }
 
-    /// <summary>Starts every leased set again after a reconnect (HELLO stopped all sets).</summary>
+    /// <summary>Users that survive a stick loss: advertising leases and scanners (links do not).</summary>
+    private int ResumableUserCount
+    {
+        get
+        {
+            lock (_stateLock)
+            {
+                return _leases.Count + _scanners.Count;
+            }
+        }
+    }
+
+    /// <summary>Starts every leased set and the scan again after a reconnect (HELLO stopped everything).</summary>
     private async Task ResumeLeasesAsync()
     {
         StickSetLease[] leases;
+        bool resumeScan;
         lock (_stateLock)
         {
             leases = _leases.ToArray();
+            resumeScan = _scanners.Count > 0;
         }
 
         foreach (var lease in leases)
         {
             await lease.ResumeAsync().ConfigureAwait(false);
         }
+
+        if (resumeScan)
+        {
+            await EnsureScanRunningAsync().ConfigureAwait(false);
+        }
+    }
+
+    // ------------------------------------------------------------------ scanning (shared by all scanners)
+
+    /// <summary>
+    /// Registers a scanner and starts the stick's scan if it is not running yet. All scanners share one scan
+    /// and receive every report. Returns false (and registers nothing) when the stick cannot scan.
+    /// </summary>
+    internal async Task<bool> StartScanAsync(StickScanner scanner)
+    {
+        lock (_stateLock)
+        {
+            if (_disposed || _state != UsbStickState.Connected || _info is not { SupportsScan: true })
+            {
+                return false;
+            }
+
+            _scanners.Add(scanner);
+            _idleTimer?.Dispose();
+            _idleTimer = null;
+        }
+
+        RaiseStatusChanged();
+        if (await EnsureScanRunningAsync().ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        await StopScanAsync(scanner).ConfigureAwait(false);
+        return false;
+    }
+
+    /// <summary>Sends SCAN_START (active scan, firmware defaults for timing) unless the scan already runs.</summary>
+    private async Task<bool> EnsureScanRunningAsync()
+    {
+        await _scanGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            lock (_stateLock)
+            {
+                if (_scanOnStick)
+                {
+                    return true;
+                }
+            }
+
+            // Active scan always: DUPLO / WeDo 2.0 only show their name in the scan response.
+            byte[] payload = StickFrameEncoder.ScanStartPayload(StickProtocol.ScanFlagActive, 0, 0, 0);
+            StickFrame frame = await RequestOnceAsync(StickProtocol.TypeScanStart, payload, StickGattLink.ImmediateAckTimeout, CancellationToken.None).ConfigureAwait(false);
+            if (!StickResponseDecoder.TryDecodeAck(frame, out var ack) || ack.Status is not (StickStatus.Ok or StickStatus.AlreadyRunning))
+            {
+                _logger.LogWarning("USB stick: SCAN_START refused");
+                return false;
+            }
+
+            lock (_stateLock)
+            {
+                _scanOnStick = true;
+            }
+
+            return true;
+        }
+        catch (StickException ex)
+        {
+            _logger.LogWarning("USB stick: SCAN_START failed: {Message}", ex.Message);
+            return false;
+        }
+        finally
+        {
+            _scanGate.Release();
+        }
+    }
+
+    /// <summary>Unregisters a scanner; the last one stops the stick's scan.</summary>
+    internal async Task StopScanAsync(StickScanner scanner)
+    {
+        bool stopScan;
+        lock (_stateLock)
+        {
+            if (!_scanners.Remove(scanner))
+            {
+                return;
+            }
+
+            stopScan = _scanners.Count == 0 && _scanOnStick;
+            if (_scanners.Count == 0 && _state == UsbStickState.Lost)
+            {
+                _reconnectCts?.Cancel();
+            }
+        }
+
+        RaiseStatusChanged();
+
+        if (stopScan)
+        {
+            await _scanGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                bool stillUnused;
+                lock (_stateLock)
+                {
+                    stillUnused = _scanners.Count == 0 && _scanOnStick;
+                    if (stillUnused)
+                    {
+                        _scanOnStick = false;
+                    }
+                }
+
+                if (stillUnused)
+                {
+                    await RequestOnceAsync(StickProtocol.TypeScanStop, [], StickGattLink.ImmediateAckTimeout, CancellationToken.None).ConfigureAwait(false);
+                }
+            }
+            catch (StickException)
+            {
+                // The stick is gone or silent: its safety logic stops the scan anyway.
+            }
+            finally
+            {
+                _scanGate.Release();
+            }
+        }
+
+        StartIdleTimerIfUnused();
     }
 
     /// <summary>Closes the port after the idle delay if nobody leased a set in the meantime.</summary>
@@ -665,7 +1077,7 @@ public sealed class UsbStickConnection : IDisposable
         StickSession? session;
         lock (_stateLock)
         {
-            if (_leases.Count > 0 || _state != UsbStickState.Connected || _disposed)
+            if (UserCountLocked() > 0 || _state != UsbStickState.Connected || _disposed)
             {
                 return Task.CompletedTask;
             }
@@ -696,6 +1108,9 @@ public sealed class UsbStickConnection : IDisposable
             _state = state;
         }
 
-        StatusChanged?.Invoke(this, EventArgs.Empty);
+        RaiseStatusChanged();
     }
+
+    /// <summary>Notifies the UI that state or activity (links, scan) changed.</summary>
+    private void RaiseStatusChanged() => StatusChanged?.Invoke(this, EventArgs.Empty);
 }
