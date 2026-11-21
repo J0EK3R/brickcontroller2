@@ -37,6 +37,8 @@ public class PlatformServicesModule : Module
         builder.RegisterType<RegistryStickLocator>().As<IStickLocator>().SingleInstance();
         builder.RegisterType<UsbStickConnection>().AsSelf().SingleInstance();
         builder.RegisterType<UsbAdvertiserService>().AsSelf().As<IUsbAdvertiserService>().SingleInstance();
+        builder.RegisterType<StickAddressBook>().AsSelf().SingleInstance();
+        builder.RegisterType<UsbGattService>().AsSelf().As<IUsbGattService>().SingleInstance();
         builder.RegisterType<StickAwareBleService>().As<IBluetoothLEService>().SingleInstance();
         builder.RegisterType<LocalizationService>().As<ILocalizationService>().SingleInstance();
         if (AppInfo.Current.PackagingModel == AppPackagingModel.Unpackaged)

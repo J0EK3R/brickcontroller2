@@ -121,6 +121,9 @@ internal sealed partial class FakeStickDevice
     /// <summary>Flags byte of the last SCAN_START (bit0 = active).</summary>
     public byte? LastScanFlags { get; private set; }
 
+    /// <summary>When true SCAN_START is answered with NO_RESOURCES (controller busy).</summary>
+    public bool RefuseScan { get; set; }
+
     /// <summary>Number of SCAN_START requests received.</summary>
     public int ScanStartCount { get; private set; }
 
@@ -344,6 +347,11 @@ internal sealed partial class FakeStickDevice
     private byte[] HandleScanStart(StickFrame frame)
     {
         ScanStartCount++;
+        if (RefuseScan)
+        {
+            return Ack(frame, StickStatus.NoResources);
+        }
+
         if (Scanning)
         {
             return Ack(frame, StickStatus.AlreadyRunning);
