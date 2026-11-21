@@ -204,18 +204,26 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
     {
         if (characteristic is not StickGattCharacteristic { CanNotify: true } chr)
         {
+            // Diagnostic: shows whether the stick reported no notify property or no CCCD handle for the characteristic.
+            _logger.LogInformation(
+                "USB stick: {Address} cannot enable notifications (characteristic {Characteristic})",
+                _address,
+                characteristic is StickGattCharacteristic c
+                    ? $"{c.Uuid} value 0x{c.ValueHandle:X4} cccd 0x{c.CccdHandle:X4} props 0x{c.Properties:X2}"
+                    : "unknown");
             return false;
         }
 
         // Registered before SUBSCRIBE so a notification that follows the ACK immediately is not discarded.
         _subscribedHandles[chr.ValueHandle] = true;
-        bool ok = await RunAsync(link => link.SubscribeAsync(chr.CccdHandle, 1, token), token).ConfigureAwait(false) is { IsOk: true };
-        if (!ok)
+        GattResult result = await RunAsync(link => link.SubscribeAsync(chr.CccdHandle, 1, token), token).ConfigureAwait(false);
+        if (!result.IsOk)
         {
+            _logger.LogInformation("USB stick: enabling notifications on {Address} failed ({Status})", _address, result.Status);
             _subscribedHandles.TryRemove(chr.ValueHandle, out _);
         }
 
-        return ok;
+        return result.IsOk;
     }
 
     /// <inheritdoc />
