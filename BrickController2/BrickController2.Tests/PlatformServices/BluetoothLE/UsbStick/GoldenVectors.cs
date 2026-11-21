@@ -50,6 +50,38 @@ internal static class GoldenVectors
     public const string GattStatusRsp = "B2 0B A1 11 01 02 00 05 00 03 00 04 00 18 EA";
     public const string AckAttError = "B2 05 80 0E 36 0E 03 F2 A9";
 
+    // ---- Golden vectors of the firmware (workspace/ble-usb-advertiser docs/protocol.md section 18, branch task/009-usb-stick-gatt-fw),
+    // verified byte-exact by the firmware's own C and Python tests. ----
+    public const string FwScanStartDefaults = "B2 09 30 08 01 00 00 00 00 00 00 8E 96";
+    public const string FwScanStartDup = "B2 09 30 09 03 A0 00 50 00 E8 03 D5 8C";
+    public const string FwScanStop = "B2 02 31 0A 12 35";
+    public const string FwConnectBackground = "B2 11 32 0B 00 90 84 2B 01 02 03 FF 01 00 00 00 00 00 00 D0 EB";
+    public const string FwConnectRandom = "B2 11 32 0C 02 AA BB CC DD EE FF 01 00 88 13 0C 00 18 00 D3 7C";
+    public const string FwDisconnect = "B2 03 33 0D 01 94 E5";
+    public const string FwDiscover = "B2 03 34 0E 01 57 35";
+    public const string FwRead = "B2 05 35 0F 01 12 00 67 E4";
+    public const string FwWriteDuplo = "B2 0D 36 10 00 10 00 08 00 81 00 11 51 00 00 03 58";
+    public const string FwWriteCmdMkDiy = "B2 17 37 11 01 2A 00 CC AA BB 01 80 80 80 80 80 80 80 80 80 80 80 80 66 33 83 62";
+    public const string FwWriteCmd56 = "B2 3D 37 12 01 2A 00 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F 30 31 32 33 34 35 36 37 23 F4";
+    public const string FwSubscribe = "B2 06 38 13 00 11 00 01 DF FC";
+    public const string FwGetGattStatus = "B2 02 39 14 44 4F";
+    public const string FwSetFailsafe = "B2 18 3A 15 01 00 2A 00 CC AA BB 01 80 80 80 80 80 80 80 80 80 80 80 80 66 33 34 1C";
+    public const string FwSetFailsafeClear = "B2 06 3A 16 01 01 2A 00 13 98";
+    public const string FwReadRsp = "B2 08 A0 0F 01 12 00 00 A1 B2 22 91";
+    public const string FwGattStatusRsp = "B2 13 A1 14 01 04 00 03 00 02 00 00 00 00 80 02 00 00 40 01 00 56 F8";
+    public const string FwAckAttError = "B2 05 80 10 36 0E 03 0F 10";
+    public const string FwAckConnect = "B2 04 80 0B 32 00 34 D6";
+    public const string FwEvtNotify = "B2 0B C0 00 00 11 00 00 04 00 45 00 01 AC 42";
+    public const string FwEvtConnected = "B2 0D C1 00 00 40 00 18 00 90 84 2B 01 02 03 B0 12";
+    public const string FwEvtDisconnected = "B2 05 C2 00 00 01 08 13 88";
+    public const string FwEvtScanReport = "B2 19 C3 00 90 84 2B 01 02 03 01 C4 01 0D 02 01 06 09 FF 97 03 00 41 20 00 00 00 B9 69";
+    public const string FwEvtServiceLego = "B2 18 C4 00 00 10 00 20 00 10 23 D1 BC EA 5F 78 23 16 DE EF 12 12 23 16 00 00 FB 31";
+    public const string FwEvtService180A = "B2 0A C4 00 00 30 00 3F 00 02 0A 18 21 CF";
+    public const string FwEvtChar = "B2 19 C5 00 00 11 00 12 00 1E 10 23 D1 BC EA 5F 78 23 16 DE EF 12 12 24 16 00 00 8F 18";
+    public const string FwEvtDiscoverDone = "B2 06 C6 00 00 00 02 05 FD 55";
+    public const string FwEvtScanStopped = "B2 05 C7 00 01 0F 00 73 3E";
+    public const string FwEvtDropped = "B2 05 C8 00 02 2A 00 C9 FB";
+
     /// <summary>Converts "B2 06 ..." into bytes.</summary>
     public static byte[] Bytes(string hex) => Convert.FromHexString(hex.Replace(" ", string.Empty));
 }

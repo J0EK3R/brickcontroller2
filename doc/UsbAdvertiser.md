@@ -4,7 +4,9 @@ BrickController2 for Windows can send its Bluetooth advertising data (MouldKing,
 through a small USB stick (M5Stack AtomS3U, firmware in the `ble-usb-advertiser` project) instead of the
 Windows Bluetooth stack. The stick is found automatically; without a stick, or with the setting Off,
 BC2 uses the normal Windows advertiser. Android and iOS are not affected. Scanning and GATT devices
-(LEGO, BuWizz, ...) still use the Windows Bluetooth stack.
+(LEGO, BuWizz, ...) can also go through the stick with protocol 1.1 firmware, see
+[UsbStickGatt.md](UsbStickGatt.md); with an old firmware or the setting `WindowsOnly` they use the Windows
+Bluetooth stack.
 
 ## How it works
 
@@ -55,10 +57,12 @@ stick when it opens. Changing the setting affects devices created afterwards.
 ## Known limitations
 
 * With the Windows radio off and a stick present (setting Auto) BC2 no longer asks to enable Bluetooth
-  (`StickAwareBleService.IsBluetoothOnAsync` = radio on OR stick reachable, decided by
-  `BluetoothAvailability`). Only advertising devices work in this state: BLE scanning completes without
-  results (advertising scan still runs) and GATT devices fail to connect with the normal connection error.
-  With the setting Off the behaviour is unchanged (prompt when the radio is off).
+  (`GattAwareBleService.IsBluetoothOnAsync` = radio on OR stick reachable, decided by
+  `BluetoothAvailability`). With a stick with protocol 1.1 firmware and the GATT setting `Auto`, scanning and GATT
+  devices work through the stick in this state ([UsbStickGatt.md](UsbStickGatt.md)). With a 1.0 firmware (or
+  the GATT setting `WindowsOnly`) only advertising devices work: BLE scanning completes without results
+  (advertising scan still runs) and GATT devices fail to connect with the normal connection error.
+  With the advertiser setting Off (and GATT not `Auto`) the behaviour is unchanged (prompt when the radio is off).
 * Hardware tests are pending (the stick was not available during development).
 * Device creation is synchronous, so the stick probe waits at most 1 s. With two or more silent ESP32
   boards plugged in (each probed with 3 HELLOs of 200 ms) the wait can time out; that device is then
