@@ -36,12 +36,14 @@ An axis action maps the position of a stick or trigger to the output.
 | Normal | The output follows the position of the axis. |
 | Train | The output follows the axis when speeding up, but does not drop when the axis is moved back. Slowing down is gradual, and the output stays at zero until the axis returns to the center. |
 | Accelerator | Holding the axis at its end position changes the output by the acceleration step of the device, so the output keeps its value when the axis is released. |
+| Sequence | Starts the selected sequence when the axis reaches half of its range, after the dead zone and active zone are applied, and stops it when the axis falls back below that point. The axis does not drive the output directly. |
 
 Related options:
 
 - **Joy dead zone**: the center range of the axis that is ignored.
 - **Joy active zone**: the range of the axis that is used. The full output is reached at the end of this range.
 - **Joy characteristic**: the response curve of the axis. Linear is proportional, exponential gives finer control near the center and logarithmic gives more output near the center.
+- **Invert**: for the Sequence type it selects the direction. Add two actions on the same axis, one inverted, to run a different sequence when turning left and when turning right. Use a different channel than the steering channel, because stopping a sequence sets its channel output to zero. Joy type and joy characteristic do not apply to it.
 
 ## Channel types
 
@@ -54,6 +56,13 @@ The channel type defines what the output means for the connected motor. It is av
 | Stepper | The output moves a stepper motor in steps. Set the **Stepper angle** (0 to 180 degrees) to define the step size. |
 
 For servo and stepper channel types, a channel setup button appears next to the channel type.
+
+## Buttons and toolbar
+
+- ![](../../../icons/done_outline.svg) **Apply changes** - save the action and close the page.
+- ![](../../../icons/contactless.svg) **Show the device details** - open the selected device.
+- ![](../../../icons/settings.svg) **Setup the channel** / **Edit the sequence** - open the channel setup or edit the selected sequence.
+- ![](../../../icons/cached.svg) **Reload macros** - reload the macros of the device.
 
 ## See also
 

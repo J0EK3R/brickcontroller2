@@ -1,5 +1,6 @@
 using BrickController2.Helpers;
 using Markdig;
+using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using System;
@@ -12,6 +13,7 @@ namespace BrickController2.UI.Services.Help;
 internal static class HelpHtmlRenderer
 {
     private static readonly Regex Heading = new(@"^#\s+(?<title>.+)$", RegexOptions.Multiline | RegexOptions.Compiled);
+    private static readonly Regex SvgStyle = new(@"<style\b[^>]*>.*?</style>", RegexOptions.Singleline | RegexOptions.Compiled);
 
     private const string Style = """
         :root { color-scheme: light dark; }
@@ -24,10 +26,11 @@ internal static class HelpHtmlRenderer
         code { padding: 0 3px; }
         a { color: #4a90e2; }
         img { max-width: 100%; height: auto; }
+        img.icon { height: 1.2em; width: 1.2em; vertical-align: text-bottom; }
         """;
 
     private const string LightStyle = ":root { color-scheme: light; } body { background: #ffffff; color: #000000; }";
-    private const string DarkStyle = ":root { color-scheme: dark; } body { background: #121212; color: #e0e0e0; }";
+    private const string DarkStyle = ":root { color-scheme: dark; } body { background: #121212; color: #e0e0e0; } img.icon { filter: invert(1); }";
 
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UsePipeTables()
@@ -52,6 +55,14 @@ internal static class HelpHtmlRenderer
 
         foreach (var image in document.Descendants<LinkInline>().Where(l => l.IsImage && l.Url is not null).ToList())
         {
+            var iconDataUri = GetIconDataUri(image.Url!);
+            if (iconDataUri is not null)
+            {
+                image.Url = iconDataUri;
+                image.GetAttributes().AddClass("icon");
+                continue;
+            }
+
             var dataUri = GetImageDataUri(image.Url!);
             if (dataUri is not null)
             {
@@ -73,7 +84,32 @@ internal static class HelpHtmlRenderer
     }
 
     /// <summary>
-    /// Converts a link to an app image (.../UI/Images/{name}.png) to a data URI of the embedded resource.
+    /// Converts a link to a help icon (.../icons/{name}.svg) to a data URI of the embedded resource.
+    /// </summary>
+    internal static string? GetIconDataUri(string url)
+    {
+        const string IconsFolder = "icons/";
+        var normalized = url.Replace('\\', '/');
+        var index = normalized.LastIndexOf(IconsFolder, StringComparison.OrdinalIgnoreCase);
+        if (index < 0 || !normalized.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        using var stream = typeof(ResourceHelper).Assembly.GetManifestResourceStream("doc/icons/" + normalized[(index + IconsFolder.Length)..]);
+        if (stream is null)
+        {
+            return null;
+        }
+
+        // the embedded style adapts the icon to the browser color scheme, the app theme is applied by the help page style instead
+        using var reader = new StreamReader(stream);
+        var svg = SvgStyle.Replace(reader.ReadToEnd(), string.Empty);
+        return "data:image/svg+xml;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg));
+    }
+
+    /// <summary>
+    /// Converts a link to an app image
     /// Only app images are supported, images in other locations are not embedded and stay unchanged.
     /// </summary>
     private static string? GetImageDataUri(string url)

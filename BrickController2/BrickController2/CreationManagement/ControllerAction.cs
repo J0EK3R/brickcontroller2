@@ -145,6 +145,11 @@ namespace BrickController2.CreationManagement
         [JsonIgnore]
         internal MacroScope MacroScope => HasChannel ? MacroScope.Channel : MacroScope.Device;
 
+        [Ignore]
+        [JsonIgnore]
+        internal bool UsesSequence => ButtonType == ControllerButtonType.Sequence || AxisType == ControllerAxisType.Sequence;
+
+
         public override string ToString()
         {
             return HasChannel
@@ -153,7 +158,7 @@ namespace BrickController2.CreationManagement
         }
 
         public bool IsValidMacro(MacroDescriptor macro) => ButtonType == ControllerButtonType.Macro
-            && macro.IsMatch(MacroId, MacroScope, MacroChoice);
+            && macro.IsMatch(MacroId, MacroScope, MacroChoice, HasChannel ? Channel : null);
 
         /// <summary>
         /// Determines whether this action is bound to the given device output.

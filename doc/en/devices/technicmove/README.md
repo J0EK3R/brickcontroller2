@@ -17,7 +17,7 @@ The device exposes 9 channels:
 ## Getting started
 
 1. Power on the hub.
-2. Open the device list and press **Scan for new devices**. Found devices are added to the list.
+2. Open the device list and press ![](../../../icons/search.svg) **Scan for new devices**. Found devices are added to the list.
 3. Use the device in a creation: assign its channels to controller actions.
 
 ## PLAYVM mode
@@ -29,5 +29,6 @@ When enabled, port C works as a steering servo. Virtual channel **AB** drives po
 
 ## See also
 
+- [Channel setup](../../pages/channel-setup/README.md) (for port C in PLAYVM mode)
 - [Devices](../../pages/device-list/README.md)
 - [Controller action](../../pages/controller-action/README.md)

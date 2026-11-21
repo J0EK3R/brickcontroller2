@@ -67,7 +67,7 @@ namespace BrickController2.CreationManagement
                 {
                     foreach (var controllerAction in controllerEvent.ControllerActions)
                     {
-                        if (controllerAction.ButtonType == ControllerButtonType.Sequence)
+                        if (controllerAction.UsesSequence)
                         {
                             var sequenceName = controllerAction.SequenceName;
                             sequenceNames.Add(sequenceName);
@@ -79,9 +79,9 @@ namespace BrickController2.CreationManagement
             return sequenceNames;
         }
 
-        public IReadOnlyCollection<(string DeviceId, string MacroId, DeviceManagement.Macros.MacroScope Scope, DeviceManagement.Macros.MacroChoiceValue Choice)> GetMacroReferences()
+        public IReadOnlyCollection<(string DeviceId, string MacroId, DeviceManagement.Macros.MacroScope Scope, DeviceManagement.Macros.MacroChoiceValue Choice, int? Channel)> GetMacroReferences()
         {
-            var macroReferences = new HashSet<(string, string, DeviceManagement.Macros.MacroScope, DeviceManagement.Macros.MacroChoiceValue)>();
+            var macroReferences = new HashSet<(string, string, DeviceManagement.Macros.MacroScope, DeviceManagement.Macros.MacroChoiceValue, int?)>();
 
             foreach (var profile in ControllerProfiles)
             {
@@ -91,7 +91,8 @@ namespace BrickController2.CreationManagement
                     {
                         if (controllerAction.ButtonType == ControllerButtonType.Macro)
                         {
-                            macroReferences.Add((controllerAction.DeviceId, controllerAction.MacroId, controllerAction.MacroScope, controllerAction.MacroChoice));
+                            int? channel = controllerAction.HasChannel ? controllerAction.Channel : null;
+                            macroReferences.Add((controllerAction.DeviceId, controllerAction.MacroId, controllerAction.MacroScope, controllerAction.MacroChoice, channel));
                         }
                     }
                 }

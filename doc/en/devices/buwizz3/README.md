@@ -16,7 +16,7 @@ The device exposes 6 channels:
 ## Getting started
 
 1. Power on the BuWizz 3.
-2. Open the device list and press **Scan for new devices**. Found devices are added to the list.
+2. Open the device list and press ![](../../../icons/search.svg) **Scan for new devices**. Found devices are added to the list.
 3. Use the device in a creation: assign its channels to controller actions.
 
 ## Current limit
@@ -39,5 +39,6 @@ Shelf mode disconnects the battery from the device, for example for storage or t
 
 ## See also
 
+- [Channel setup](../../pages/channel-setup/README.md)
 - [Devices](../../pages/device-list/README.md)
 - [Controller action](../../pages/controller-action/README.md)

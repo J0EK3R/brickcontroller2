@@ -43,10 +43,65 @@ public class HelpHtmlRendererTests
             .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}_template{Path.DirectorySeparatorChar}"))
             .SelectMany(file => image.Matches(File.ReadAllText(file)).Select(m => (file, url: m.Groups["url"].Value)))
             .Where(item => !File.Exists(Path.GetFullPath(item.url, Path.GetDirectoryName(item.file)!))
-                || !item.url.Replace('\\', '/').Contains("UI/Images/", StringComparison.OrdinalIgnoreCase))
+                || !IsAllowedImage(item.url))
             .Select(item => $"{Path.GetRelativePath(docRoot, item.file)}: {item.url}")
             .ToList();
 
+        invalid.Should().BeEmpty();
+    }
+
+    private static bool IsAllowedImage(string url)
+    {
+        var normalized = url.Replace('\\', '/');
+        return normalized.Contains("UI/Images/", StringComparison.OrdinalIgnoreCase)
+            || (normalized.Contains("icons/", StringComparison.OrdinalIgnoreCase) && normalized.EndsWith(".svg", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Render_InlinesIconAsSvgDataUri()
+    {
+        var html = HelpHtmlRenderer.Render("![](../../../icons/settings.svg)", Topic, Mock.Of<IHelpService>());
+
+        html.Should().Contain("data:image/svg+xml;base64,").And.Contain("class=\"icon\"");
+    }
+
+    [Fact]
+    public void Render_KeepsUnknownIconUnchanged()
+    {
+        var html = HelpHtmlRenderer.Render("![](../../../icons/unknown_icon.svg)", Topic, Mock.Of<IHelpService>());
+
+        html.Should().Contain("icons/unknown_icon.svg").And.NotContain("data:image");
+    }
+
+    [Fact]
+    public void GetIconDataUri_IconWithStyle_StyleRemoved()
+    {
+        // Act
+        var dataUri = HelpHtmlRenderer.GetIconDataUri("../../../icons/settings.svg");
+
+        // Assert
+        dataUri.Should().StartWith("data:image/svg+xml;base64,");
+        var svg = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(dataUri!["data:image/svg+xml;base64,".Length..]));
+        svg.Should().Contain("<path").And.NotContain("<style").And.NotContain("prefers-color-scheme");
+    }
+
+    [Fact]
+    public void Icons_ContainDarkModeStyle()
+    {
+        // Arrange
+        var docRoot = FindDocRoot();
+        if (docRoot is null)
+        {
+            return; // repository sources are not available (e.g. packaged test run)
+        }
+
+        // Act
+        var invalid = Directory.EnumerateFiles(Path.Combine(docRoot, "icons"), "*.svg")
+            .Where(file => !File.ReadAllText(file).Contains("prefers-color-scheme:dark"))
+            .Select(Path.GetFileName)
+            .ToList();
+
+        // Assert
         invalid.Should().BeEmpty();
     }
 

@@ -71,11 +71,34 @@ namespace BrickController2.BusinessLogic
                     _sequences.Remove((deviceId, channel));
 
                     var device = _deviceManager.GetDeviceById(deviceId);
-                    device?.SetOutput(channel, 0);
+                    device?.SetOutputs(new[] { (channel, 0f) });
                 }
                 else
                 {
                     _sequences[(deviceId, channel)] = (sequence, invert, null);
+                }
+            }
+        }
+
+        public void StartSequence(string deviceId, int channel, bool invert, Sequence sequence)
+        {
+            lock (_sequences)
+            {
+                if (!_sequences.ContainsKey((deviceId, channel)))
+                {
+                    _sequences[(deviceId, channel)] = (sequence, invert, null);
+                }
+            }
+        }
+
+        public void StopSequence(string deviceId, int channel)
+        {
+            lock (_sequences)
+            {
+                if (_sequences.Remove((deviceId, channel)))
+                {
+                    var device = _deviceManager.GetDeviceById(deviceId);
+                    device?.SetOutputs(new[] { (channel, 0f) });
                 }
             }
         }
@@ -177,7 +200,7 @@ namespace BrickController2.BusinessLogic
 
             var device = _deviceManager.GetDeviceById(deviceId);
             value = invert ? -1 * value : value;
-            device?.SetOutput(channel, value);
+            device?.SetOutputs(new[] { (channel, value) });
 
             return true;
         }
