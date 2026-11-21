@@ -225,6 +225,9 @@ public sealed class UsbStickConnection : IDisposable
 
                 if (_state == UsbStickState.Connected)
                 {
+                    // The caller is about to lease a set / reserve a link: restart the idle delay so that a close
+                    // that is due right now cannot slip in between this return and the reservation.
+                    RestartIdleTimerLocked();
                     return true;
                 }
 
@@ -488,8 +491,7 @@ public sealed class UsbStickConnection : IDisposable
 
             if (_state == UsbStickState.Connected)
             {
-                _idleTimer?.Dispose();
-                _idleTimer = _clock.CreateTimer(_ => _ = CloseIdleAsync(), null, IdleCloseDelay, Timeout.InfiniteTimeSpan);
+                RestartIdleTimerLocked();
             }
             else if (_state == UsbStickState.Lost)
             {
@@ -501,6 +503,20 @@ public sealed class UsbStickConnection : IDisposable
         {
             SetState(UsbStickState.NotFound);
         }
+    }
+
+    /// <summary>
+    /// (Re)starts the idle close timer if nothing uses the port. Must be called with <see cref="_stateLock"/> held.
+    /// </summary>
+    private void RestartIdleTimerLocked()
+    {
+        if (UserCountLocked() > 0 || _disposed)
+        {
+            return;
+        }
+
+        _idleTimer?.Dispose();
+        _idleTimer = _clock.CreateTimer(_ => _ = CloseIdleAsync(), null, IdleCloseDelay, Timeout.InfiniteTimeSpan);
     }
 
     // ------------------------------------------------------------------ connect
@@ -1109,29 +1125,45 @@ public sealed class UsbStickConnection : IDisposable
         StartIdleTimerIfUnused();
     }
 
-    /// <summary>Closes the port after the idle delay if nobody leased a set in the meantime.</summary>
-    private Task CloseIdleAsync()
+    /// <summary>
+    /// Closes the port after the idle delay if nobody leased a set, opened a link or scanned in the meantime.
+    /// The decision, the state change to Idle, stopping the PING timer and detaching the session happen in ONE
+    /// critical section: there is no moment in which the state is still Connected while the session is gone (a link
+    /// reserved in that window would have lived without PING and killed all GATT links by the stick's keep-alive).
+    /// The port itself is closed under the connect gate so that a following connect never opens a port that is
+    /// still being closed.
+    /// </summary>
+    private async Task CloseIdleAsync()
     {
-        StickSession? session;
-        lock (_stateLock)
+        await _connectGate.WaitAsync().ConfigureAwait(false);
+        try
         {
-            if (UserCountLocked() > 0 || _state != UsbStickState.Connected || _disposed)
+            StickSession? session;
+            lock (_stateLock)
             {
-                return Task.CompletedTask;
+                if (UserCountLocked() > 0 || _state != UsbStickState.Connected || _disposed)
+                {
+                    return;                            // new activity cancelled the close: PING keeps running
+                }
+
+                session = _session;
+                _session = null;
+                _state = UsbStickState.Idle;           // same critical section: nobody can reserve a link on a dead session
+                _pingTimer?.Dispose();
+                _pingTimer = null;
+                _idleTimer?.Dispose();
+                _idleTimer = null;
             }
 
-            session = _session;
-            _session = null;
-            _pingTimer?.Dispose();
-            _pingTimer = null;
-            _idleTimer?.Dispose();
-            _idleTimer = null;
+            _logger.LogInformation("USB stick idle: closing the port");
+            UsbStickTrace.Write("idle: closing the port (no lease, link or scan)");
+            session?.Dispose();
+            RaiseStatusChanged();
         }
-
-        _logger.LogInformation("USB stick idle: closing the port");
-        session?.Dispose();
-        SetState(UsbStickState.Idle);
-        return Task.CompletedTask;
+        finally
+        {
+            _connectGate.Release();
+        }
     }
 
     private void SetState(UsbStickState state)

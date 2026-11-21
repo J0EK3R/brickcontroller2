@@ -401,6 +401,48 @@ public class UsbStickConnectionTests
         h.Connection.Status.State.Should().Be(UsbStickState.Connected);
     }
 
+    /// <summary>
+    /// Regression (real log, Windows): the idle close became due between TryConnectAsync (which saw a connected stick)
+    /// and the link reservation of the new device connect. PING stopped, the stick timed out after 1 s and killed
+    /// everything. Now the connect restarts the idle delay, so the close cannot slip in and PING never pauses.
+    /// </summary>
+    [Fact]
+    public async Task ConnectDuringIdleDelay_KeepsPortOpenAndPingRunning()
+    {
+        using var h = new StickHarness(maxConns: 4);
+        var lease = await h.ConnectAndLeaseAsync();
+        lease.Dispose();
+        await h.PumpUntilAsync(() => h.Connection.LeaseCount == 0);
+        await h.PumpAsync(TimeSpan.FromSeconds(4.9));          // the idle close is due in ~100 ms
+
+        (await h.RunAsync(h.Connection.TryConnectAsync())).Should().BeTrue();
+        await h.PumpAsync(TimeSpan.FromMilliseconds(300));     // the old idle deadline passes here
+        var link = h.Connection.TryAcquireLink();
+        int pingsBefore = h.Stick!.Requests(StickProtocol.TypePing).Count;
+        await h.PumpAsync(TimeSpan.FromSeconds(6));            // far beyond the stick's 1 s keep-alive and the idle delay
+
+        link.Should().NotBeNull("the port must still be usable for the new device");
+        h.Connection.Status.State.Should().Be(UsbStickState.Connected);
+        h.Stick.Requests(StickProtocol.TypePing).Count.Should().BeGreaterThan(pingsBefore + 20, "PING (200 ms) must continue while the link exists");
+        h.Stick.Requests(StickProtocol.TypeHello).Count.Should().Be(1, "no reconnect happened");
+    }
+
+    /// <summary>The idle close and the state change to Idle are atomic: after the close no PING is sent on the closed port.</summary>
+    [Fact]
+    public async Task IdleClose_StopsPingTogetherWithPortClose()
+    {
+        using var h = new StickHarness();
+        var lease = await h.ConnectAndLeaseAsync();
+        lease.Dispose();
+        (await h.PumpUntilAsync(() => h.Connection.Status.State == UsbStickState.Idle)).Should().BeTrue();
+        int pings = h.Stick!.Requests(StickProtocol.TypePing).Count;
+
+        await h.PumpAsync(TimeSpan.FromSeconds(2));
+
+        h.Stick.Requests(StickProtocol.TypePing).Count.Should().Be(pings);
+        h.Connection.TryAcquireLink().Should().BeNull("an idle (closed) stick cannot hand out links without reconnecting");
+    }
+
     [Fact]
     public async Task ParallelStartsAndUpdates_ProduceOnlyValidFramesAndFinalDataPerSet()
     {
