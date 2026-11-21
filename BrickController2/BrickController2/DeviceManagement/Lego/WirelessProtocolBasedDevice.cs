@@ -1,5 +1,6 @@
 ﻿using BrickController2.CreationManagement;
 using BrickController2.DeviceManagement.IO;
+using BrickController2.Diagnostics;
 using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Collections.Generic;
@@ -109,11 +110,16 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
         var service = services?.FirstOrDefault(s => s.Uuid == ServiceUuid);
         Characteristic = service?.Characteristics?.FirstOrDefault(c => c.Uuid == CharacteristicUuid);
 
+        UsbStickTrace.Write($"{GetType().Name} {Address}: ValidateServices expects service {ServiceUuid} / characteristic {CharacteristicUuid}; services={(services == null ? "null" : string.Join(", ", services.Select(s => s.Uuid)))}; service found={service != null}; characteristic found={Characteristic != null}");
+
         if (Characteristic is not null)
         {
-            return await _bleDevice!.EnableNotificationAsync(Characteristic, token);
+            bool enabled = await _bleDevice!.EnableNotificationAsync(Characteristic, token);
+            UsbStickTrace.Write($"{GetType().Name} {Address}: EnableNotificationAsync = {enabled}");
+            return enabled;
         }
 
+        UsbStickTrace.Write($"{GetType().Name} {Address}: ValidateServices FALSE: {(services == null ? "no services (connect/discovery failed earlier)" : service == null ? "LEGO service not found" : "LEGO characteristic not found in the service")}");
         return false;
     }
 
@@ -133,6 +139,7 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
 
     protected override void OnCharacteristicChanged(Guid characteristicGuid, byte[] data)
     {
+        UsbStickTrace.Write($"{GetType().Name} {Address}: notification {characteristicGuid} {UsbStickTrace.Hex(data, 16)}{(data.Length >= 3 ? $" (message type 0x{data[2]:X2})" : string.Empty)}");
         if (data.Length < 4 || characteristicGuid != Characteristic?.Uuid)
         {
             return;
@@ -299,6 +306,7 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
     {
         try
         {
+            UsbStickTrace.Write($"{GetType().Name} {Address}: requesting hub properties (FW, HW, voltage)");
             // Request firmware version
             await RequestHubPropertyAsync(HUB_PROPERTY_FW_VERSION, token);
             // Request hardware version
@@ -315,11 +323,16 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
         {
             // Request firmware version
             await Task.Delay(TimeSpan.FromMilliseconds(100), token);
-            await _bleDevice!.WriteAsync(Characteristic!, [0x05, 0x00, 0x01, propertyId, 0x05], token);
+            bool written = await _bleDevice!.WriteAsync(Characteristic!, [0x05, 0x00, 0x01, propertyId, 0x05], token);
             var data = await _bleDevice!.ReadAsync(Characteristic!, token);
+            UsbStickTrace.Write($"{GetType().Name} {Address}: hub property 0x{propertyId:X2}: write={written}, read={UsbStickTrace.Hex(data)}");
             ProcessHubPropertyData(data);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            // Behaviour unchanged (swallowed); the trace shows why a hub property read failed.
+            UsbStickTrace.Write($"{GetType().Name} {Address}: hub property 0x{propertyId:X2} EXCEPTION swallowed: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     protected void ProcessHubPropertyData(ReadOnlySpan<byte> data)
@@ -393,6 +406,7 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
             timeout,
             token);
 
+       UsbStickTrace.Write($"{GetType().Name} {Address}: AwaitPeripheralsAttached timeout={timeout.TotalMilliseconds:F0}ms stable={result} attachedPeripherals={AttachedPeripherals.Count} (result is ignored by the connect flow)");
        return result && AttachedPeripherals.Count > 0;
     }
 }

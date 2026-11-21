@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using BrickController2.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
@@ -85,6 +86,8 @@ internal sealed class StickSession : IDisposable
         {
             for (int attempt = 1; attempt <= attempts; attempt++)
             {
+                // Diagnostic: every request on the wire (conn_id is the first payload byte of GATT requests).
+                UsbStickTrace.Write($"TX {UsbStickTrace.FrameName(type)} seq={seq} attempt={attempt}/{attempts} timeout={timeout.TotalMilliseconds:F0}ms payload={UsbStickTrace.Hex(payload)}");
                 await WriteAsync(frame, cancellationToken).ConfigureAwait(false);
 
                 try
@@ -93,6 +96,7 @@ internal sealed class StickSession : IDisposable
                 }
                 catch (TimeoutException)
                 {
+                    UsbStickTrace.Write($"TIMEOUT waiting for response to {UsbStickTrace.FrameName(type)} seq={seq} after {timeout.TotalMilliseconds:F0}ms (attempt {attempt}/{attempts})");
                     _logger.LogDebug("USB stick: no response to type 0x{Type:X2} (attempt {Attempt}/{Attempts})", type, attempt, attempts);
                 }
             }
@@ -184,6 +188,8 @@ internal sealed class StickSession : IDisposable
 
         foreach (var frame in frames)
         {
+            TraceReceived(frame);
+
             // Responses carry the sequence number of their request; events use SEQ 0.
             if (frame.Seq != 0 && _pending.TryRemove(frame.Seq, out var tcs))
             {
@@ -196,7 +202,32 @@ internal sealed class StickSession : IDisposable
         }
     }
 
-    private void OnTransportDisconnected() => Close("transport disconnected");
+    /// <summary>
+    /// Diagnostic: logs a received frame. Scan reports are skipped (several per second, they would bury the
+    /// connect sequence); everything else (ACK, responses, GATT events, pongs) is shown with its SEQ and payload.
+    /// </summary>
+    private static void TraceReceived(StickFrame frame)
+    {
+        if (frame.Type == StickProtocol.TypeEvtScanReport)
+        {
+            return;
+        }
+
+        string detail = string.Empty;
+        if (StickResponseDecoder.TryDecodeAck(frame, out var ack))
+        {
+            // ACK payload: original request type, status, optional extra (ATT error code for AttError).
+            detail = $" -> {UsbStickTrace.FrameName(ack.OriginalType)} status={ack.Status} extra={UsbStickTrace.Hex(ack.Extra)}";
+        }
+
+        UsbStickTrace.Write($"RX {UsbStickTrace.FrameName(frame.Type)} seq={frame.Seq} payload={UsbStickTrace.Hex(frame.Payload)}{detail}");
+    }
+
+    private void OnTransportDisconnected()
+    {
+        UsbStickTrace.Write("transport (serial port) disconnected");
+        Close("transport disconnected");
+    }
 
     /// <summary>Marks the session closed, fails waiting requests and notifies the owner once.</summary>
     private void Close(string reason)
@@ -206,6 +237,7 @@ internal sealed class StickSession : IDisposable
             return;
         }
 
+        UsbStickTrace.Write($"session closed: {reason}");
         _logger.LogWarning("USB stick session closed: {Reason}", reason);
         FailPending(reason);
         Closed?.Invoke(reason);

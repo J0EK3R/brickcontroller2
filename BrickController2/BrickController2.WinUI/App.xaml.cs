@@ -10,6 +10,9 @@ using BrickController2.UI.Controls;
 using BrickController2.UI.DI;
 using BrickController2.Windows.PlatformServices.DI;
 using BrickController2.Windows.UI.CustomHandlers;
+using BrickController2.Windows.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Hosting;
@@ -58,6 +61,13 @@ public partial class App : MauiWinUIApplication
                 autofacBuilder.RegisterModule<InputDeviceManagementModule>();
                 autofacBuilder.RegisterModule<UiModule>();
             });
+
+#if DEBUG
+        // Debug builds only: show ILogger output (Information and above) in the Visual Studio Output window.
+        // The MAUI host has no logging provider by default. Trace lines tagged "[USBSTICK]" do not depend on this.
+        builder.Services.AddSingleton<ILoggerProvider, DebugOutputLoggerProvider>();
+        builder.Logging.SetMinimumLevel(LogLevel.Information);
+#endif
 
         return builder.Build();
     }

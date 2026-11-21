@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BrickController2.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
@@ -63,6 +64,10 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         _logger = logger;
     }
 
+    /// <summary>Diagnostic: trace line prefixed with the peer address and the conn_id of the current link.</summary>
+    private void Trace(string message)
+        => UsbStickTrace.Write($"device {_address} conn {(_link is { } l ? l.ConnId.ToString() : "-")} [{_state}]: {message}");
+
     /// <inheritdoc />
     public BluetoothLEDeviceState State
     {
@@ -82,18 +87,23 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         Action<IBluetoothLEDevice> onDeviceDisconnected,
         CancellationToken token)
     {
+        Trace($"ConnectAndDiscoverServicesAsync start (autoConnect={autoConnect})");
         try
         {
             await _operationGate.WaitAsync(token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
+            Trace("ConnectAndDiscoverServicesAsync cancelled while waiting for the operation gate -> returning null");
             return null;
         }
 
+        long started = Environment.TickCount64;
         try
         {
-            return await ConnectCoreAsync(autoConnect, onCharacteristicChanged, onDeviceDisconnected, token).ConfigureAwait(false);
+            IEnumerable<IGattService>? result = await ConnectCoreAsync(autoConnect, onCharacteristicChanged, onDeviceDisconnected, token).ConfigureAwait(false);
+            Trace($"ConnectAndDiscoverServicesAsync end after {Environment.TickCount64 - started} ms: {(result == null ? "FAILED (null)" : $"OK, {result.Count()} service(s)")}");
+            return result;
         }
         finally
         {
@@ -112,12 +122,14 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         {
             if (_state != BluetoothLEDeviceState.Disconnected)
             {
+                Trace($"connect refused: device is not Disconnected (state {_state})");
                 return null;
             }
 
             link = _link ??= _acquireLink();
             if (link == null || !StickAddress.TryParse(_address, out _))
             {
+                Trace(link == null ? "connect refused: no free stick connection slot" : "connect refused: address cannot be parsed");
                 return null;
             }
 
@@ -137,15 +149,18 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         {
             StickAddress.TryParse(_address, out byte[] addressBytes);
             byte addressType = _addressBook.GetAddressType(_address);
+            Trace($"address type from scan cache: {addressType} (0 public, 1 random, 0xFF unknown)");
 
             GattResult connected = await link.ConnectAsync(addressBytes, addressType, autoConnect, token).ConfigureAwait(false);
             if (!connected.IsOk)
             {
+                Trace($"link.ConnectAsync FAILED: {connected.Status} attError=0x{connected.AttError:X2} -> connect declared failed");
                 _logger.LogInformation("USB stick: connect to {Address} failed ({Status})", _address, connected.Status);
                 await ReleaseAfterFailureAsync().ConfigureAwait(false);
                 return null;
             }
 
+            Trace($"link connected (mtu {link.Mtu}), starting discovery");
             lock (_stateLock)
             {
                 if (_state == BluetoothLEDeviceState.Connecting)
@@ -157,6 +172,7 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
             var (discovered, services) = await link.DiscoverAsync(token).ConfigureAwait(false);
             if (!discovered.IsOk)
             {
+                Trace($"link.DiscoverAsync FAILED: {discovered.Status} -> connect declared failed");
                 _logger.LogInformation("USB stick: discovery on {Address} failed ({Status})", _address, discovered.Status);
                 await ReleaseAfterFailureAsync().ConfigureAwait(false);
                 return null;
@@ -167,6 +183,7 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
                 // A link lost between the discovery and here must not be reported as connected.
                 if (_state != BluetoothLEDeviceState.Discovering || !link.IsConnected)
                 {
+                    Trace($"link lost during discovery: state={_state} linkConnected={link.IsConnected} -> connect failed");
                     services = [];
                 }
                 else
@@ -186,6 +203,7 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         }
         catch (OperationCanceledException)
         {
+            Trace("connect cancelled (token) -> cleaning up");
             // Cancelled in any phase: the link already aborted the attempt; clean up and report "no services" like WinUI.
             await ReleaseAfterFailureAsync().ConfigureAwait(false);
             return null;
@@ -195,6 +213,7 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
     /// <inheritdoc />
     public async Task DisconnectAsync()
     {
+        Trace("DisconnectAsync (requested by BC2)");
         StickGattLink? link = TakeLink(raiseCallback: false, out _);
         await ReleaseLinkAsync(link).ConfigureAwait(false);
     }
@@ -211,11 +230,13 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
                 characteristic is StickGattCharacteristic c
                     ? $"{c.Uuid} value 0x{c.ValueHandle:X4} cccd 0x{c.CccdHandle:X4} props 0x{c.Properties:X2}"
                     : "unknown");
+            Trace($"EnableNotificationAsync REFUSED: characteristic cannot notify (no NOTIFY/INDICATE property or no CCCD handle): {(characteristic is StickGattCharacteristic c2 ? $"{c2.Uuid} value=0x{c2.ValueHandle:X4} cccd=0x{c2.CccdHandle:X4} props=0x{c2.Properties:X2} ({UsbStickTrace.PropertyNames(c2.Properties)})" : "not a stick characteristic")}");
             return false;
         }
 
         // Registered before SUBSCRIBE so a notification that follows the ACK immediately is not discarded.
         _subscribedHandles[chr.ValueHandle] = true;
+        Trace($"EnableNotificationAsync {chr.Uuid} value=0x{chr.ValueHandle:X4} cccd=0x{chr.CccdHandle:X4}");
         GattResult result = await RunAsync(link => link.SubscribeAsync(chr.CccdHandle, 1, token), token).ConfigureAwait(false);
         if (!result.IsOk)
         {
@@ -223,6 +244,7 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
             _subscribedHandles.TryRemove(chr.ValueHandle, out _);
         }
 
+        Trace($"EnableNotificationAsync result: {result.Status} attError=0x{result.AttError:X2}");
         return result.IsOk;
     }
 
@@ -248,19 +270,44 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         }
 
         var (result, data) = await RunAsync(link => link.ReadAsync(chr.ValueHandle, token), token).ConfigureAwait(false);
+        Trace($"ReadAsync {chr.Uuid} -> {result.Status} data={UsbStickTrace.Hex(data)}");
 
         return result.IsOk ? data : null;
     }
 
     /// <inheritdoc />
     public async Task<bool> WriteAsync(IGattCharacteristic characteristic, byte[] data, CancellationToken token)
-        => characteristic is StickGattCharacteristic chr
-           && await RunAsync(link => link.WriteAsync(chr.ValueHandle, data, token), token).ConfigureAwait(false) is { IsOk: true };
+    {
+        if (characteristic is not StickGattCharacteristic chr)
+        {
+            Trace("WriteAsync refused: not a stick characteristic");
+            return false;
+        }
+
+        GattResult result = await RunAsync(link => link.WriteAsync(chr.ValueHandle, data, token), token).ConfigureAwait(false);
+        Trace($"WriteAsync {chr.Uuid} data={UsbStickTrace.Hex(data)} -> {result.Status} attError=0x{result.AttError:X2}");
+        return result.IsOk;
+    }
 
     /// <inheritdoc />
     public async Task<bool> WriteNoResponseAsync(IGattCharacteristic characteristic, byte[] data, CancellationToken token)
-        => characteristic is StickGattCharacteristic chr
-           && await RunAsync(link => link.WriteCommandAsync(chr.ValueHandle, data, token), token).ConfigureAwait(false) is { IsOk: true };
+    {
+        if (characteristic is not StickGattCharacteristic chr)
+        {
+            Trace("WriteNoResponseAsync refused: not a stick characteristic");
+            return false;
+        }
+
+        GattResult result = await RunAsync(link => link.WriteCommandAsync(chr.ValueHandle, data, token), token).ConfigureAwait(false);
+
+        // Only failures are traced here: a driving loop sends many of these per second (the link traces the first ones).
+        if (!result.IsOk)
+        {
+            Trace($"WriteNoResponseAsync {chr.Uuid} data={UsbStickTrace.Hex(data)} FAILED -> {result.Status}");
+        }
+
+        return result.IsOk;
+    }
 
     // ------------------------------------------------------------------ plumbing
 
@@ -289,6 +336,11 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
                 link = _state == BluetoothLEDeviceState.Connected ? _link : null;
             }
 
+            if (link == null)
+            {
+                Trace($"operation refused: device not connected (state {_state})");
+            }
+
             return link == null
                 ? (new GattResult(StickStatus.NotConnected), default)
                 : await operation(link).ConfigureAwait(false);
@@ -312,6 +364,11 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
         {
             callback(uuid, data);
         }
+        else
+        {
+            // Diagnostic: a notification that is dropped because it was not subscribed / state is wrong.
+            Trace($"notification on handle 0x{handle:X4} DROPPED (callback={callback != null}, subscribed={_subscribedHandles.ContainsKey(handle)}, known={_uuidByHandle.ContainsKey(handle)}) data={UsbStickTrace.Hex(data, 16)}");
+        }
     }
 
     /// <summary>The link of a connected device ended without our request (peer, supervision timeout, stick gone).</summary>
@@ -319,6 +376,7 @@ internal sealed class StickGattDevice : IBluetoothLEDevice
     {
         StickGattLink? link = TakeLink(raiseCallback: true, out Action<IBluetoothLEDevice>? callback);
         _logger.LogInformation("USB stick: link to {Address} lost (reason 0x{Reason:X2})", _address, reason);
+        Trace($"LINK LOST reason={UsbStickTrace.ReasonName(reason)}; BC2 disconnect callback will {(callback != null ? "be raised" : "NOT be raised (device was not in Connected state: connect/discovery phase or already disconnected)")}");
 
         // Give the slot back right away; the callback runs after the state is Disconnected (as in WinUI).
         _ = ReleaseLinkAsync(link);

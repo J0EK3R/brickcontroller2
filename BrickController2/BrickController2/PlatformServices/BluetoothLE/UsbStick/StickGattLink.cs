@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BrickController2.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
@@ -83,6 +84,9 @@ internal sealed class StickGattLink : IDisposable
     /// <summary>The conn_id of this link on the stick (0 .. MaxConns-1).</summary>
     public byte ConnId { get; }
 
+    /// <summary>Diagnostic: writes a trace line prefixed with this link's conn_id and state.</summary>
+    private void Trace(string message) => UsbStickTrace.Write($"conn {ConnId} [{_state}]: {message}");
+
     /// <summary>Handler called, in order, for every notification (value handle, data). Set before connecting.</summary>
     public Action<ushort, byte[]>? NotificationHandler { get; set; }
 
@@ -134,6 +138,7 @@ internal sealed class StickGattLink : IDisposable
         }
 
         byte flags = background ? StickProtocol.ConnectFlagBackground : (byte)0;
+        Trace($"ConnectAsync start: peer={StickAddress.Format(address)} addressType={addressType} background={background}");
         byte[] payload = StickFrameEncoder.ConnectPayload(ConnId, address, addressType, flags, 0, 0, 0);
 
         try
@@ -141,9 +146,12 @@ internal sealed class StickGattLink : IDisposable
             var (ack, _) = await SendAsync(StickProtocol.TypeConnect, payload, ImmediateAckTimeout, cancellationToken).ConfigureAwait(false);
             if (!ack.IsOk)
             {
+                Trace($"CONNECT rejected by the stick: status={ack.Status} attError=0x{ack.AttError:X2} -> connect failed");
                 MarkClosed();
                 return ack;
             }
+
+            Trace("CONNECT accepted, waiting for EVT_CONNECTED");
 
             // The stick enforces its own connect timeout (default 10 s) and reports it as EVT_DISCONNECTED 0xF0;
             // the guard only protects against a stick that never answers.
@@ -151,21 +159,25 @@ internal sealed class StickGattLink : IDisposable
             StickDisconnected? failure = await connectTcs.Task.WaitAsync(wait, _clock, cancellationToken).ConfigureAwait(false);
             if (failure != null)
             {
+                Trace($"connect attempt ended before EVT_CONNECTED: reason={UsbStickTrace.ReasonName(failure.Reason)} wasConnected={failure.WasConnected}");
                 MarkClosed();
                 _logger.LogInformation("USB stick: connect to {Address} failed (reason 0x{Reason:X2})", StickAddress.Format(address), failure.Reason);
                 return new GattResult(StickStatus.Disconnected);
             }
 
+            Trace("ConnectAsync done: link is connected");
             return GattResult.Ok;
         }
         catch (OperationCanceledException)
         {
+            Trace("ConnectAsync cancelled by the caller, aborting the attempt on the stick");
             // Cancel while connecting: tell the stick to abort the attempt (best effort) and report the failure.
             await AbortConnectAsync().ConfigureAwait(false);
             throw;
         }
         catch (TimeoutException)
         {
+            Trace("ConnectAsync: host guard timeout, the stick sent neither EVT_CONNECTED nor EVT_DISCONNECTED");
             await AbortConnectAsync().ConfigureAwait(false);
             return new GattResult(StickStatus.Timeout);
         }
@@ -228,6 +240,7 @@ internal sealed class StickGattLink : IDisposable
             }
 
             closed = _closedTcs?.Task;
+            Trace("DisconnectAsync: local disconnect requested, sending DISCONNECT");
             _state = LinkState.Closed;
             _discovery?.Fail(StickStatus.Disconnected);
             _connectTcs?.TrySetResult(new StickDisconnected(ConnId, false, StickProtocol.ReasonCancelled));
@@ -260,19 +273,32 @@ internal sealed class StickGattLink : IDisposable
             collector = _discovery = new DiscoveryCollector();
         }
 
+        long started = _clock.GetTimestamp();
+        Trace("DiscoverAsync start");
         try
         {
             var (ack, _) = await SendAsync(StickProtocol.TypeDiscover, StickFrameEncoder.ConnIdPayload(ConnId), ImmediateAckTimeout, cancellationToken).ConfigureAwait(false);
             if (!ack.IsOk)
             {
+                Trace($"DISCOVER rejected: status={ack.Status} -> discovery failed");
                 return (ack, []);
             }
 
             StickStatus status = await collector.Done.WaitAsync(DiscoverTimeout, _clock, cancellationToken).ConfigureAwait(false);
-            return status == StickStatus.Ok ? (GattResult.Ok, collector.BuildServices()) : (new GattResult(status), []);
+            if (status != StickStatus.Ok)
+            {
+                Trace($"DiscoverAsync failed after {_clock.GetElapsedTime(started).TotalMilliseconds:F0} ms: EVT_DISCOVER_DONE/abort status={status}");
+                return (new GattResult(status), []);
+            }
+
+            IReadOnlyList<StickGattService> services = collector.BuildServices();
+            Trace($"DiscoverAsync done in {_clock.GetElapsedTime(started).TotalMilliseconds:F0} ms: {services.Count} service(s)");
+            TraceServices(services);
+            return (GattResult.Ok, services);
         }
         catch (TimeoutException)
         {
+            Trace($"DiscoverAsync TIMEOUT after {DiscoverTimeout.TotalSeconds:F0} s (no EVT_DISCOVER_DONE)");
             return (new GattResult(StickStatus.Timeout), []);
         }
         finally
@@ -287,6 +313,19 @@ internal sealed class StickGattLink : IDisposable
         }
     }
 
+    /// <summary>Diagnostic: lists every service and characteristic of a finished discovery.</summary>
+    private void TraceServices(IReadOnlyList<StickGattService> services)
+    {
+        foreach (StickGattService service in services)
+        {
+            Trace($"  service {service.Uuid} handles 0x{service.StartHandle:X4}-0x{service.EndHandle:X4}");
+            foreach (StickGattCharacteristic c in service.Characteristics)
+            {
+                Trace($"    characteristic {c.Uuid} value=0x{c.ValueHandle:X4} cccd=0x{c.CccdHandle:X4} props=0x{c.Properties:X2} ({UsbStickTrace.PropertyNames(c.Properties)})");
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ read / write / subscribe
 
     /// <summary>ATT read of a characteristic value.</summary>
@@ -294,14 +333,19 @@ internal sealed class StickGattLink : IDisposable
     {
         if (!IsConnected)
         {
+            Trace($"ReadAsync handle=0x{handle:X4} refused: link not connected");
             return (new GattResult(StickStatus.NotConnected), null);
         }
 
+        Trace($"ReadAsync start handle=0x{handle:X4}");
         var (result, frame) = await SendAsync(StickProtocol.TypeRead, StickFrameEncoder.ReadPayload(ConnId, handle), ProcedureTimeout, cancellationToken).ConfigureAwait(false);
         if (result.IsOk && frame != null && StickResponseDecoder.TryDecodeGatt(frame, out var message) && message is StickReadResponse read)
         {
+            Trace($"ReadAsync done handle=0x{handle:X4} data={UsbStickTrace.Hex(read.Data)} truncated={read.Truncated}");
             return (GattResult.Ok, read.Data);
         }
+
+        Trace($"ReadAsync FAILED handle=0x{handle:X4} status={result.Status} attError=0x{result.AttError:X2} responseFrame={(frame == null ? "none" : UsbStickTrace.FrameName(frame.Type))}");
 
         return (result.IsOk ? new GattResult(StickStatus.BleError) : result, null);
     }
@@ -318,12 +362,16 @@ internal sealed class StickGattLink : IDisposable
     {
         if (!IsConnected)
         {
+            Trace($"{UsbStickTrace.FrameName(type)} handle=0x{handle:X4} refused: link not connected");
             return new GattResult(StickStatus.NotConnected);
         }
+
+        Trace($"{UsbStickTrace.FrameName(type)} start handle=0x{handle:X4} data={UsbStickTrace.Hex(data)} (max payload {MaxPayload}, mtu {Mtu})");
 
         // Reject oversized data without touching the wire (the stick would answer PAYLOAD_TOO_LARGE anyway).
         if (data.Length == 0 || data.Length > MaxPayload)
         {
+            Trace($"write of {data.Length} bytes rejected locally (limit {MaxPayload})");
             _logger.LogWarning("USB stick: write of {Length} bytes rejected (limit {Limit})", data.Length, MaxPayload);
             return new GattResult(StickStatus.PayloadTooLarge);
         }
@@ -340,6 +388,7 @@ internal sealed class StickGattLink : IDisposable
                 break;
             }
 
+            Trace($"{UsbStickTrace.FrameName(type)} BUSY, retry {attempt}/{attempts - 1}");
             await Task.Delay(BusyRetryDelay, _clock, cancellationToken).ConfigureAwait(false);
         }
 
@@ -351,9 +400,11 @@ internal sealed class StickGattLink : IDisposable
     {
         if (!IsConnected)
         {
+            Trace($"SubscribeAsync cccd=0x{cccdHandle:X4} refused: link not connected");
             return new GattResult(StickStatus.NotConnected);
         }
 
+        Trace($"SubscribeAsync start cccd=0x{cccdHandle:X4} mode={mode}");
         var (result, _) = await SendAsync(StickProtocol.TypeSubscribe, StickFrameEncoder.SubscribePayload(ConnId, cccdHandle, mode), ProcedureTimeout, cancellationToken).ConfigureAwait(false);
         return result;
     }
@@ -381,11 +432,13 @@ internal sealed class StickGattLink : IDisposable
     /// </summary>
     private async Task<(GattResult Result, StickFrame? Frame)> SendAsync(byte type, byte[] payload, TimeSpan timeout, CancellationToken cancellationToken)
     {
+        long started = _clock.GetTimestamp();
         try
         {
             StickFrame frame = await _connection.RequestOnceAsync(type, payload, timeout, cancellationToken).ConfigureAwait(false);
             if (frame.Type != StickProtocol.TypeAck)
             {
+                Trace($"{UsbStickTrace.FrameName(type)} answered by {UsbStickTrace.FrameName(frame.Type)} after {_clock.GetElapsedTime(started).TotalMilliseconds:F0} ms");
                 return (GattResult.Ok, frame);
             }
 
@@ -400,16 +453,19 @@ internal sealed class StickGattLink : IDisposable
             }
 
             byte attError = ack.Status == StickStatus.AttError && ack.Extra.Length > 0 ? ack.Extra[0] : (byte)0;
+            Trace($"{UsbStickTrace.FrameName(type)} ACK status={ack.Status} attError=0x{attError:X2} after {_clock.GetElapsedTime(started).TotalMilliseconds:F0} ms");
             return (new GattResult(ack.Status, attError), null);
         }
         catch (StickTimeoutException)
         {
+            Trace($"{UsbStickTrace.FrameName(type)} PROCEDURE TIMEOUT after {_clock.GetElapsedTime(started).TotalMilliseconds:F0} ms (limit {timeout.TotalMilliseconds:F0} ms)");
             _logger.LogWarning("USB stick: request 0x{Type:X2} on conn {ConnId} timed out", type, ConnId);
             return (new GattResult(StickStatus.Timeout), null);
         }
         catch (StickException ex)
         {
             // Session closed / stick unplugged: the link is gone as well.
+            Trace($"{UsbStickTrace.FrameName(type)} failed, stick session error: {ex.GetType().Name}: {ex.Message}");
             _logger.LogDebug("USB stick: request 0x{Type:X2} failed: {Message}", type, ex.Message);
             return (new GattResult(StickStatus.Disconnected), null);
         }
@@ -445,11 +501,17 @@ internal sealed class StickGattLink : IDisposable
                 break;
 
             case StickNotify notify:
+                Trace($"EVT_NOTIFY handle=0x{notify.Handle:X4} flags=0x{notify.Flags:X2} len={notify.Data.Length} data={UsbStickTrace.Hex(notify.Data, 16)}");
                 // Written in arrival order; the reader task delivers it. Failure only after the link ended.
                 _notifications.Writer.TryWrite(notify);
                 break;
 
             case StickGattServiceEvent or StickGattCharEvent or StickDiscoverDone:
+                if (message is StickDiscoverDone done)
+                {
+                    Trace($"EVT_DISCOVER_DONE status={done.Status} services={done.ServiceCount} chars={done.CharCount}");
+                }
+
                 lock (_lock)
                 {
                     _discovery?.Add(message);
@@ -465,9 +527,11 @@ internal sealed class StickGattLink : IDisposable
         {
             if (_state != LinkState.Connecting)
             {
+                Trace($"EVT_CONNECTED ignored (link not connecting) mtu={connected.Mtu}");
                 return;
             }
 
+            Trace($"EVT_CONNECTED peer={connected.Address} mtu={connected.Mtu} interval={connected.Interval} units ({connected.Interval * 1.25:F2} ms)");
             Volatile.Write(ref _mtu, connected.Mtu);
             _state = LinkState.Connected;
             _connectTcs?.TrySetResult(null);
@@ -487,6 +551,7 @@ internal sealed class StickGattLink : IDisposable
             // "cancelled" is not ours, and a "was not connected" event cannot belong to an established link.
             bool stale = (_state is LinkState.Connecting or LinkState.Connected && disconnected.Reason == StickProtocol.ReasonCancelled)
                 || (_state == LinkState.Connected && !disconnected.WasConnected);
+            Trace($"EVT_DISCONNECTED reason={UsbStickTrace.ReasonName(disconnected.Reason)} wasConnected={disconnected.WasConnected} stale={stale}");
             if (stale)
             {
                 _logger.LogDebug("USB stick: stale EVT_DISCONNECTED (reason 0x{Reason:X2}) ignored on conn {ConnId}", disconnected.Reason, ConnId);
@@ -527,6 +592,7 @@ internal sealed class StickGattLink : IDisposable
             }
 
             lost = _state == LinkState.Connected;
+            Trace("stick session lost (unplugged or closed) -> link is dead");
             _disconnectReason = StickProtocol.ReasonSafetyStop;
             if (_state == LinkState.Connecting)
             {

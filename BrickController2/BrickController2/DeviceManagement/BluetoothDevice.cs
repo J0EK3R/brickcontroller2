@@ -1,4 +1,5 @@
-﻿using BrickController2.PlatformServices.BluetoothLE;
+﻿using BrickController2.Diagnostics;
+using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -36,8 +37,10 @@ namespace BrickController2.DeviceManagement
         {
             using (await _asyncLock.LockAsync())
             {
+                UsbStickTrace.Write($"BC2 connect {GetType().Name} {Address}: start (reconnect={reconnect}, autoConnect={reconnect || AutoConnectOnFirstConnect}, state={DeviceState}, requestDeviceInformation={requestDeviceInformation})");
                 if (token.IsCancellationRequested || _bleDevice != null || DeviceState != DeviceState.Disconnected)
                 {
+                    UsbStickTrace.Write($"BC2 connect {Address}: FAILED immediately (cancelled={token.IsCancellationRequested}, bleDeviceAlreadySet={_bleDevice != null}, state={DeviceState}) -> Error");
                     return DeviceConnectionResult.Error;
                 }
 
@@ -48,8 +51,11 @@ namespace BrickController2.DeviceManagement
                     _bleDevice = await _bleService.GetKnownDeviceAsync(Address);
                     if (_bleDevice == null)
                     {
+                        UsbStickTrace.Write($"BC2 connect {Address}: FAILED, GetKnownDeviceAsync returned null (no path / no free slot) -> Error");
                         return DeviceConnectionResult.Error;
                     }
+
+                    UsbStickTrace.Write($"BC2 connect {Address}: got {_bleDevice.GetType().Name}, connecting and discovering services");
 
                     DeviceState = DeviceState.Connecting;
                     var services = await _bleDevice.ConnectAndDiscoverServicesAsync(
@@ -60,8 +66,16 @@ namespace BrickController2.DeviceManagement
 
                     token.ThrowIfCancellationRequested();
 
-                    if (await ValidateServicesAsync(services, token) && 
-                        await AfterConnectSetupAsync(requestDeviceInformation, token))
+                    UsbStickTrace.Write($"BC2 connect {Address}: ConnectAndDiscoverServicesAsync returned {(services == null ? "null (connect or discovery failed)" : "services")}");
+                    bool servicesValid = await ValidateServicesAsync(services, token);
+                    UsbStickTrace.Write($"BC2 connect {Address}: ValidateServicesAsync = {servicesValid}");
+                    bool setupDone = servicesValid && await AfterConnectSetupAsync(requestDeviceInformation, token);
+                    if (servicesValid)
+                    {
+                        UsbStickTrace.Write($"BC2 connect {Address}: AfterConnectSetupAsync = {setupDone}");
+                    }
+
+                    if (servicesValid && setupDone)
                     {
                         if (startOutputProcessing)
                         {
@@ -71,18 +85,23 @@ namespace BrickController2.DeviceManagement
                         token.ThrowIfCancellationRequested();
 
                         DeviceState = DeviceState.Connected;
+                        UsbStickTrace.Write($"BC2 connect {Address}: SUCCESS -> Ok");
                         return DeviceConnectionResult.Ok;
                     }
                 }
                 catch (OperationCanceledException)
                 {
+                    UsbStickTrace.Write($"BC2 connect {Address}: CANCELED (OperationCanceledException) -> Canceled");
                     await DisconnectInternalAsync();
                     return DeviceConnectionResult.Canceled;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    // Behaviour unchanged (the exception is swallowed); the trace shows what was hidden before.
+                    UsbStickTrace.Write($"BC2 connect {Address}: EXCEPTION swallowed -> Error: {ex}");
                 }
 
+                UsbStickTrace.Write($"BC2 connect {Address}: FAILED -> disconnecting and returning Error");
                 await DisconnectInternalAsync();
                 return DeviceConnectionResult.Error;
             }
@@ -143,6 +162,7 @@ namespace BrickController2.DeviceManagement
 
         private void OnDeviceDisconnected(IBluetoothLEDevice bluetoothLEDevice)
         {
+            UsbStickTrace.Write($"BC2 {Address}: onDeviceDisconnected callback from the BLE layer (state {DeviceState})");
             Task.Run(async () =>
             {
                 using (await _asyncLock.LockAsync())

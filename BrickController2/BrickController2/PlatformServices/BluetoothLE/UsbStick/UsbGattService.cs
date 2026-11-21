@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BrickController2.UI.Services.Preferences;
+using BrickController2.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
@@ -163,7 +164,9 @@ public sealed class UsbGattService : IUsbGattService
     {
         UsbGattMode mode = GattMode;
         bool stickAvailable = mode != UsbGattMode.WindowsOnly && await IsStickGattAvailableAsync().ConfigureAwait(false);
-        return GattPathSelector.Choose(radioOn, stickAvailable, stickHasFreeSlot: true, mode);
+        GattPath path = GattPathSelector.Choose(radioOn, stickAvailable, stickHasFreeSlot: true, mode);
+        UsbStickTrace.Write($"scan path decision: {path} (mode={mode}, windowsRadioOn={radioOn}, stickGattAvailable={stickAvailable})");
+        return path;
     }
 
     /// <summary>Decides who serves a device connection (also looks at the free connection slots of the stick).</summary>
@@ -171,7 +174,10 @@ public sealed class UsbGattService : IUsbGattService
     {
         UsbGattMode mode = GattMode;
         bool stickAvailable = mode != UsbGattMode.WindowsOnly && await IsStickGattAvailableAsync().ConfigureAwait(false);
-        return GattPathSelector.Choose(radioOn, stickAvailable, stickAvailable && _connection.HasFreeLink, mode);
+        bool freeLink = stickAvailable && _connection.HasFreeLink;
+        GattPath path = GattPathSelector.Choose(radioOn, stickAvailable, freeLink, mode);
+        UsbStickTrace.Write($"device path decision: {path} (mode={mode}, windowsRadioOn={radioOn}, stickGattAvailable={stickAvailable}, stickHasFreeSlot={freeLink}, stickInfo={(_connection.Info is { } i ? $"maxConns={i.MaxConns} gattFlags=0x{i.GattFlags:X2}" : "none")})");
+        return path;
     }
 
     // ------------------------------------------------------------------ stick backed objects
@@ -185,8 +191,11 @@ public sealed class UsbGattService : IUsbGattService
         var scanner = new StickScanner(_connection, scanCallback, _addressBook, _loggerFactory.CreateLogger<StickScanner>());
         if (!await scanner.StartAsync().ConfigureAwait(false))
         {
+            UsbStickTrace.Write("scan through the stick could not be started");
             return false;
         }
+
+        UsbStickTrace.Write("scan through the stick started");
 
         try
         {
@@ -214,9 +223,11 @@ public sealed class UsbGattService : IUsbGattService
         StickGattLink? link = _connection.TryAcquireLink();
         if (link == null)
         {
+            UsbStickTrace.Write($"TryCreateDevice {address}: no free stick slot");
             return null;
         }
 
+        UsbStickTrace.Write($"TryCreateDevice {address}: StickGattDevice created on conn {link.ConnId}");
         _logger.LogInformation("GATT device {Address} on USB stick connection {ConnId}", address, link.ConnId);
         return new StickGattDevice(address, link, () => _connection.TryAcquireLink(), _addressBook, _loggerFactory.CreateLogger<StickGattDevice>());
     }

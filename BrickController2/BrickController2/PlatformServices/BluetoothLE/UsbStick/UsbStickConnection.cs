@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BrickController2.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
@@ -287,15 +288,19 @@ public sealed class UsbStickConnection : IDisposable
         {
             if (!CanUseGattLocked())
             {
+                UsbStickTrace.Write($"TryAcquireLink refused: stick state={_state} disposed={_disposed} supportsGatt={_info?.SupportsGatt}");
                 return null;
             }
 
             byte? freeId = FindFreeConnIdLocked();
             if (freeId == null)
             {
+                UsbStickTrace.Write($"TryAcquireLink refused: all {_info!.MaxConns} GATT links are in use");
                 _logger.LogInformation("USB stick: all {Count} GATT links are in use", _info!.MaxConns);
                 return null;
             }
+
+            UsbStickTrace.Write($"conn {freeId.Value}: slot reserved ({_links.Count + 1}/{_info!.MaxConns} in use)");
 
             link = new StickGattLink(this, freeId.Value, _clock, _logger);
             _links.Add(freeId.Value, link);
@@ -337,6 +342,8 @@ public sealed class UsbStickConnection : IDisposable
         {
             removed = _links.TryGetValue(link.ConnId, out var owner) && ReferenceEquals(owner, link) && _links.Remove(link.ConnId);
         }
+
+        UsbStickTrace.Write($"conn {link.ConnId}: slot released (removed={removed})");
 
         if (removed)
         {
@@ -556,6 +563,7 @@ public sealed class UsbStickConnection : IDisposable
         _logger.LogInformation(
             "USB stick found on {Port}: firmware {Firmware}, {Sets} sets, keep-alive {KeepAlive} ms, id {Id}",
             chosen.Transport.Name, info.FirmwareVersion, info.MaxSets, info.KeepAliveMs, info.DeviceId);
+        UsbStickTrace.Write($"stick found on {chosen.Transport.Name}: firmware={info.FirmwareVersion} id={info.DeviceId} keepAlive={info.KeepAliveMs}ms sets={info.MaxSets} gattFlags=0x{info.GattFlags:X2} maxConns={info.MaxConns} maxValueLen={info.MaxValueLen} maxScanData={info.MaxScanData} failsafeSlots={info.FailsafeSlots}");
 
         lock (_stateLock)
         {
@@ -755,6 +763,7 @@ public sealed class UsbStickConnection : IDisposable
                 break;
 
             case StickScanStopped stopped:
+                UsbStickTrace.Write($"EVT_SCAN_STOPPED by the stick: reason={stopped.Reason} rc={stopped.Rc}");
                 _logger.LogWarning("USB stick: scan stopped by the stick (reason {Reason}, rc {Rc})", stopped.Reason, stopped.Rc);
                 lock (_stateLock)
                 {
@@ -764,6 +773,7 @@ public sealed class UsbStickConnection : IDisposable
                 break;
 
             case StickDropped dropped:
+                UsbStickTrace.Write($"EVT_DROPPED: the stick dropped {dropped.Count} frame(s) of kind {dropped.Kind} (1 scan reports, 2 notifications)");
                 _logger.LogDebug("USB stick dropped {Count} frames of kind {Kind}", dropped.Count, dropped.Kind);
                 break;
 
@@ -797,10 +807,19 @@ public sealed class UsbStickConnection : IDisposable
 
     private StickGattLink? FindLink(byte connId)
     {
+        StickGattLink? link;
         lock (_stateLock)
         {
-            return _links.GetValueOrDefault(connId);
+            link = _links.GetValueOrDefault(connId);
         }
+
+        // Diagnostic: an event for a conn_id nobody reserved is silently dropped otherwise.
+        if (link == null)
+        {
+            UsbStickTrace.Write($"event for conn {connId} DROPPED: no link reserved on that conn_id");
+        }
+
+        return link;
     }
 
     /// <summary>
@@ -857,6 +876,7 @@ public sealed class UsbStickConnection : IDisposable
             reconnect = _leases.Count > 0 || _scanners.Count > 0;
         }
 
+        UsbStickTrace.Write($"STICK LOST: {reason}; {links.Length} GATT link(s) are told that they are dead");
         _logger.LogWarning("USB stick lost: {Reason}", reason);
         session?.Dispose();
         SetState(reconnect ? UsbStickState.Lost : UsbStickState.NotFound);

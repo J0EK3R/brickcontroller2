@@ -4,6 +4,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BrickController2.Diagnostics;
 
 namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
 
@@ -75,18 +76,28 @@ public class GattAwareBleService : IBluetoothLEService
     public async Task<IBluetoothLEDevice?> GetKnownDeviceAsync(string address)
     {
         bool radioOn = await _inner.IsBluetoothOnAsync().ConfigureAwait(false);
+        GattPath path = await _usbGatt.ChooseDevicePathAsync(radioOn).ConfigureAwait(false);
+        UsbStickTrace.Write($"GetKnownDeviceAsync {address}: path={path}");
 
-        switch (await _usbGatt.ChooseDevicePathAsync(radioOn).ConfigureAwait(false))
+        switch (path)
         {
             case GattPath.Stick:
                 // The slot may have been taken since the decision; Auto then overflows to Windows.
-                return _usbGatt.TryCreateDevice(address)
-                    ?? (radioOn && _usbGatt.GattMode == UsbGattMode.Auto ? await _inner.GetKnownDeviceAsync(address).ConfigureAwait(false) : null);
+                IBluetoothLEDevice? stickDevice = _usbGatt.TryCreateDevice(address);
+                if (stickDevice != null)
+                {
+                    return stickDevice;
+                }
+
+                bool overflow = radioOn && _usbGatt.GattMode == UsbGattMode.Auto;
+                UsbStickTrace.Write($"GetKnownDeviceAsync {address}: stick slot lost after the decision -> {(overflow ? "falling back to the Windows service" : "returning null (connect will fail)")}");
+                return overflow ? await _inner.GetKnownDeviceAsync(address).ConfigureAwait(false) : null;
 
             case GattPath.Windows:
                 return await _inner.GetKnownDeviceAsync(address).ConfigureAwait(false);
 
             default:
+                UsbStickTrace.Write($"GetKnownDeviceAsync {address}: no path available -> returning null (connect will fail)");
                 return null;
         }
     }

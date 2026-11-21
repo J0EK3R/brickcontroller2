@@ -1,4 +1,5 @@
 ﻿using BrickController2.CreationManagement;
+using BrickController2.Diagnostics;
 using BrickController2.DeviceManagement.Lego;
 using BrickController2.PlatformServices.BluetoothLE;
 using System;
@@ -169,6 +170,7 @@ namespace BrickController2.DeviceManagement
             try
             {
                 // Wait until ports finish communicating with the hub
+                UsbStickTrace.Write($"{GetType().Name} {Address}: AfterConnectSetup start (requestDeviceInformation={requestDeviceInformation}, channels={NumberOfChannels})");
                 await AwaitPeripheralsAttachedAsync(TimeSpan.FromMilliseconds(1000), token);
 
                 if (requestDeviceInformation)
@@ -189,8 +191,10 @@ namespace BrickController2.DeviceManagement
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                // Behaviour unchanged (returns false = connect fails); the trace names the exception that caused it.
+                UsbStickTrace.Write($"{GetType().Name} {Address}: AfterConnectSetup EXCEPTION -> connect fails: {ex}");
                 return false;
             }
         }
