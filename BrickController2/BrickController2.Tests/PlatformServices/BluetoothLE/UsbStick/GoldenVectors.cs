@@ -21,8 +21,8 @@ internal static class GoldenVectors
     public const string EvtTimeout = "B2 04 E2 00 E8 03 F0 58";
 
     // ---- protocol 1.1 (GATT). Derived from tasks/009-usb-stick-gatt-fw/plan.md section 3 with an independent
-    // Python implementation of the frame format and CRC; replace with the vectors of the firmware's
-    // docs/protocol.md once they are published (the byte layout is the contract). ----
+    // Python implementation of the frame format and CRC. The firmware's own vectors (docs/protocol.md section 18)
+    // follow below as the Fw* constants and are the authoritative check of the byte layout. ----
     public const string Hello11 = "B2 06 01 01 01 01 E8 03 E6 57";
     public const string ScanStart = "B2 09 30 08 01 A0 00 50 00 E8 03 E5 AB";
     public const string ScanStop = "B2 02 31 09 71 05";
@@ -67,6 +67,7 @@ internal static class GoldenVectors
     public const string FwGetGattStatus = "B2 02 39 14 44 4F";
     public const string FwSetFailsafe = "B2 18 3A 15 01 00 2A 00 CC AA BB 01 80 80 80 80 80 80 80 80 80 80 80 80 66 33 34 1C";
     public const string FwSetFailsafeClear = "B2 06 3A 16 01 01 2A 00 13 98";
+    public const string FwHelloRsp = "B2 22 81 01 42 43 32 41 44 56 00 01 01 00 02 00 05 18 1B 20 00 00 40 E8 03 24 0A BC 11 22 33 07 04 38 1F 04 DA 6E"; // fw 0.2.0, 4 connections
     public const string FwReadRsp = "B2 08 A0 0F 01 12 00 00 A1 B2 22 91";
     public const string FwGattStatusRsp = "B2 13 A1 14 01 04 00 03 00 02 00 00 00 00 80 02 00 00 40 01 00 56 F8";
     public const string FwAckAttError = "B2 05 80 10 36 0E 03 0F 10";

@@ -249,8 +249,17 @@ internal sealed partial class FakeStickDevice
     private static byte[] Respond(StickFrame request, byte type, byte[] payload)
         => StickFrameEncoder.Encode(type, request.Seq, payload);
 
+    /// <summary>
+    /// Optional hook run after every event is fed to the host. The harness uses it to wait until the scan callbacks
+    /// (which run on their own task, not on the read thread) have seen the report, so tests stay synchronous.
+    /// </summary>
+    internal Action? AfterEvent { get; set; }
+
     internal void SendEvent(byte type, byte[] payload)
-        => Transport?.Receive(StickFrameEncoder.Encode(type, 0, payload));
+    {
+        Transport?.Receive(StickFrameEncoder.Encode(type, 0, payload));
+        AfterEvent?.Invoke();
+    }
 
     /// <summary>Firmware keep-alive: no valid frame for keepalive_ms ends the session and stops all sets.</summary>
     private void CheckKeepAlive()

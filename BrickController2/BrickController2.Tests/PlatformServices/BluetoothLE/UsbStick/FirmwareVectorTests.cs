@@ -28,6 +28,22 @@ public class FirmwareVectorTests
     }
 
     [Fact]
+    public void HelloRsp_OfFirmware_DecodesCapabilityBlock()
+    {
+        StickResponseDecoder.TryDecodeHello(Parse(GoldenVectors.FwHelloRsp), out var info).Should().BeTrue();
+
+        info!.ProtoMajor.Should().Be(1);
+        info.ProtoMinor.Should().Be(1);
+        info.MaxSets.Should().Be(5);
+        info.GattFlags.Should().Be(7);
+        info.MaxConns.Should().Be(4);
+        info.MaxValueLen.Should().Be(56);
+        info.MaxScanData.Should().Be(31);
+        info.FailsafeSlots.Should().Be(4);
+        info.SupportsGatt.Should().BeTrue();
+    }
+
+    [Fact]
     public void ScanStart_Defaults_AndDuplicatesVariant()
     {
         Frame(StickProtocol.TypeScanStart, 8, StickFrameEncoder.ScanStartPayload(1, 0, 0, 0)).Should().Equal(Hex(GoldenVectors.FwScanStartDefaults));

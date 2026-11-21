@@ -35,6 +35,7 @@ internal sealed class StickHarness : IDisposable
     public FakeStickDevice Plug(string port, int maxSets = 5, int maxConns = 0)
     {
         var device = new FakeStickDevice(Clock, maxSets, maxConns);
+        device.AfterEvent = Connection.WaitForScanCallbacks;
         Locator.Ports[port] = device;
         Stick = device;
         return device;

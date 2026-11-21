@@ -275,6 +275,22 @@ internal sealed partial class FakeStickDevice
             : Respond(frame, StickProtocol.TypeAck, status == StickStatus.AttError ? [frame.Type, (byte)status, attError] : [frame.Type, (byte)status]));
     }
 
+    /// <summary>Completes the deferred procedure with an OK ACK that names a different request type (a mixed-up answer).</summary>
+    public void ResolvePendingWithWrongType(byte originalType)
+    {
+        StickFrame? frame;
+        lock (_lock)
+        {
+            frame = _pendingProcedure;
+            _pendingProcedure = null;
+        }
+
+        if (frame != null)
+        {
+            Transport?.Receive(Respond(frame, StickProtocol.TypeAck, [originalType, 0]));
+        }
+    }
+
     /// <summary>True while a procedure waits for <see cref="ResolvePending"/>.</summary>
     public bool HasPendingProcedure
     {

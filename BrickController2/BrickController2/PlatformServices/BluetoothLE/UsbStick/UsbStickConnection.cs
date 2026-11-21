@@ -147,15 +147,33 @@ public sealed class UsbStickConnection : IDisposable
     /// </summary>
     public int MaxLinks => Info is { SupportsGatt: true } info ? info.MaxConns : 0;
 
-    /// <summary>True while at least one scanner waits for scan reports.</summary>
+    /// <summary>
+    /// True while the stick really scans for at least one scanner. After EVT_BUTTON / EVT_SCAN_STOPPED the scanners
+    /// stay registered (the scan is not restarted on purpose) but nothing is scanned, so this is false then.
+    /// </summary>
     public bool IsScanning
     {
         get
         {
             lock (_stateLock)
             {
-                return _scanners.Count > 0;
+                return _scanners.Count > 0 && _scanOnStick;
             }
+        }
+    }
+
+    /// <summary>Blocks until all scan results queued so far reached their callbacks (test support).</summary>
+    internal void WaitForScanCallbacks()
+    {
+        StickScanner[] scanners;
+        lock (_stateLock)
+        {
+            scanners = _scanners.ToArray();
+        }
+
+        foreach (var scanner in scanners)
+        {
+            scanner.WaitUntilDelivered(TimeSpan.FromSeconds(5));
         }
     }
 

@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +13,8 @@ namespace BrickController2.PlatformServices.BluetoothLE.UsbStick;
 
 /// <summary>
 /// One scan consumer of the stick. Registers with the connection (which keeps one shared scan running),
-/// receives every report on the transport thread and calls the BC2 scan callback.
+/// receives every report on the transport thread, merges it there (cheap) and hands the result to a
+/// per-scanner queue: the BC2 scan callback (device manager code) runs on a separate reader task, never on the read loop.
 /// <para>
 /// Windows reports advertising PDUs and scan responses separately; BC2's matching needs the name (from the
 /// scan response for LEGO hubs) AND the manufacturer data / service UUIDs (advertising PDU) together. The
@@ -34,6 +37,14 @@ internal sealed class StickScanner
     private readonly object _lock = new();
     private readonly Dictionary<string, PeerState> _peers = new();
 
+    // Results waiting for the BC2 callback; one reader task keeps the order. Started with the first result.
+    private readonly Channel<ScanResult> _results = Channel.CreateUnbounded<ScanResult>(
+        new UnboundedChannelOptions { SingleReader = true, SingleWriter = false, AllowSynchronousContinuations = false });
+    private bool _pumpStarted;
+
+    // Number of results queued but not yet delivered (only used by WaitUntilDelivered).
+    private int _undelivered;
+
     public StickScanner(UsbStickConnection connection, Action<ScanResult> callback, StickAddressBook addressBook, ILogger logger)
     {
         _connection = connection;
@@ -49,6 +60,7 @@ internal sealed class StickScanner
     public async Task StopAsync()
     {
         await _connection.StopScanAsync(this).ConfigureAwait(false);
+        _results.Writer.TryComplete(); // late reports are dropped, the reader task ends after the queue is empty
         lock (_lock)
         {
             // Like BleScanner: the name cache dies with the scan.
@@ -76,14 +88,66 @@ internal sealed class StickScanner
             return;
         }
 
-        try
+        Enqueue(result);
+    }
+
+    /// <summary>Queues a result for the callback and starts the reader task on first use.</summary>
+    private void Enqueue(ScanResult result)
+    {
+        lock (_lock)
         {
-            _callback(result);
+            if (!_results.Writer.TryWrite(result))
+            {
+                return; // the scanner was stopped
+            }
+
+            _undelivered++;
+            if (!_pumpStarted)
+            {
+                _pumpStarted = true;
+                _ = Task.Run(PumpAsync);
+            }
         }
-        catch (Exception ex)
+    }
+
+    /// <summary>Single reader: calls the BC2 scan callback in arrival order, off the transport thread.</summary>
+    private async Task PumpAsync()
+    {
+        await foreach (ScanResult result in _results.Reader.ReadAllAsync().ConfigureAwait(false))
         {
-            // A failing consumer must not break the stick's read loop.
-            _logger.LogWarning(ex, "USB stick: scan callback failed");
+            try
+            {
+                _callback(result);
+            }
+            catch (Exception ex)
+            {
+                // A failing consumer must not stop the delivery.
+                _logger.LogWarning(ex, "USB stick: scan callback failed");
+            }
+            finally
+            {
+                lock (_lock)
+                {
+                    _undelivered--;
+                    Monitor.PulseAll(_lock);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Blocks until every queued result was handed to the callback (or the timeout expired). For tests of the
+    /// simulated stick, which feeds reports synchronously.
+    /// </summary>
+    internal void WaitUntilDelivered(TimeSpan timeout)
+    {
+        lock (_lock)
+        {
+            var deadline = DateTime.UtcNow + timeout;
+            while (_undelivered > 0 && DateTime.UtcNow < deadline)
+            {
+                Monitor.Wait(_lock, TimeSpan.FromMilliseconds(20));
+            }
         }
     }
 

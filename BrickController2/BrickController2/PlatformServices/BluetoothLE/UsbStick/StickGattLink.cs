@@ -171,13 +171,45 @@ internal sealed class StickGattLink : IDisposable
         }
     }
 
-    /// <summary>Sends DISCONNECT for a connect attempt that is no longer wanted and marks the link closed.</summary>
+    /// <summary>
+    /// Sends DISCONNECT for a connect attempt that is no longer wanted, marks the link closed and waits (bounded)
+    /// for the stick's EVT_DISCONNECTED. The caller returns the conn_id only afterwards: otherwise a quick reconnect
+    /// on the same id could be answered with ALREADY_RUNNING or be failed by the late event of this attempt.
+    /// </summary>
     private async Task AbortConnectAsync()
     {
-        bool wasConnected = IsConnected;
-        MarkClosed();
-        await SendBestEffortAsync(StickProtocol.TypeDisconnect, StickFrameEncoder.ConnIdPayload(ConnId)).ConfigureAwait(false);
+        bool wasConnected;
+        Task<bool>? closed;
+        lock (_lock)
+        {
+            wasConnected = _state == LinkState.Connected;
+            closed = _closedTcs?.Task;
+            _state = LinkState.Closed;
+            _discovery?.Fail(StickStatus.Disconnected);
+
+            // _closedTcs is NOT completed here: it stands for "the stick confirmed the end".
+        }
+
+        _notifications.Writer.TryComplete();
+        if (await SendBestEffortAsync(StickProtocol.TypeDisconnect, StickFrameEncoder.ConnIdPayload(ConnId)).ConfigureAwait(false) && closed != null)
+        {
+            await WaitForStickConfirmationAsync(closed).ConfigureAwait(false);
+        }
+
         _logger.LogDebug("USB stick: connect on conn {ConnId} aborted (connected: {Connected})", ConnId, wasConnected);
+    }
+
+    /// <summary>Waits up to <see cref="DisconnectConfirmTimeout"/> for the stick's EVT_DISCONNECTED (or a stick loss).</summary>
+    private async Task WaitForStickConfirmationAsync(Task<bool> closed)
+    {
+        try
+        {
+            await closed.WaitAsync(DisconnectConfirmTimeout, _clock).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogDebug("USB stick: no EVT_DISCONNECTED for conn {ConnId}", ConnId);
+        }
     }
 
     /// <summary>
@@ -205,14 +237,7 @@ internal sealed class StickGattLink : IDisposable
 
         if (await SendBestEffortAsync(StickProtocol.TypeDisconnect, StickFrameEncoder.ConnIdPayload(ConnId)).ConfigureAwait(false) && closed != null)
         {
-            try
-            {
-                await closed.WaitAsync(DisconnectConfirmTimeout, _clock).ConfigureAwait(false);
-            }
-            catch (TimeoutException)
-            {
-                _logger.LogDebug("USB stick: no EVT_DISCONNECTED for conn {ConnId}", ConnId);
-            }
+            await WaitForStickConfirmationAsync(closed).ConfigureAwait(false);
         }
     }
 
@@ -365,7 +390,16 @@ internal sealed class StickGattLink : IDisposable
             }
 
             StickResponseDecoder.TryDecodeAck(frame, out var ack);
-            byte attError = ack!.Status == StickStatus.AttError && ack.Extra.Length > 0 ? ack.Extra[0] : (byte)0;
+
+            // The ACK names the request it answers: anything else is an answer to a different request (a sequence
+            // number mix-up) and must not be taken as the result of this one.
+            if (ack!.OriginalType != type)
+            {
+                _logger.LogWarning("USB stick: ACK for 0x{Got:X2} received for request 0x{Expected:X2} on conn {ConnId}", ack.OriginalType, type, ConnId);
+                return (new GattResult(StickStatus.BleError), null);
+            }
+
+            byte attError = ack.Status == StickStatus.AttError && ack.Extra.Length > 0 ? ack.Extra[0] : (byte)0;
             return (new GattResult(ack.Status, attError), null);
         }
         catch (StickTimeoutException)
@@ -448,6 +482,17 @@ internal sealed class StickGattLink : IDisposable
         bool lost;
         lock (_lock)
         {
+            // Stale events of an earlier use of this conn_id (aborted attempt, link ended before a HELLO) must not
+            // end the current link: this link never asked for a DISCONNECT (that closes it locally first), so
+            // "cancelled" is not ours, and a "was not connected" event cannot belong to an established link.
+            bool stale = (_state is LinkState.Connecting or LinkState.Connected && disconnected.Reason == StickProtocol.ReasonCancelled)
+                || (_state == LinkState.Connected && !disconnected.WasConnected);
+            if (stale)
+            {
+                _logger.LogDebug("USB stick: stale EVT_DISCONNECTED (reason 0x{Reason:X2}) ignored on conn {ConnId}", disconnected.Reason, ConnId);
+                return;
+            }
+
             _disconnectReason = disconnected.Reason;
             lost = _state == LinkState.Connected;
 
@@ -474,6 +519,13 @@ internal sealed class StickGattLink : IDisposable
         bool lost;
         lock (_lock)
         {
+            // A link that was never connected has nothing to lose: staying Idle lets its first ConnectAsync run
+            // (and fail on its own if the stick is really gone) instead of failing with AlreadyRunning.
+            if (_state == LinkState.Idle)
+            {
+                return;
+            }
+
             lost = _state == LinkState.Connected;
             _disconnectReason = StickProtocol.ReasonSafetyStop;
             if (_state == LinkState.Connecting)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -75,10 +76,10 @@ internal sealed class StickSession : IDisposable
     /// <exception cref="StickTransportException">The transport is closed or the write failed.</exception>
     public async Task<StickFrame> RequestAsync(byte type, byte[] payload, TimeSpan timeout, int attempts, CancellationToken cancellationToken = default)
     {
-        byte seq = NextSeq();
-        byte[] frame = StickFrameEncoder.Encode(type, seq, payload);
         var tcs = new TaskCompletionSource<StickFrame>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _pending[seq] = tcs;
+        // Reserve a sequence number that no other waiting request uses (never overwrites a pending entry).
+        byte seq = ReserveSeq(tcs);
+        byte[] frame = StickFrameEncoder.Encode(type, seq, payload);
 
         try
         {
@@ -100,7 +101,9 @@ internal sealed class StickSession : IDisposable
         }
         finally
         {
-            _pending.TryRemove(seq, out _);
+            // Remove only our own entry: the response handler may already have removed it and a later
+            // request may have reserved the same number in the meantime.
+            _pending.TryRemove(new KeyValuePair<byte, TaskCompletionSource<StickFrame>>(seq, tcs));
         }
     }
 
@@ -117,14 +120,28 @@ internal sealed class StickSession : IDisposable
         Transport.Dispose();
     }
 
-    /// <summary>Returns the next sequence number in 1..255 (0 is reserved for events).</summary>
-    private byte NextSeq()
+    /// <summary>
+    /// Picks the next sequence number in 1..255 (0 is reserved for events) that is not used by a
+    /// request still waiting for its answer and registers <paramref name="tcs"/> under it. Requests can
+    /// stay pending for seconds while others are sent at a high rate, so wrapping around must skip
+    /// numbers in use instead of overwriting them.
+    /// </summary>
+    /// <exception cref="StickTransportException">All 255 sequence numbers are in use.</exception>
+    private byte ReserveSeq(TaskCompletionSource<StickFrame> tcs)
     {
         lock (_seqLock)
         {
-            _lastSeq = _lastSeq == 255 ? (byte)1 : (byte)(_lastSeq + 1);
-            return _lastSeq;
+            for (int i = 0; i < 255; i++)
+            {
+                _lastSeq = _lastSeq == 255 ? (byte)1 : (byte)(_lastSeq + 1);
+                if (_pending.TryAdd(_lastSeq, tcs))
+                {
+                    return _lastSeq;
+                }
+            }
         }
+
+        throw new StickTransportException("Too many requests waiting for the stick.");
     }
 
     /// <summary>Writes one frame under the write lock; a failure closes the session.</summary>
