@@ -38,6 +38,9 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Theme -->
@@ -62,6 +65,12 @@
                     <Button Grid.Column="1" Grid.Row="6" Text="{Binding CurrentUsbAdvertiserMode}" Command="{Binding SelectUsbAdvertiserModeCommand}" Style="{StaticResource PickerButtonStyle}" HorizontalOptions="FillAndExpand" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
                     <Label Grid.ColumnSpan="2" Grid.Row="7" Text="{Binding UsbStickStatusText}" FontSize="Small" Margin="0,5,0,0" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
                     <BoxView Grid.ColumnSpan="2" Grid.Row="8" Style="{StaticResource DividerBoxViewStyle}" Margin="5,10,5,10" IsVisible="{Binding IsUsbAdvertiserSupported}"/>
+
+                    <!-- USB stick for scanning and GATT devices (Windows only): Auto / WindowsOnly / StickOnly and the connection count -->
+                    <Label Grid.Column="0" Grid.Row="9" Text="{extensions:Translate UsbGatt}" FontSize="Large" VerticalOptions="Center" IsVisible="{Binding IsUsbGattSupported}"/>
+                    <Button Grid.Column="1" Grid.Row="9" Text="{Binding CurrentUsbGattMode}" Command="{Binding SelectUsbGattModeCommand}" Style="{StaticResource PickerButtonStyle}" HorizontalOptions="FillAndExpand" IsVisible="{Binding IsUsbGattSupported}"/>
+                    <Label Grid.ColumnSpan="2" Grid.Row="10" Text="{Binding UsbGattStatusText}" FontSize="Small" Margin="0,5,0,0" IsVisible="{Binding IsUsbGattSupported}"/>
+                    <BoxView Grid.ColumnSpan="2" Grid.Row="11" Style="{StaticResource DividerBoxViewStyle}" Margin="5,10,5,10" IsVisible="{Binding IsUsbGattSupported}"/>
                 </Grid>
 
             </Grid>

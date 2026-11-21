@@ -1726,6 +1726,42 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bluetooth LE devices (GATT).
+        /// </summary>
+        internal static string UsbGatt {
+            get {
+                return ResourceManager.GetString("UsbGatt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick connections (used/max):.
+        /// </summary>
+        internal static string UsbStickLinks {
+            get {
+                return ResourceManager.GetString("UsbStickLinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scanning through the USB stick.
+        /// </summary>
+        internal static string UsbStickScanning {
+            get {
+                return ResourceManager.GetString("UsbStickScanning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick firmware has no GATT support.
+        /// </summary>
+        internal static string UsbStickNoGatt {
+            get {
+                return ResourceManager.GetString("UsbStickNoGatt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Output level.
         /// </summary>
         internal static string OutputLevel {

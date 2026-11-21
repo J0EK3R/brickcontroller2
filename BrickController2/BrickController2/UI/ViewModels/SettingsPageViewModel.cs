@@ -25,6 +25,7 @@ namespace BrickController2.UI.ViewModels
         private readonly CreationListPageViewModel _parentViewModel;
         private readonly IDialogService _dialogService;
         private readonly IUsbAdvertiserService? _usbAdvertiserService;
+        private readonly IUsbGattService? _usbGattService;
 
         public SettingsPageViewModel(
             INavigationService navigationService,
@@ -34,7 +35,8 @@ namespace BrickController2.UI.ViewModels
             ILocalizationService localizationService,
             IInputDeviceService<OrientationSensorController> orientationSensorService,
             NavigationParameters parameters,
-            IUsbAdvertiserService? usbAdvertiserService = null) : 
+            IUsbAdvertiserService? usbAdvertiserService = null,
+            IUsbGattService? usbGattService = null) : 
             base(navigationService, translationService)
         {
             _themeService = themeService;
@@ -46,6 +48,8 @@ namespace BrickController2.UI.ViewModels
             SelectLanguageCommand = new SafeCommand(SelectAppLanguageAsync);
             _usbAdvertiserService = usbAdvertiserService;
             SelectUsbAdvertiserModeCommand = new SafeCommand(SelectUsbAdvertiserModeAsync);
+            _usbGattService = usbGattService;
+            SelectUsbGattModeCommand = new SafeCommand(SelectUsbGattModeAsync);
         }
 
         public ThemeType CurrentTheme
@@ -77,6 +81,22 @@ namespace BrickController2.UI.ViewModels
         public ICommand SelectThemeCommand { get; }
         public ICommand SelectLanguageCommand { get; }
         public ICommand SelectUsbAdvertiserModeCommand { get; }
+        public ICommand SelectUsbGattModeCommand { get; }
+
+        /// <summary>
+        /// True when GATT through the USB stick can be configured (Windows); the row is hidden elsewhere.
+        /// </summary>
+        public bool IsUsbGattSupported => _usbGattService != null;
+
+        /// <summary>
+        /// Selected mode for scanning and GATT devices (Auto = stick if present, else Windows / WindowsOnly / StickOnly).
+        /// </summary>
+        public UsbGattMode CurrentUsbGattMode => _usbGattService?.GattMode ?? UsbGattMode.WindowsOnly;
+
+        /// <summary>
+        /// Translated GATT status of the stick, e.g. "USB stick connections (used/max): 2/9, Scanning through the USB stick".
+        /// </summary>
+        public string UsbGattStatusText => BuildUsbGattStatusText();
 
         /// <summary>
         /// True on platforms that can use the USB BLE advertising stick (Windows); the settings rows are hidden elsewhere.
@@ -104,6 +124,11 @@ namespace BrickController2.UI.ViewModels
                 // Look for the stick now so the status line is up to date (result arrives via StatusChanged).
                 _ = _usbAdvertiserService.RefreshAsync();
             }
+
+            if (_usbGattService != null)
+            {
+                _usbGattService.StatusChanged += OnUsbAdvertiserStatusChanged;
+            }
         }
 
         public override void OnDisappearing()
@@ -111,6 +136,11 @@ namespace BrickController2.UI.ViewModels
             if (_usbAdvertiserService != null)
             {
                 _usbAdvertiserService.StatusChanged -= OnUsbAdvertiserStatusChanged;
+            }
+
+            if (_usbGattService != null)
+            {
+                _usbGattService.StatusChanged -= OnUsbAdvertiserStatusChanged;
             }
 
             base.OnDisappearing();
@@ -135,6 +165,26 @@ namespace BrickController2.UI.ViewModels
         {
             RaisePropertyChanged(nameof(CurrentUsbAdvertiserMode));
             RaisePropertyChanged(nameof(UsbStickStatusText));
+            RaisePropertyChanged(nameof(CurrentUsbGattMode));
+            RaisePropertyChanged(nameof(UsbGattStatusText));
+        }
+
+        private string BuildUsbGattStatusText()
+        {
+            if (_usbGattService == null || _usbGattService.GattMode == UsbGattMode.WindowsOnly)
+            {
+                return string.Empty;
+            }
+
+            var status = _usbGattService.GattStatus;
+            if (!status.Supported)
+            {
+                // Only mention missing GATT support when a stick is connected but its firmware lacks it.
+                return _usbAdvertiserService?.Status.State == UsbStickState.Connected ? Translate("UsbStickNoGatt") : string.Empty;
+            }
+
+            var text = Translate("UsbStickLinks", $"{status.LinksInUse}/{status.MaxLinks}");
+            return status.Scanning ? text + ", " + Translate("UsbStickScanning") : text;
         }
 
         private string BuildUsbStickStatusText()
@@ -180,6 +230,30 @@ namespace BrickController2.UI.ViewModels
                 if (mode == UsbAdvertiserMode.Auto)
                 {
                     _ = _usbAdvertiserService.RefreshAsync();
+                }
+            }
+        }
+
+        private async Task SelectUsbGattModeAsync()
+        {
+            if (_usbGattService == null)
+            {
+                return;
+            }
+
+            var result = await _dialogService.ShowSelectionDialogAsync(
+                Enum.GetNames<UsbGattMode>(),
+                Translate("UsbGatt"),
+                Translate("Cancel"),
+                DisappearingToken);
+
+            if (result.IsOk && Enum.TryParse<UsbGattMode>(result.SelectedItem, out var mode))
+            {
+                _usbGattService.GattMode = mode;
+                if (mode != UsbGattMode.WindowsOnly)
+                {
+                    // Look for the stick now so the status line shows its connection count (result arrives via StatusChanged).
+                    _ = _usbAdvertiserService?.RefreshAsync();
                 }
             }
         }

@@ -972,4 +972,16 @@
   <data name="UsbStickIncompatible" xml:space="preserve">
     <value>USB stick has an incompatible firmware version</value>
   </data>
+  <data name="UsbGatt" xml:space="preserve">
+    <value>Bluetooth LE devices (GATT)</value>
+  </data>
+  <data name="UsbStickLinks" xml:space="preserve">
+    <value>USB stick connections (used/max):</value>
+  </data>
+  <data name="UsbStickScanning" xml:space="preserve">
+    <value>Scanning through the USB stick</value>
+  </data>
+  <data name="UsbStickNoGatt" xml:space="preserve">
+    <value>USB stick firmware has no GATT support</value>
+  </data>
 </root>

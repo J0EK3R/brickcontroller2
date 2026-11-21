@@ -972,4 +972,16 @@
   <data name="UsbStickIncompatible" xml:space="preserve">
     <value>USB-Stick hat eine inkompatible Firmware-Version</value>
   </data>
+  <data name="UsbGatt" xml:space="preserve">
+    <value>Bluetooth-LE-Geräte (GATT)</value>
+  </data>
+  <data name="UsbStickLinks" xml:space="preserve">
+    <value>USB-Stick-Verbindungen (belegt/max):</value>
+  </data>
+  <data name="UsbStickScanning" xml:space="preserve">
+    <value>Suche läuft über den USB-Stick</value>
+  </data>
+  <data name="UsbStickNoGatt" xml:space="preserve">
+    <value>Die Firmware des USB-Sticks unterstützt kein GATT</value>
+  </data>
 </root>

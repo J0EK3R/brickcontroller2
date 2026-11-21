@@ -963,4 +963,16 @@
   <data name="UsbStickIncompatible" xml:space="preserve">
     <value>Az USB-eszköz firmware-verziója nem kompatibilis</value>
   </data>
+  <data name="UsbGatt" xml:space="preserve">
+    <value>Bluetooth LE eszközök (GATT)</value>
+  </data>
+  <data name="UsbStickLinks" xml:space="preserve">
+    <value>USB-eszköz kapcsolatok (foglalt/max):</value>
+  </data>
+  <data name="UsbStickScanning" xml:space="preserve">
+    <value>Keresés az USB-eszközön keresztül</value>
+  </data>
+  <data name="UsbStickNoGatt" xml:space="preserve">
+    <value>Az USB-eszköz firmware-e nem támogatja a GATT-ot</value>
+  </data>
 </root>
