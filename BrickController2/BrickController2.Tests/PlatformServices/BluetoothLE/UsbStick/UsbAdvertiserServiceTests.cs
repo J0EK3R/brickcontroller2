@@ -100,4 +100,29 @@ public class UsbAdvertiserServiceTests
         raised.Should().BeGreaterThan(0);
         service.Status.State.Should().Be(UsbStickState.Connected);
     }
+
+    [Fact]
+    public async Task IsStickAvailableAsync_AutoWithStick_IsTrue()
+    {
+        var (service, h) = Create(plugged: true);
+        using var _ = h;
+        (await service.IsStickAvailableAsync()).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task IsStickAvailableAsync_AutoWithoutStick_IsFalse()
+    {
+        var (service, h) = Create(plugged: false);
+        using var _ = h;
+        (await service.IsStickAvailableAsync()).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsStickAvailableAsync_ModeOff_IsFalseEvenWithStick()
+    {
+        var (service, h) = Create(plugged: true);
+        using var _ = h;
+        service.Mode = UsbAdvertiserMode.Off;
+        (await service.IsStickAvailableAsync()).Should().BeFalse();
+    }
 }

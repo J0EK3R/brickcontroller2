@@ -54,8 +54,11 @@ stick when it opens. Changing the setting affects devices created afterwards.
 
 ## Known limitations
 
-* `IsBluetoothOnAsync` still reflects the Windows radio: with Bluetooth switched off in Windows BC2 asks to
-  turn it on even if a stick is present.
+* With the Windows radio off and a stick present (setting Auto) BC2 no longer asks to enable Bluetooth
+  (`StickAwareBleService.IsBluetoothOnAsync` = radio on OR stick reachable, decided by
+  `BluetoothAvailability`). Only advertising devices work in this state: BLE scanning completes without
+  results (advertising scan still runs) and GATT devices fail to connect with the normal connection error.
+  With the setting Off the behaviour is unchanged (prompt when the radio is off).
 * Hardware tests are pending (the stick was not available during development).
 * Device creation is synchronous, so the stick probe waits at most 1 s. With two or more silent ESP32
   boards plugged in (each probed with 3 HELLOs of 200 ms) the wait can time out; that device is then

@@ -73,6 +73,29 @@ public sealed class UsbAdvertiserService : IUsbAdvertiserService
         : _connection.TryConnectAsync(forceProbe: true);
 
     /// <summary>
+    /// True when the setting is Auto and a stick is connected or can be connected right now. Fully async
+    /// (never blocks the caller); a failed probe is cached by the connection for 10 s, so repeated calls
+    /// (e.g. from every page that checks Bluetooth) stay cheap.
+    /// </summary>
+    public async Task<bool> IsStickAvailableAsync()
+    {
+        if (Mode == UsbAdvertiserMode.Off)
+        {
+            return false;
+        }
+
+        try
+        {
+            return _connection.IsConnected || await _connection.TryConnectAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("USB stick availability check failed: {Message}", ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Creates an advertiser device on a free stick set, or returns null when the stick must not or cannot
     /// be used (mode Off, no stick, stick lost, all 5 sets in use). No live switching happens afterwards:
     /// an already created device keeps its set and resumes when the stick returns.
