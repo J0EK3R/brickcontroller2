@@ -17,7 +17,9 @@ using Xunit;
 
 namespace BrickController2.Tests.DeviceManagement;
 
-/// <summary>Effective resend interval of <see cref="DuploTrainHubDevice"/> with artificial write latency.</summary>
+/// <summary>
+/// Effective resend interval of <see cref="DuploTrainHubDevice"/> with artificial write latency.
+/// </summary>
 public class DuploResendTests
 {
     private const int WriteLatencyMs = 150;
@@ -52,7 +54,9 @@ public class DuploResendTests
         gaps.Should().OnlyContain(g => g >= 450, "no flood: the command is resent about every 500 ms");
     }
 
-    /// <summary>Creates a DUPLO device on top of a fake BLE device whose writes record their start and take 150 ms.</summary>
+    /// <summary>
+    /// Creates a DUPLO device on top of a fake BLE device whose writes record their start and take 150 ms.
+    /// </summary>
     private static DuploTrainHubDevice CreateConnectedDevice(List<(long Ticks, byte[] Data)> starts, out Mock<IBluetoothLEDevice> bleDevice)
     {
         var characteristic = Mock.Of<IGattCharacteristic>(c => c.Uuid == LegoWirelessProtocol.CharacteristicUuid);

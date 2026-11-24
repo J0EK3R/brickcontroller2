@@ -243,7 +243,9 @@ namespace BrickController2.DeviceManagement
             }
         }
 
-        /// <summary>True when a normal motor command was sent before and <see cref="ResendDelay_NormalMotor"/> has passed since its start.</summary>
+        /// <summary>
+        /// True when a normal motor command was sent before and <see cref="ResendDelay_NormalMotor"/> has passed since its start.
+        /// </summary>
         private bool NormalMotorResendDue()
         {
             long start = Volatile.Read(ref _lastSentStart_NormalMotor);
