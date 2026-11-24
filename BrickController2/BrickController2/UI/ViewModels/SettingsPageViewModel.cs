@@ -4,10 +4,13 @@ using BrickController2.UI.Commands;
 using BrickController2.UI.Services.Dialog;
 using BrickController2.UI.Services.Localization;
 using BrickController2.UI.Services.Navigation;
+using BrickController2.UI.Services.PlatformSettings;
 using BrickController2.UI.Services.Theme;
 using BrickController2.UI.Services.Translation;
 using Microsoft.Maui.Controls;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -30,7 +33,8 @@ namespace BrickController2.UI.ViewModels
             IThemeService themeService,
             ILocalizationService localizationService,
             IInputDeviceService<OrientationSensorController> orientationSensorService,
-            NavigationParameters parameters) : 
+            NavigationParameters parameters,
+            IEnumerable<IPlatformSettingsItem>? platformSettings = null) : 
             base(navigationService, translationService)
         {
             _themeService = themeService;
@@ -40,6 +44,8 @@ namespace BrickController2.UI.ViewModels
             _parentViewModel = parameters.Get<CreationListPageViewModel>("parent");
             SelectThemeCommand = new SafeCommand(SelectThemeAsync);
             SelectLanguageCommand = new SafeCommand(SelectAppLanguageAsync);
+            // Autofac injects an empty list when the platform registered no items
+            PlatformSettings = platformSettings?.ToList() ?? new List<IPlatformSettingsItem>();
         }
 
         public ThemeType CurrentTheme
@@ -70,6 +76,29 @@ namespace BrickController2.UI.ViewModels
 
         public ICommand SelectThemeCommand { get; }
         public ICommand SelectLanguageCommand { get; }
+
+        /// <summary>
+        /// Extra settings rows contributed by the platform project (empty on most platforms).
+        /// </summary>
+        public IReadOnlyList<IPlatformSettingsItem> PlatformSettings { get; }
+
+        public override void OnAppearing()
+        {
+            base.OnAppearing();
+            foreach (var item in PlatformSettings)
+            {
+                item.Attach();
+            }
+        }
+
+        public override void OnDisappearing()
+        {
+            foreach (var item in PlatformSettings)
+            {
+                item.Detach();
+            }
+            base.OnDisappearing();
+        }
 
         public bool IsOrientationSensorSupported => _orientationSensorService.IsSupported;
 
