@@ -1672,6 +1672,96 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to USB advertiser.
+        /// </summary>
+        internal static string UsbAdvertiser {
+            get {
+                return ResourceManager.GetString("UsbAdvertiser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick not used (Off).
+        /// </summary>
+        internal static string UsbStickDisabled {
+            get {
+                return ResourceManager.GetString("UsbStickDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick connected:.
+        /// </summary>
+        internal static string UsbStickConnected {
+            get {
+                return ResourceManager.GetString("UsbStickConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick not found.
+        /// </summary>
+        internal static string UsbStickNotFound {
+            get {
+                return ResourceManager.GetString("UsbStickNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick lost, waiting for it to be plugged in again.
+        /// </summary>
+        internal static string UsbStickLost {
+            get {
+                return ResourceManager.GetString("UsbStickLost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick has an incompatible firmware version.
+        /// </summary>
+        internal static string UsbStickIncompatible {
+            get {
+                return ResourceManager.GetString("UsbStickIncompatible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bluetooth LE devices (GATT).
+        /// </summary>
+        internal static string UsbGatt {
+            get {
+                return ResourceManager.GetString("UsbGatt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick connections (used/max):.
+        /// </summary>
+        internal static string UsbStickLinks {
+            get {
+                return ResourceManager.GetString("UsbStickLinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scanning through the USB stick.
+        /// </summary>
+        internal static string UsbStickScanning {
+            get {
+                return ResourceManager.GetString("UsbStickScanning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to USB stick firmware has no GATT support.
+        /// </summary>
+        internal static string UsbStickNoGatt {
+            get {
+                return ResourceManager.GetString("UsbStickNoGatt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Output level.
         /// </summary>
         internal static string OutputLevel {

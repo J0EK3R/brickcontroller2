@@ -1,4 +1,5 @@
-﻿using BrickController2.PlatformServices.BluetoothLE;
+﻿using BrickController2.Diagnostics;
+using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -38,6 +39,7 @@ namespace BrickController2.DeviceManagement
             {
                 if (token.IsCancellationRequested || _bleDevice != null || DeviceState != DeviceState.Disconnected)
                 {
+                    UsbStickTrace.Write($"BC2 connect {Address}: FAILED immediately (cancelled={token.IsCancellationRequested}, bleDeviceAlreadySet={_bleDevice != null}, state={DeviceState}) -> Error");
                     return DeviceConnectionResult.Error;
                 }
 
@@ -48,8 +50,10 @@ namespace BrickController2.DeviceManagement
                     _bleDevice = await _bleService.GetKnownDeviceAsync(Address);
                     if (_bleDevice == null)
                     {
+                        UsbStickTrace.Write($"BC2 connect {Address}: FAILED, GetKnownDeviceAsync returned null (no path / no free slot) -> Error");
                         return DeviceConnectionResult.Error;
                     }
+
 
                     DeviceState = DeviceState.Connecting;
                     var services = await _bleDevice.ConnectAndDiscoverServicesAsync(
@@ -60,8 +64,10 @@ namespace BrickController2.DeviceManagement
 
                     token.ThrowIfCancellationRequested();
 
-                    if (await ValidateServicesAsync(services, token) && 
-                        await AfterConnectSetupAsync(requestDeviceInformation, token))
+                    bool servicesValid = await ValidateServicesAsync(services, token);
+                    bool setupDone = servicesValid && await AfterConnectSetupAsync(requestDeviceInformation, token);
+
+                    if (servicesValid && setupDone)
                     {
                         if (startOutputProcessing)
                         {
@@ -79,8 +85,10 @@ namespace BrickController2.DeviceManagement
                     await DisconnectInternalAsync();
                     return DeviceConnectionResult.Canceled;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    // Behaviour unchanged (the exception is swallowed); the trace shows what was hidden before.
+                    UsbStickTrace.Write($"BC2 connect {Address}: EXCEPTION swallowed -> Error: {ex}");
                 }
 
                 await DisconnectInternalAsync();

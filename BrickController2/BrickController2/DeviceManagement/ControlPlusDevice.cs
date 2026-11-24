@@ -1,4 +1,5 @@
 ﻿using BrickController2.CreationManagement;
+using BrickController2.Diagnostics;
 using BrickController2.DeviceManagement.Lego;
 using BrickController2.PlatformServices.BluetoothLE;
 using System;
@@ -28,7 +29,14 @@ namespace BrickController2.DeviceManagement
         private readonly int[] _sendAttemptsLeft;
         private readonly object _outputLock = new object();
 
-        private readonly Stopwatch _lastSent_NormalMotor = new Stopwatch();
+        // Stopwatch timestamp of the START of the last normal motor write (0 = nothing sent since connect).
+        // Measured at the start, not after the awaited write: a write with response (stick GATT: 100+ ms) would
+        // otherwise stretch the effective resend interval beyond ResendDelay_NormalMotor and e.g. a DUPLO hub
+        // (needs the command at least every ~500 ms) would stop its motor between two resends.
+        private long _lastSentStart_NormalMotor;
+
+        // Set whenever a command was written during the current SendOutputValuesAsync pass (see there).
+        private bool _wroteInPass;
 
         public ControlPlusDevice(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
             : base(name, address, deviceRepository, bleService)
@@ -161,7 +169,7 @@ namespace BrickController2.DeviceManagement
                     _sendAttemptsLeft[channel] = MAX_SEND_ATTEMPTS;
                 }
             }
-            _lastSent_NormalMotor.Reset();
+            Volatile.Write(ref _lastSentStart_NormalMotor, 0);
         }
 
         protected override async Task<bool> AfterConnectSetupAsync(bool requestDeviceInformation, CancellationToken token)
@@ -189,8 +197,10 @@ namespace BrickController2.DeviceManagement
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                // Behaviour unchanged (returns false = connect fails); the trace names the exception that caused it.
+                UsbStickTrace.Write($"{GetType().Name} {Address}: AfterConnectSetup EXCEPTION -> connect fails: {ex}");
                 return false;
             }
         }
@@ -200,6 +210,7 @@ namespace BrickController2.DeviceManagement
             try
             {
                 var result = true;
+                _wroteInPass = false;
 
                 for (int channel = 0; channel < NumberOfChannels; channel++)
                 {
@@ -220,12 +231,26 @@ namespace BrickController2.DeviceManagement
                     }
                 }
 
+                if (result && !_wroteInPass)
+                {
+                    // Nothing to send: the caller loops immediately on a true result, so yield here instead of
+                    // spinning a thread-pool thread at 100 % (that starved the USB stick keep-alive and RX processing).
+                    await Task.Delay(SEND_DELAY, token);
+                }
+
                 return result;
             }
             catch
             {
                 return false;
             }
+        }
+
+        /// <summary>True when a normal motor command was sent before and <see cref="ResendDelay_NormalMotor"/> has passed since its start.</summary>
+        private bool NormalMotorResendDue()
+        {
+            long start = Volatile.Read(ref _lastSentStart_NormalMotor);
+            return start != 0 && Stopwatch.GetElapsedTime(start) > ResendDelay_NormalMotor;
         }
 
         private async Task<bool> SendOutputValueAsync(int channel, CancellationToken token)
@@ -243,15 +268,18 @@ namespace BrickController2.DeviceManagement
 
                 if (v != _lastOutputValues[channel] || 
                     sendAttemptsLeft > 0 ||
-                    _lastSent_NormalMotor.Elapsed > ResendDelay_NormalMotor)
+                    NormalMotorResendDue())
                 {
                     var outputCmd = GetOutputCommand(channel, v);
+                    // The resend deadline counts from the start of this send (see _lastSentStart_NormalMotor).
+                    long sendStart = Stopwatch.GetTimestamp();
                     if (await WriteAsync(outputCmd, token))
                     {
-                        _lastSent_NormalMotor.Restart();
+                        Volatile.Write(ref _lastSentStart_NormalMotor, sendStart);
 
                         _lastOutputValues[channel] = v;
                         ResetSendAttemps(channel, 0);
+                        _wroteInPass = true;
                         await Task.Delay(SEND_DELAY, token);
                         return true;
                     }
@@ -284,6 +312,7 @@ namespace BrickController2.DeviceManagement
                         _lastOutputValues[channel1] = value1;
                         _lastOutputValues[channel2] = value2;
 
+                        _wroteInPass = true;
                         await Task.Delay(SEND_DELAY, token);
                         return true;
                     }
@@ -329,6 +358,7 @@ namespace BrickController2.DeviceManagement
                     {
                         _lastOutputValues[channel] = v;
                         ResetSendAttemps(channel, 0);
+                        _wroteInPass = true;
                         await Task.Delay(SEND_DELAY, token);
                         return true;
                     }
@@ -373,6 +403,7 @@ namespace BrickController2.DeviceManagement
                     {
                         _lastOutputValues[channel] = v;
                         ResetSendAttemps(channel, 0);
+                        _wroteInPass = true;
                         await Task.Delay(SEND_DELAY, token);
                         return true;
                     }

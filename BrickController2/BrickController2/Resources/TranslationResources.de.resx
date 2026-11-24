@@ -954,4 +954,34 @@
   <data name="HelpForward" xml:space="preserve">
     <value>Nächste Seite</value>
   </data>
+  <data name="UsbAdvertiser" xml:space="preserve">
+    <value>USB-Advertiser</value>
+  </data>
+  <data name="UsbStickDisabled" xml:space="preserve">
+    <value>USB-Stick wird nicht zum Senden (Advertising) verwendet (Aus)</value>
+  </data>
+  <data name="UsbStickConnected" xml:space="preserve">
+    <value>USB-Stick verbunden:</value>
+  </data>
+  <data name="UsbStickNotFound" xml:space="preserve">
+    <value>USB-Stick nicht gefunden</value>
+  </data>
+  <data name="UsbStickLost" xml:space="preserve">
+    <value>USB-Stick verloren, warte auf erneutes Einstecken</value>
+  </data>
+  <data name="UsbStickIncompatible" xml:space="preserve">
+    <value>USB-Stick hat eine inkompatible Firmware-Version</value>
+  </data>
+  <data name="UsbGatt" xml:space="preserve">
+    <value>Bluetooth-LE-Geräte (GATT)</value>
+  </data>
+  <data name="UsbStickLinks" xml:space="preserve">
+    <value>USB-Stick-Verbindungen (belegt/max):</value>
+  </data>
+  <data name="UsbStickScanning" xml:space="preserve">
+    <value>Suche läuft über den USB-Stick</value>
+  </data>
+  <data name="UsbStickNoGatt" xml:space="preserve">
+    <value>Die Firmware des USB-Sticks unterstützt kein GATT</value>
+  </data>
 </root>

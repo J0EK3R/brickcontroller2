@@ -1,5 +1,6 @@
 ﻿using BrickController2.CreationManagement;
 using BrickController2.DeviceManagement.IO;
+using BrickController2.Diagnostics;
 using BrickController2.PlatformServices.BluetoothLE;
 using System;
 using System.Collections.Generic;
@@ -114,6 +115,7 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
             return await _bleDevice!.EnableNotificationAsync(Characteristic, token);
         }
 
+        UsbStickTrace.Write($"{GetType().Name} {Address}: ValidateServices FALSE: {(services == null ? "no services (connect/discovery failed earlier)" : service == null ? "LEGO service not found" : "LEGO characteristic not found in the service")}");
         return false;
     }
 
@@ -319,7 +321,11 @@ internal abstract class WirelessProtocolBasedDevice : BluetoothDevice
             var data = await _bleDevice!.ReadAsync(Characteristic!, token);
             ProcessHubPropertyData(data);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            // Behaviour unchanged (swallowed); the trace shows why a hub property read failed.
+            UsbStickTrace.Write($"{GetType().Name} {Address}: hub property 0x{propertyId:X2} EXCEPTION swallowed: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     protected void ProcessHubPropertyData(ReadOnlySpan<byte> data)
