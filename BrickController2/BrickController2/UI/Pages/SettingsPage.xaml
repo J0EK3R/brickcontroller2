@@ -6,6 +6,7 @@
     xmlns:converters="clr-namespace:BrickController2.UI.Converters"
     xmlns:extensions="clr-namespace:BrickController2.UI.MarkupExtensions"
     xmlns:local="clr-namespace:BrickController2.UI.Pages"
+    xmlns:platformSettings="clr-namespace:BrickController2.UI.Services.PlatformSettings"
     xmlns:viewModels="clr-namespace:BrickController2.UI.ViewModels"
     x:Class="BrickController2.UI.Pages.SettingsPage"
     x:DataType="viewModels:SettingsPageViewModel"
@@ -35,6 +36,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Theme -->
@@ -53,6 +55,20 @@
                     <Switch Grid.Column="1" Grid.Row="4" IsToggled="{Binding IsOrientationSensorEnabled}" HorizontalOptions="End" VerticalOptions="Center" IsVisible="{Binding IsOrientationSensorSupported}"/>
 
                     <BoxView Grid.ColumnSpan="2" Grid.Row="5" Style="{StaticResource DividerBoxViewStyle}" Margin="5,10,5,10"/>
+
+                    <!-- Rows contributed by the platform project; renders nothing when the list is empty -->
+                    <VerticalStackLayout Grid.ColumnSpan="2" Grid.Row="6" BindableLayout.ItemsSource="{Binding PlatformSettings}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="platformSettings:IPlatformSettingsItem">
+                                <Grid ColumnDefinitions="2*,*" RowDefinitions="Auto,Auto,Auto">
+                                    <Label Text="{Binding Title}" FontSize="Large" VerticalOptions="Center"/>
+                                    <Button Grid.Column="1" Text="{Binding Value}" Command="{Binding Command}" Style="{StaticResource PickerButtonStyle}" HorizontalOptions="FillAndExpand"/>
+                                    <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Status}" FontSize="Small" Margin="0,5,0,0"/>
+                                    <BoxView Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource DividerBoxViewStyle}" Margin="5,10,5,10"/>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
                 </Grid>
 
             </Grid>
