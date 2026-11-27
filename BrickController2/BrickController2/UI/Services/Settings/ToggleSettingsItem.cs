@@ -67,6 +67,9 @@ public class ToggleSettingsItem : ISettingsToggleItem
     public ICommand Command { get; } = new SafeCommand(() => Task.CompletedTask);
 
     /// <inheritdoc />
+    public virtual int Order => 100;
+
+    /// <inheritdoc />
     public void Attach()
     {
         // nothing to subscribe to
