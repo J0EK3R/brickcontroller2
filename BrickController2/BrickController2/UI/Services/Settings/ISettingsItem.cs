@@ -37,6 +37,12 @@ public interface ISettingsItem : INotifyPropertyChanged
     bool IsVisible => true;
 
     /// <summary>
+    /// Sort key of the row (ascending, ties keep registration order). The built-in rows use 0, 10 and 20;
+    /// the default of 100 places platform rows after them, independent of the order in which Autofac modules were registered.
+    /// </summary>
+    int Order => 100;
+
+    /// <summary>
     /// Called when the settings page appeared: subscribe to platform events and refresh.
     /// </summary>
     void Attach();
