@@ -1,15 +1,15 @@
-// Hook that lets a platform project add its own rows to the shared settings page
-// without the shared project knowing anything about the feature behind it.
+// Generic model of one row of the settings page. The built-in rows (theme, language, orientation sensor)
+// and rows contributed by a platform project all use this contract, so the page needs no hard-coded rows.
 using System.ComponentModel;
 using System.Windows.Input;
 
-namespace BrickController2.UI.Services.PlatformSettings;
+namespace BrickController2.UI.Services.Settings;
 
 /// <summary>
-/// One extra row of the settings page contributed by a platform project.
-/// Platforms register implementations in Autofac; platforms that register none show nothing extra.
+/// One row of the settings page (picker style: label, button and optional status line).
+/// Platforms may register further implementations in Autofac; platforms that register none show nothing extra.
 /// </summary>
-public interface IPlatformSettingsItem : INotifyPropertyChanged
+public interface ISettingsItem : INotifyPropertyChanged
 {
     /// <summary>
     /// Label shown in the left column.
@@ -22,7 +22,7 @@ public interface IPlatformSettingsItem : INotifyPropertyChanged
     string Value { get; }
 
     /// <summary>
-    /// Small status line below the row; may be empty.
+    /// Small status line below the row; may be empty (the line is then hidden).
     /// </summary>
     string Status { get; }
 
@@ -30,6 +30,11 @@ public interface IPlatformSettingsItem : INotifyPropertyChanged
     /// Executed when the button is pressed (typically opens a selection dialog).
     /// </summary>
     ICommand Command { get; }
+
+    /// <summary>
+    /// Whether the row (including its divider) is shown. Defaults to visible so existing implementations keep working.
+    /// </summary>
+    bool IsVisible => true;
 
     /// <summary>
     /// Called when the settings page appeared: subscribe to platform events and refresh.

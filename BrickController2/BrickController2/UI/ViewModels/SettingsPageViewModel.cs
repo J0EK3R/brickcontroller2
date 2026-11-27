@@ -4,7 +4,7 @@ using BrickController2.UI.Commands;
 using BrickController2.UI.Services.Dialog;
 using BrickController2.UI.Services.Localization;
 using BrickController2.UI.Services.Navigation;
-using BrickController2.UI.Services.PlatformSettings;
+using BrickController2.UI.Services.Settings;
 using BrickController2.UI.Services.Theme;
 using BrickController2.UI.Services.Translation;
 using Microsoft.Maui.Controls;
@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace BrickController2.UI.ViewModels
 {
@@ -25,6 +24,8 @@ namespace BrickController2.UI.ViewModels
         private readonly IInputDeviceService<OrientationSensorController> _orientationSensorService;
         private readonly CreationListPageViewModel _parentViewModel;
         private readonly IDialogService _dialogService;
+        private readonly PickerSettingsItem _themeItem;
+        private readonly PickerSettingsItem _languageItem;
 
         public SettingsPageViewModel(
             INavigationService navigationService,
@@ -34,7 +35,7 @@ namespace BrickController2.UI.ViewModels
             ILocalizationService localizationService,
             IInputDeviceService<OrientationSensorController> orientationSensorService,
             NavigationParameters parameters,
-            IEnumerable<IPlatformSettingsItem>? platformSettings = null) : 
+            IEnumerable<ISettingsItem>? platformSettings = null) : 
             base(navigationService, translationService)
         {
             _themeService = themeService;
@@ -42,10 +43,21 @@ namespace BrickController2.UI.ViewModels
             _localizationService = localizationService;
             _orientationSensorService = orientationSensorService;
             _parentViewModel = parameters.Get<CreationListPageViewModel>("parent");
-            SelectThemeCommand = new SafeCommand(SelectThemeAsync);
-            SelectLanguageCommand = new SafeCommand(SelectAppLanguageAsync);
-            // Autofac injects an empty list when the platform registered no items
-            PlatformSettings = platformSettings?.ToList() ?? new List<IPlatformSettingsItem>();
+
+            // built-in rows need page-bound services, so they are created here instead of being registered in DI
+            _themeItem = new PickerSettingsItem(Translate("Theme"), () => CurrentTheme.ToString(), SelectThemeAsync);
+            _languageItem = new PickerSettingsItem(Translate("Language"), () => CurrentLanguage.ToString(), SelectAppLanguageAsync);
+            var orientationItem = new ToggleSettingsItem(
+                Translate("OrientationSensor"),
+                () => _orientationSensorService.IsSupported,
+                () => _orientationSensorService.IsEnabled,
+                value => _orientationSensorService.IsEnabled = value);
+
+            // fixed order: theme, language, orientation sensor, then the rows contributed by the platform;
+            // Autofac injects an empty list (or null in tests) when the platform registered no items
+            SettingsItems = new ISettingsItem[] { _themeItem, _languageItem, orientationItem }
+                .Concat(platformSettings ?? Enumerable.Empty<ISettingsItem>())
+                .ToList();
         }
 
         public ThemeType CurrentTheme
@@ -57,6 +69,7 @@ namespace BrickController2.UI.ViewModels
                 {
                     _themeService.CurrentTheme = value;
                     RaisePropertyChanged();
+                    _themeItem.RaiseValueChanged();
                 }
             }
         }
@@ -70,22 +83,20 @@ namespace BrickController2.UI.ViewModels
                 {
                     _localizationService.CurrentLanguage = value;
                     RaisePropertyChanged();
+                    _languageItem.RaiseValueChanged();
                 }
             }
         }
 
-        public ICommand SelectThemeCommand { get; }
-        public ICommand SelectLanguageCommand { get; }
-
         /// <summary>
-        /// Extra settings rows contributed by the platform project (empty on most platforms).
+        /// All rows of the settings page in display order: built-in rows first, then platform rows.
         /// </summary>
-        public IReadOnlyList<IPlatformSettingsItem> PlatformSettings { get; }
+        public IReadOnlyList<ISettingsItem> SettingsItems { get; }
 
         public override void OnAppearing()
         {
             base.OnAppearing();
-            foreach (var item in PlatformSettings)
+            foreach (var item in SettingsItems)
             {
                 item.Attach();
             }
@@ -93,26 +104,11 @@ namespace BrickController2.UI.ViewModels
 
         public override void OnDisappearing()
         {
-            foreach (var item in PlatformSettings)
+            foreach (var item in SettingsItems)
             {
                 item.Detach();
             }
             base.OnDisappearing();
-        }
-
-        public bool IsOrientationSensorSupported => _orientationSensorService.IsSupported;
-
-        public bool IsOrientationSensorEnabled
-        {
-            get => _orientationSensorService.IsEnabled;
-            set
-            {
-                if (IsOrientationSensorEnabled != value)
-                {
-                    _orientationSensorService.IsEnabled = value;
-                    RaisePropertyChanged();
-                }
-            }
         }
 
         private async Task SelectThemeAsync()
