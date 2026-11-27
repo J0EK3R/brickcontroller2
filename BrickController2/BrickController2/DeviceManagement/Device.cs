@@ -162,8 +162,18 @@ namespace BrickController2.DeviceManagement
                 }
 
                 await _deviceRepository.UpdateDeviceAsync(DeviceType, Address, CurrentSettings);
+
+                // let the device apply the new settings (e.g. send them to a connected module)
+                await OnDeviceSettingsUpdatedAsync();
             }
         }
+
+        /// <summary>
+        /// Called after the device settings were updated and stored. It runs while the device lock is held.
+        /// The default implementation does nothing, devices override it to apply the new settings.
+        /// </summary>
+        protected virtual Task OnDeviceSettingsUpdatedAsync() => Task.CompletedTask;
+
         public bool HasSettings => _settings.Values.Any();
         public IReadOnlyCollection<NamedSetting> CurrentSettings => _settings.Values;
 

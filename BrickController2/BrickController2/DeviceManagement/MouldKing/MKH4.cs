@@ -4,8 +4,10 @@ using BrickController2.DeviceManagement.Lego;
 using BrickController2.Helpers;
 using BrickController2.PlatformServices.BluetoothLE;
 using BrickController2.Protocols;
+using BrickController2.Settings;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -57,6 +59,11 @@ internal class MKH4 : BluetoothDevice
     private const int MIN_EDITION = 6;
 
     /// <summary>
+    /// Max time to send changed settings to a connected module.
+    /// </summary>
+    private static readonly TimeSpan SETTINGS_WRITE_TIMEOUT = TimeSpan.FromSeconds(2);
+
+    /// <summary>
     /// delay between two iterations of the output loop
     /// </summary>
     private static readonly TimeSpan SEND_DELAY = TimeSpan.FromMilliseconds(10);
@@ -89,11 +96,6 @@ internal class MKH4 : BluetoothDevice
     private const double POSITION_UNITS_PER_DEGREE = 1650.0;
 
     /// <summary>
-    /// Speed (0..1) of position moves. 0x4FFF is about 0.625.
-    /// </summary>
-    private const float SERVO_SPEED = 0.625f;
-
-    /// <summary>
     /// Max time to wait for the "position reached" message (T027300W) during calibration.
     /// </summary>
     private static readonly TimeSpan POSITION_REACHED_TIMEOUT = TimeSpan.FromSeconds(5);
@@ -102,12 +104,6 @@ internal class MKH4 : BluetoothDevice
     /// Max time to wait for the "position reached" message when moving to the base angle after connecting.
     /// </summary>
     private static readonly TimeSpan CONNECT_POSITION_TIMEOUT = TimeSpan.FromSeconds(3);
-
-    /// <summary>
-    /// Leading hex digit of each channel in the T144 message. '0' is used for all channels.
-    /// The meaning of the digit is unknown.
-    /// </summary>
-    private const char CHANNEL_FLAG = '0';
 
     /// <summary>
     /// Notifications on the AE30 service are not needed for the protocol, so this is off by default.
@@ -139,6 +135,18 @@ internal class MKH4 : BluetoothDevice
     /// Number of motor channels, all per-channel buffers are sized from it.
     /// </summary>
     private readonly int _channelCount;
+
+    /// <summary>
+    /// Current device settings. The snapshot is replaced as a whole when the settings change, so the output loop
+    /// and the notification thread never read half-updated settings.
+    /// </summary>
+    private volatile MKH4Config _config;
+
+    /// <summary>
+    /// Channel flags of the last speed message that was sent. A change of the flags forces one resend
+    /// of the last speed values. Only used by the output loop.
+    /// </summary>
+    private ImmutableArray<char> _lastSentFlags;
 
     /// <summary>
     /// Configuration (output type, base angle, max angle, ...) of each channel.
@@ -216,8 +224,8 @@ internal class MKH4 : BluetoothDevice
     private IGattCharacteristic? _characteristic_AE3B_Write_No_Response;
     private IGattCharacteristic? _characteristic_AE3C_Notify;
 
-    public MKH4(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-        : this(name, address, deviceRepository, bleService, DEFAULT_CHANNEL_COUNT)
+    public MKH4(string name, string address, IEnumerable<NamedSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        : this(name, address, settings, deviceRepository, bleService, DEFAULT_CHANNEL_COUNT)
     {
     }
 
@@ -225,10 +233,15 @@ internal class MKH4 : BluetoothDevice
     /// Creates the module with the given number of channels, so that a variant with more ports
     /// can reuse the implementation.
     /// </summary>
-    protected MKH4(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService, int channelCount)
+    protected MKH4(string name, string address, IEnumerable<NamedSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService, int channelCount)
         : base(name, address, deviceRepository, bleService)
     {
         _channelCount = Math.Clamp(channelCount, 1, MAX_CHANNEL_COUNT);
+
+        // register the device settings (stored values are taken over) and take the first snapshot
+        RegisterSettings(settings);
+        _config = MKH4Config.FromSettings(CurrentSettings, _channelCount);
+        _lastSentFlags = _config.ChannelFlags;
 
         // size all per-channel buffers
         _outputValues = new OutputValuesGroup<int>(_channelCount);
@@ -247,6 +260,29 @@ internal class MKH4 : BluetoothDevice
         for (int channel = 0; channel < _channelCount; channel++)
         {
             _channelConfigs.Set(channel, ChannelConfig.From(default));
+        }
+    }
+
+    /// <summary>
+    /// Registers all device settings with their defaults. All values are bool or <see cref="Percent"/>,
+    /// because the settings page can render nothing else for the needed ranges. The names are also the keys
+    /// of the translations (the limits of channels beyond D need additional translations).
+    /// </summary>
+    private void RegisterSettings(IEnumerable<NamedSetting> settings)
+    {
+        SetSettingValue(MKH4Config.StallProtectionName, settings, MKH4Config.DefaultStallProtection);
+        SetSettingValue<Percent>(MKH4Config.MoveSpeedName, settings, MKH4Config.DefaultMoveSpeedPercent);
+
+        SetSettingValue(MKH4Config.MotorStrengthEnabledName, settings, MKH4Config.MotorStrengthGroupName, MKH4Config.DefaultMotorStrengthEnabled);
+        SetSettingValue<Percent>(MKH4Config.MotorStrengthName, settings, MKH4Config.MotorStrengthGroupName, MKH4Config.DefaultMotorStrengthPercent);
+
+        // limits: one group per channel
+        for (int channel = 0; channel < _channelCount; channel++)
+        {
+            var group = MKH4Config.LimitGroupName(channel);
+            SetSettingValue(MKH4Config.LimitEnabledName(channel), settings, group, MKH4Config.DefaultLimitEnabled);
+            SetSettingValue<Percent>(MKH4Config.LimitMaxName(channel), settings, group, MKH4Config.DefaultLimitPercent);
+            SetSettingValue<Percent>(MKH4Config.LimitMinName(channel), settings, group, MKH4Config.DefaultLimitPercent);
         }
     }
 
@@ -471,7 +507,7 @@ internal class MKH4 : BluetoothDevice
         // move there directly, the output loop may not be running (e.g. on the calibration page)
         var targets = new int?[_channelCount];
         targets[channel] = center;
-        var payload = BuildPositionPayload(targets, SERVO_SPEED);
+        var payload = BuildPositionPayload(targets, _config.MoveSpeed);
 
         return payload is not null && await SendPositionAndWaitAsync(BuildMessage('3', payload), timeout, token).ConfigureAwait(false);
     }
@@ -710,7 +746,9 @@ internal class MKH4 : BluetoothDevice
             await RequestAsync('E', string.Empty, token).ConfigureAwait(false); // T00EW -> T067E410012W (version info)
             await RequestAsync('C', string.Empty, token).ConfigureAwait(false); // T00CW -> T027C02W (motor status)
             await RequestAsync('6', string.Empty, token).ConfigureAwait(false); // T006W -> T15760B0100030003+0279E999W (stored value, logged only)
-            await RequestAsync('F', "1", token).ConfigureAwait(false);          // T01F1W -> T017F1W
+
+            // device settings: stall protection, motor strength and limits
+            await ApplyConfigOnConnectAsync(_config, token).ConfigureAwait(false);
 
             if (requestDeviceInformation)
             {
@@ -742,6 +780,122 @@ internal class MKH4 : BluetoothDevice
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Sends the device settings to the module after connecting, in this order: stall protection (always, with the
+    /// configured value), motor strength (only if enabled), limits of every channel with enabled limits,
+    /// then one read-back of the limits that is only logged. Missing answers are logged and never abort the setup.
+    /// </summary>
+    private async Task ApplyConfigOnConnectAsync(MKH4Config config, CancellationToken token)
+    {
+        // T01F1W -> T017F1W (stall protection on)
+        await RequestAsync(BuildStallProtectionMessage(config.StallProtection), token).ConfigureAwait(false);
+
+        // the module keeps the strength until it is power cycled, so it is only sent on explicit request
+        if (config.MotorStrengthEnabled)
+        {
+            await RequestAsync(BuildMotorStrengthMessage(config.MotorStrength), token).ConfigureAwait(false);
+        }
+
+        var limitsSent = false;
+        for (int channel = 0; channel < config.Limits.Length; channel++)
+        {
+            var limit = config.Limits[channel];
+            if (limit.Enabled)
+            {
+                await RequestAsync(BuildLimitMessage(channel, limit.MinUnits, limit.MaxUnits), token).ConfigureAwait(false);
+                limitsSent = true;
+            }
+        }
+
+        if (limitsSent)
+        {
+            // read back for diagnostics only
+            var response = await RequestAsync(BuildReadLimitsMessage(), token).ConfigureAwait(false);
+            LogLimits(config, response);
+        }
+    }
+
+    /// <summary>
+    /// Logs the limits read back from the module and any difference to the configured limits of enabled channels.
+    /// Only logs, a parse failure or a mismatch has no further effect.
+    /// </summary>
+    private void LogLimits(MKH4Config config, string? response)
+    {
+        if (response is null || !TryParseLimits(response, _channelCount, out var limits))
+        {
+            Debug.WriteLine($"MKH4 limits could not be read back: {response ?? "no response"}");
+            return;
+        }
+
+        for (int channel = 0; channel < limits.Length && channel < config.Limits.Length; channel++)
+        {
+            var (min, max) = limits[channel];
+            Debug.WriteLine($"MKH4 limits channel {channel}: min={min}, max={max}");
+
+            // the module treats small values as 0, so compare with the normalized configured values
+            var expected = config.Limits[channel];
+            if (expected.Enabled && (min != NormalizeLimit(expected.MinUnits) || max != NormalizeLimit(expected.MaxUnits)))
+            {
+                Debug.WriteLine($"MKH4 limits channel {channel} differ from the settings: min={expected.MinUnits}, max={expected.MaxUnits}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Limit value as the module stores it: values with a small absolute value become 0.
+    /// </summary>
+    private static int NormalizeLimit(int units) => Math.Abs(units) < MKH4Config.MinLimitUnits ? 0 : units;
+
+    /// <summary>
+    /// Applies changed device settings to a connected module: only what changed is sent (stall protection,
+    /// motor strength if enabled, limits of enabled channels), best effort. Nothing is sent if the module is not
+    /// connected, the next connection applies everything. Switching the motor strength or the limits off sends
+    /// nothing, the module keeps its state until it is power cycled. Changed channel flags are picked up by
+    /// the output loop.
+    /// </summary>
+    protected override async Task OnDeviceSettingsUpdatedAsync()
+    {
+        var newConfig = MKH4Config.FromSettings(CurrentSettings, _channelCount);
+        var oldConfig = Interlocked.Exchange(ref _config, newConfig);
+
+        if (DeviceState != DeviceState.Connected || _bleDevice is null || _characteristic_AE3B_Write_No_Response is null)
+        {
+            return;
+        }
+
+        var changes = MKH4Config.GetChanges(oldConfig, newConfig);
+        if (changes.IsEmpty)
+        {
+            return;
+        }
+
+        try
+        {
+            // do not block the settings page for long if the connection is bad
+            using var cts = new CancellationTokenSource(SETTINGS_WRITE_TIMEOUT);
+
+            if (changes.StallProtection)
+            {
+                await WriteMessageAsync(BuildStallProtectionMessage(newConfig.StallProtection), cts.Token).ConfigureAwait(false);
+            }
+
+            if (changes.MotorStrength)
+            {
+                await WriteMessageAsync(BuildMotorStrengthMessage(newConfig.MotorStrength), cts.Token).ConfigureAwait(false);
+            }
+
+            foreach (var channel in changes.LimitChannels)
+            {
+                var limit = newConfig.Limits[channel];
+                await WriteMessageAsync(BuildLimitMessage(channel, limit.MinUnits, limit.MaxUnits), cts.Token).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MKH4 settings could not be sent: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -856,12 +1010,120 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Builds the payload of the simple motor start message (T144):
-    /// for each channel one flag digit and 4 hex digits speed. The number of channels is the length of the values array.
+    /// for each channel one flag digit and 4 hex digits speed. The number of channels is the length of the values array,
+    /// the flags array holds the flag digit of each channel (a missing entry means "limits not enabled").
     /// </summary>
-    internal static string BuildSpeedPayload(int[] values)
+    internal static string BuildSpeedPayload(int[] values, ReadOnlySpan<char> flags)
     {
-        return string.Concat(values.Select(value => FormatSpeed(value, CHANNEL_FLAG)));
+        var payload = new StringBuilder(values.Length * 5);
+        for (int channel = 0; channel < values.Length; channel++)
+        {
+            payload.Append(FormatSpeed(values[channel], channel < flags.Length ? flags[channel] : MKH4Config.LimitDisabledFlag));
+        }
+
+        return payload.ToString();
     }
+
+    /// <summary>
+    /// Builds the speed message (T144) of all channels with the given flag digits.
+    /// Separate synchronous method, because a span can not be used in an async method.
+    /// </summary>
+    private static string BuildSpeedMessage(int[] values, ImmutableArray<char> flags)
+        => BuildMessage('4', BuildSpeedPayload(values, flags.AsSpan()));
+
+    /// <summary>
+    /// Builds the stall protection message (T01F1W = on, T01F0W = off).
+    /// </summary>
+    internal static string BuildStallProtectionMessage(bool enabled) => BuildMessage('F', enabled ? "1" : "0");
+
+    /// <summary>
+    /// Builds the motor strength message (T02bXXW), XX = strength 0..100 % as 2 hex digits (00..64).
+    /// Values outside the range are clamped.
+    /// </summary>
+    internal static string BuildMotorStrengthMessage(int percent)
+        => BuildMessage('b', Math.Clamp(percent, 0, 100).ToString("X2"));
+
+    /// <summary>
+    /// Builds the limit message (T149) of one channel: motor mask (2 hex digits), then the positive limit
+    /// and the negative limit, each as sign and 8 hex digits. The module treats limits with an absolute value
+    /// below 1000 as 0, which is done here as well.
+    /// </summary>
+    /// <param name="channel">Channel index (0 = A).</param>
+    /// <param name="minUnits">Negative limit in encoder units (zero or negative).</param>
+    /// <param name="maxUnits">Positive limit in encoder units (zero or positive).</param>
+    internal static string BuildLimitMessage(int channel, int minUnits, int maxUnits)
+        => BuildMessage('9', (1 << channel).ToString("X2") + FormatLimit(maxUnits) + FormatLimit(minUnits));
+
+    /// <summary>
+    /// Builds the request that reads the limits of all channels (T00BW, answered with command 7B).
+    /// </summary>
+    internal static string BuildReadLimitsMessage() => BuildMessage('B');
+
+    /// <summary>
+    /// Formats a limit value as sign and 8 hex digits, small values are sent as +00000000.
+    /// </summary>
+    private static string FormatLimit(int value)
+    {
+        var magnitude = Math.Abs((long)value);
+        if (magnitude < MKH4Config.MinLimitUnits)
+        {
+            return "+00000000";
+        }
+
+        return (value >= 0 ? '+' : '-') + magnitude.ToString("X8");
+    }
+
+    /// <summary>
+    /// Parses the answer to the read limits request (T00BW): per channel two values of sign and 8 hex digits.
+    /// The values of the two strings are interleaved (channel p uses the values 2p and 2p+1), the larger one is the
+    /// positive limit and the smaller one the negative limit. The layout is not fully verified, so a payload
+    /// that does not fit is reported as failure.
+    /// </summary>
+    internal static bool TryParseLimits(string payload, int channelCount, out (int Min, int Max)[] limits)
+    {
+        limits = [];
+
+        // two values of 9 characters per channel
+        const int valueLength = 9;
+        if (payload.Length != channelCount * 2 * valueLength)
+        {
+            return false;
+        }
+
+        var values = new int[channelCount * 2];
+        for (int i = 0; i < values.Length; i++)
+        {
+            var text = payload.Substring(i * valueLength, valueLength);
+            var digits = text.Substring(1);
+            if ((text[0] != '+' && text[0] != '-') || !digits.All(Uri.IsHexDigit))
+            {
+                return false;
+            }
+
+            var magnitude = Convert.ToInt64(digits, 16);
+            if (magnitude > int.MaxValue)
+            {
+                return false;
+            }
+
+            values[i] = (int)(text[0] == '-' ? -magnitude : magnitude);
+        }
+
+        limits = new (int Min, int Max)[channelCount];
+        for (int channel = 0; channel < channelCount; channel++)
+        {
+            var first = values[2 * channel];
+            var second = values[2 * channel + 1];
+            limits[channel] = (Math.Min(first, second), Math.Max(first, second));
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Command of the response to a request: 0x7X for request X (the digit is case-sensitive, e.g. 7b for b).
+    /// </summary>
+    internal static string GetResponseCommand(char command) => "7" + command;
 
     /// <summary>
     /// Builds the message that announces the end of the session (T002W). The module does not answer it.
@@ -979,13 +1241,20 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Sends a request and repeats it until the matching response (0x7X for request X) arrives,
+    /// Sends a request and repeats it until the matching response (0x7X for request X) arrives.
     /// Returns the payload of the response or null after too many attempts.
     /// </summary>
-    private async Task<string?> RequestAsync(char command, string payload, CancellationToken token)
+    private Task<string?> RequestAsync(char command, string payload, CancellationToken token)
+        => RequestAsync(BuildMessage(command, payload), token);
+
+    /// <summary>
+    /// Sends a complete request message and repeats it until the matching response arrives.
+    /// The command digit of the message is at index 3 ('T' + 2 length digits + command).
+    /// </summary>
+    private async Task<string?> RequestAsync(string message, CancellationToken token)
     {
         // a request X is answered with a message with the command 7X
-        var responseCommand = "7" + command;
+        var responseCommand = GetResponseCommand(message[3]);
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         // register the request before sending, so the response can not be missed
@@ -996,8 +1265,6 @@ internal class MKH4 : BluetoothDevice
 
         try
         {
-            var message = BuildMessage(command, payload);
-
             for (int attempt = 0; attempt < REQUEST_MAX_ATTEMPTS; attempt++)
             {
                 token.ThrowIfCancellationRequested();
@@ -1145,6 +1412,7 @@ internal class MKH4 : BluetoothDevice
             // start with an all-zero message
             _outputValues.Initialize();
             Array.Clear(_lastSentValues);
+            _lastSentFlags = _config.ChannelFlags;
 
             // servo channels: hold the center position, the targets set during the connect setup were cleared above
             _servoTargets.Initialize();
@@ -1164,11 +1432,14 @@ internal class MKH4 : BluetoothDevice
 
             while (!token.IsCancellationRequested)
             {
+                // one settings snapshot per iteration
+                var flags = _config.ChannelFlags;
+
                 // ---- normal motors: speed values ----
                 if (TryGetOutputSnapshot())
                 {
                     // the values changed (or a previous attempt failed), so send them
-                    if (await SendOutputValuesAsync(_snapshot, token).ConfigureAwait(false))
+                    if (await SendOutputValuesAsync(_snapshot, flags, token).ConfigureAwait(false))
                     {
                         // tell the group that these values were applied, so they are not sent again
                         _outputValues.Commit();
@@ -1178,13 +1449,22 @@ internal class MKH4 : BluetoothDevice
                         lastSent.Restart();
                     }
                 }
+                else if (!flags.AsSpan().SequenceEqual(_lastSentFlags.AsSpan()))
+                {
+                    // the channel flags changed (limit enabled/disabled): send the last values once with the new flags
+                    if (!ShouldResendOutputValues() || await SendOutputValuesAsync(_lastSentValues, flags, token).ConfigureAwait(false))
+                    {
+                        _lastSentFlags = flags;
+                        lastSent.Restart();
+                    }
+                }
                 else if (lastSent.Elapsed > RESEND_DELAY)
                 {
                     // nothing changed for a while: send the last values again as a safety net,
                     // the group does not offer a periodic resend, so the own copy is used
                     if (ShouldResendOutputValues())
                     {
-                        if (await SendOutputValuesAsync(_lastSentValues, token).ConfigureAwait(false))
+                        if (await SendOutputValuesAsync(_lastSentValues, flags, token).ConfigureAwait(false))
                         {
                             lastSent.Restart();
                         }
@@ -1284,7 +1564,7 @@ internal class MKH4 : BluetoothDevice
     /// Sends a stop message (zero speed) for all channels, best effort with a short timeout.
     /// </summary>
     private Task SendStopAsync()
-        => SendBestEffortAsync(BuildMessage('4', BuildSpeedPayload(new int[_channelCount])));
+        => SendBestEffortAsync(BuildSpeedMessage(new int[_channelCount], _config.ChannelFlags));
 
     /// <summary>
     /// Writes a message with a short timeout and ignores any failure, used while the connection is closing.
@@ -1305,11 +1585,17 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Sends the speed values of all channels with one message (T144, simple motor start).
-    /// Servo channels always have the value 0 here.
+    /// Servo channels always have the value 0 here. On success the flags are remembered as last sent.
     /// </summary>
-    private Task<bool> SendOutputValuesAsync(int[] values, CancellationToken token)
+    private async Task<bool> SendOutputValuesAsync(int[] values, ImmutableArray<char> flags, CancellationToken token)
     {
-        return WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(values)), token);
+        if (!await WriteMessageAsync(BuildSpeedMessage(values, flags), token).ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        _lastSentFlags = flags;
+        return true;
     }
 
     /// <summary>
@@ -1324,7 +1610,7 @@ internal class MKH4 : BluetoothDevice
             positions[channel] = IsServoReady(channel) ? targets[channel] : null;
         }
 
-        var payload = BuildPositionPayload(positions, SERVO_SPEED);
+        var payload = BuildPositionPayload(positions, _config.MoveSpeed);
         if (payload is null)
         {
             // no servo channel is ready, nothing to move

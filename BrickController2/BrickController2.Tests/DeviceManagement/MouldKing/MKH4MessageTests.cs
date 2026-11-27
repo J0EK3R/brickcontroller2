@@ -1,5 +1,6 @@
 using BrickController2.DeviceManagement.MouldKing;
 using FluentAssertions;
+using System.Linq;
 using Xunit;
 
 namespace BrickController2.Tests.DeviceManagement.MouldKing;
@@ -40,7 +41,7 @@ public class MKH4MessageTests
     [InlineData(6)]
     public void BuildSpeedPayload_HasFiveDigitsPerChannel(int channelCount)
     {
-        var payload = MKH4.BuildSpeedPayload(new int[channelCount]);
+        var payload = MKH4.BuildSpeedPayload(new int[channelCount], new string('0', channelCount));
 
         payload.Should().HaveLength(5 * channelCount);
         payload.Should().Be(new string('0', 5 * channelCount));
@@ -49,7 +50,114 @@ public class MKH4MessageTests
     [Fact]
     public void BuildSpeedPayload_MixedValues()
     {
-        MKH4.BuildSpeedPayload([0x7FFF, 0, -0x7FFF, 1]).Should().Be("07FFF" + "00000" + "0FFFF" + "00001");
+        MKH4.BuildSpeedPayload([0x7FFF, 0, -0x7FFF, 1], "0000").Should().Be("07FFF" + "00000" + "0FFFF" + "00001");
+    }
+
+    [Fact]
+    public void BuildSpeedPayload_FlagsAreUsedPerChannel()
+    {
+        MKH4.BuildSpeedPayload([1, 2, 3, 4], "1001").Should().Be("10001" + "00002" + "00003" + "10004");
+    }
+
+    [Fact]
+    public void BuildSpeedPayload_AllLimitsDisabled_EqualsPlainZeroFlags()
+    {
+        // regression: the default flags must give the same bytes as before the settings existed
+        var flags = new string(MKH4Config.LimitDisabledFlag, 4);
+
+        MKH4.BuildSpeedPayload([0x7FFF, 0, -0x7FFF, 1], flags)
+            .Should().Be(MKH4.BuildSpeedPayload([0x7FFF, 0, -0x7FFF, 1], "0000"));
+    }
+
+    [Fact]
+    public void BuildStallProtectionMessage_OnAndOff()
+    {
+        MKH4.BuildStallProtectionMessage(true).Should().Be("T01F1W");
+        MKH4.BuildStallProtectionMessage(false).Should().Be("T01F0W");
+    }
+
+    [Theory]
+    [InlineData(0, "T02b00W")]
+    [InlineData(50, "T02b32W")]
+    [InlineData(100, "T02b64W")]
+    [InlineData(-5, "T02b00W")]
+    [InlineData(250, "T02b64W")]
+    public void BuildMotorStrengthMessage_ClampsAndFormats(int percent, string expected)
+    {
+        MKH4.BuildMotorStrengthMessage(percent).Should().Be(expected);
+    }
+
+    [Fact]
+    public void BuildLimitMessage_ChannelA()
+    {
+        MKH4.BuildLimitMessage(0, -100980, 100980).Should().Be("T14901+00018A74-00018A74W");
+    }
+
+    [Fact]
+    public void BuildLimitMessage_ChannelDUsesMask08()
+    {
+        MKH4.BuildLimitMessage(3, -100980, 100980).Should().StartWith("T14908");
+    }
+
+    [Fact]
+    public void BuildLimitMessage_SmallValuesBecomeZero()
+    {
+        MKH4.BuildLimitMessage(0, -999, 999).Should().Be("T14901+00000000+00000000W");
+    }
+
+    [Fact]
+    public void BuildLimitMessage_SignsAreKept()
+    {
+        // negative max and positive min are formatted with their own sign, max first
+        MKH4.BuildLimitMessage(1, 2000, -3000).Should().Be("T14902-00000BB8+000007D0W");
+    }
+
+    [Fact]
+    public void BuildReadLimitsMessage_IsT00BW()
+    {
+        MKH4.BuildReadLimitsMessage().Should().Be("T00BW");
+    }
+
+    [Fact]
+    public void GetResponseCommand_IsCaseSensitive()
+    {
+        MKH4.GetResponseCommand('b').Should().Be("7b");
+        MKH4.GetResponseCommand('B').Should().Be("7B");
+        MKH4.GetResponseCommand('C').Should().Be("7C");
+    }
+
+    /// <summary>
+    /// Builds the answer of the module: the values of port p are the values 2p and 2p+1.
+    /// </summary>
+    private static string BuildLimitsPayload(params int[] values)
+        => string.Concat(values.Select(v => (v >= 0 ? "+" : "-") + System.Math.Abs(v).ToString("X8")));
+
+    [Fact]
+    public void TryParseLimits_ValidPayload_ReturnsMinMaxPerChannel()
+    {
+        // channel A: 100000 / -100000 (order does not matter), B: 5000 / -6000, C and D: 0
+        var payload = BuildLimitsPayload(100000, -100000, -6000, 5000, 0, 0, 0, 0);
+        // channel B uses the values 2 and 3
+        MKH4.TryParseLimits(payload, 4, out var limits).Should().BeTrue();
+
+        limits.Should().Equal((-100000, 100000), (-6000, 5000), (0, 0), (0, 0));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("+00000000")]
+    public void TryParseLimits_WrongLength_ReturnsFalse(string payload)
+    {
+        MKH4.TryParseLimits(payload, 4, out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void TryParseLimits_BadSignOrDigits_ReturnsFalse()
+    {
+        var good = BuildLimitsPayload(1, 2, 3, 4, 5, 6, 7, 8);
+
+        MKH4.TryParseLimits("*" + good.Substring(1), 4, out _).Should().BeFalse();
+        MKH4.TryParseLimits(good.Substring(0, 71) + "G", 4, out _).Should().BeFalse();
     }
 
     [Fact]
