@@ -21,7 +21,7 @@ namespace BrickController2.DeviceManagement.MouldKing;
 /// Protocol: ASCII messages 'T' + payload length (2 hex digits) + command (1 hex digit) + payload + 'W',
 /// written to characteristic AE3B, answers/notifications are received on characteristic AE3C.
 /// A channel is either a normal motor (speed control with T144) or a servo (position control with T303,
-/// requires a motor with encoder, e.g. a MK+ motor).
+/// requires a motor with encoder).
 ///
 /// Position reference of servo channels:
 /// The position counter of the module is volatile. After a power cycle of the module it starts at 0 again,
@@ -55,21 +55,21 @@ internal class MKH4 : BluetoothDevice
     private const int MAX_PACKET_LENGTH = 20;
 
     /// <summary>
-    /// The original app repeats a request about every 30 ms (9 to 11 times in the captures)
-    /// until the response arrives. Requests are repeated the same way here.
+    /// The module answers a request with the matching response, so a request is repeated about every 40 ms
+    /// until the response arrives (or the max number of attempts is reached).
     /// </summary>
     private const int REQUEST_MAX_ATTEMPTS = 20;
     private static readonly TimeSpan REQUEST_RETRY_DELAY = TimeSpan.FromMilliseconds(40);
 
     /// <summary>
     /// Number of encoder position units per degree of the motor shaft (594000 units per revolution).
-    /// This value was measured with a MK+ motor: set the base angle to 180 degrees, observe the real rotation
+    /// This value was measured with an encoder motor: set the base angle to 180 degrees, observe the real rotation
     /// and scale the value (new value = old value * 180 / observed angle). Other motor types may differ.
     /// </summary>
     private const double POSITION_UNITS_PER_DEGREE = 1650.0;
 
     /// <summary>
-    /// Speed (0..1) of position moves. The original app used 0x4FFF, which is about 0.625.
+    /// Speed (0..1) of position moves. 0x4FFF is about 0.625.
     /// </summary>
     private const float SERVO_SPEED = 0.625f;
 
@@ -84,25 +84,24 @@ internal class MKH4 : BluetoothDevice
     private static readonly TimeSpan CONNECT_POSITION_TIMEOUT = TimeSpan.FromSeconds(3);
 
     /// <summary>
-    /// Leading hex digit of each channel in the T144 message. The README uses '0' for all channels,
-    /// the original app used '1' for the first channel and '0' for the third and fourth one. Meaning unknown.
-    /// If channel A does not turn, try '1' for the first entry.
+    /// Leading hex digit of each channel in the T144 message. '0' is used for all channels.
+    /// The meaning of the digit is unknown.
     /// </summary>
     private static readonly char[] CHANNEL_FLAGS = { '0', '0', '0', '0' };
 
     /// <summary>
-    /// The original app does not enable notifications on the AE30 service, so this is off by default.
+    /// Notifications on the AE30 service are not needed for the protocol, so this is off by default.
     /// </summary>
     private const bool ENABLE_AE30_NOTIFICATIONS = false;
 
     /// <summary>
-    /// The original app acknowledges every notification with a single 0x01 byte.
+    /// Every notification is acknowledged with a single 0x01 byte.
     /// </summary>
     private static readonly byte[] AckByte = { 0x01 };
 
     internal static readonly Guid MOULD_KING_HUB_SCAN_SERVICE_UUID = BluetoothLowEnergy.GetGuid(0xaf30);
 
-    // service AE30: not used by the original app during the captured sessions, kept for reference
+    // service AE30: not needed for the protocol, kept for reference
     private static readonly Guid MOULD_KING_HUB_SERVICE_AE30_UUID = BluetoothLowEnergy.GetGuid(0xae30);
     private static readonly Guid MOULD_KING_HUB_AE01_UUID = BluetoothLowEnergy.GetGuid(0xae01);
     private static readonly Guid MOULD_KING_HUB_AE02_UUID = BluetoothLowEnergy.GetGuid(0xae02);
@@ -232,14 +231,13 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// The max servo angle is used as software limit of the position range (center +/- max angle).
-    /// The module itself gets no limits (the original app does not set them either).
+    /// The module itself gets no limits.
     /// </summary>
     public override bool CanChangeMaxServoAngle(int channel) => true;
 
     /// <summary>
-    /// "Auto calibration" does not search for mechanical end stops here (the meaning of the T02b command that
-    /// the original app sends before such a run is unknown). It defines the current shaft position as center,
-    /// see <see cref="AutoCalibrateOutputAsync"/>.
+    /// "Auto calibration" does not search for mechanical end stops here.
+    /// It defines the current shaft position as center, see <see cref="AutoCalibrateOutputAsync"/>.
     /// </summary>
     public override bool CanAutoCalibrateOutput(int channel) => true;
 
@@ -435,7 +433,7 @@ internal class MKH4 : BluetoothDevice
 
     protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService>? services, CancellationToken token)
     {
-        // ---- service AE30: looked up for completeness, the original app does not use it ----
+        // ---- service AE30: looked up for completeness, not needed ----
         var service_AE30 = services?.FirstOrDefault(s => s.Uuid == MOULD_KING_HUB_SERVICE_AE30_UUID);
 
         // CanNotify = false
@@ -474,7 +472,7 @@ internal class MKH4 : BluetoothDevice
         _characteristic_AE3C_Notify = service_AE3A?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_NOTIFY_AE3C_UUID);
         if (_characteristic_AE3C_Notify is not null)
         {
-            // the original app writes the CCCD of this characteristic right after the service discovery
+            // the notifications are enabled right after the service discovery
             await _bleDevice!.EnableNotificationAsync(_characteristic_AE3C_Notify, token);
         }
 
@@ -529,7 +527,7 @@ internal class MKH4 : BluetoothDevice
         {
             HandleMessage(message);
 
-            // the original app acknowledges every notification with a single 0x01 byte
+            // acknowledge every notification with a single 0x01 byte
             _ = AcknowledgeAsync();
         }
     }
@@ -578,9 +576,8 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Diagnostic logging of the response to T006W. The module keeps this value between connections,
-    /// the original app updates it with T155... at the end of a calibration
-    /// (new value = old value + position of motor A). Unlike the position counter it is not reset to 0
-    /// by the module on its own. The meaning is unknown, so the value is only logged.
+    /// it can be updated with T155... (new value = old value + position of motor A).
+    /// Unlike the position counter it is not reset to 0 by the module on its own. The meaning is unknown, so the value is only logged.
     /// Payload: fixed prefix (12 hex digits) + sign + 8 hex digits, e.g. "0B0100030003+0279E999"
     /// </summary>
     private static void LogStoredValue(string payload)
@@ -610,7 +607,7 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Sends the single 0x01 byte that the original app sends after each notification.
+    /// Sends the single 0x01 byte that acknowledges a notification.
     /// </summary>
     private async Task AcknowledgeAsync()
     {
@@ -656,7 +653,7 @@ internal class MKH4 : BluetoothDevice
                 Array.Clear(_servoReady);
             }
 
-            // init sequence observed in the original app, every request is repeated until it is answered
+            // init sequence, every request is repeated until it is answered
             await RequestAsync('1', "AABB", token).ConfigureAwait(false); // T041AABBW -> T01711W (ready)
             await RequestAsync('E', string.Empty, token).ConfigureAwait(false); // T00EW -> T067E410012W (version info)
             await RequestAsync('C', string.Empty, token).ConfigureAwait(false); // T00CW -> T027C02W (motor status)
@@ -696,7 +693,7 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// The original app never reads the AE30 characteristics, the device info is part of the T...W protocol.
+    /// The AE30 characteristics are not read, the device info is part of the T...W protocol.
     /// </summary>
     private async Task ReadDeviceInfo(CancellationToken token)
     {
@@ -717,7 +714,7 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// T00EW response payload, e.g. "410012" for a module shown as H4.0 / V1.1.2 in the original app.
+    /// T00EW response payload, e.g. "410012" for a module with hardware H4.0 and firmware V1.1.2.
     /// The layout is inferred from this single sample: byte 0 = model major (high nibble) and version major (low nibble),
     /// byte 1 = model minor, byte 2 = version minor (high nibble) and version patch (low nibble).
     /// </summary>
@@ -766,7 +763,7 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Builds the payload of the position message (T303): for each channel 4 hex digits speed and 8 hex digits
-    /// target position. Channels without a target are idle (speed 0, position 0) as sent by the original app.
+    /// target position. Channels without a target are idle (speed 0, position 0).
     /// Returns null if no channel has a target.
     /// </summary>
     private static string? BuildPositionPayload(int?[] targets, float speed)
@@ -879,7 +876,7 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Sends a request and repeats it until the matching response (0x7X for request X) arrives,
-    /// like the original app does. Returns the payload of the response or null after too many attempts.
+    /// Returns the payload of the response or null after too many attempts.
     /// </summary>
     private async Task<string?> RequestAsync(char command, string payload, CancellationToken token)
     {
@@ -970,7 +967,7 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Sets the current position of one motor to 0 (T028XXW -> T027800W, XX = motor bitmask,
-    /// e.g. T02804W for motor C as seen in the calibration capture of the original app).
+    /// e.g. T02804W for motor C).
     /// This defines the zero of the module counter, which is the reference of the servo base angle.
     /// The counter is volatile and starts at 0 again after a power cycle of the module.
     /// </summary>
@@ -991,7 +988,7 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Called by the base class while the connection is still up (after the output loop was stopped).
-    /// The module keeps the last speed values (the original app does not resend them), so stop all motors.
+    /// The module keeps the last speed values (they are not resent by the module), so stop all motors.
     /// </summary>
     protected override async ValueTask BeforeDisconnectAsync(CancellationToken token)
     {
@@ -1037,7 +1034,7 @@ internal class MKH4 : BluetoothDevice
         try
         {
             // reset all values to 0 and force an initial transmission,
-            // the original app also starts with an all-zero message
+            // start with an all-zero message
             _outputValues.Initialize();
             Array.Clear(_lastSentValues);
 
