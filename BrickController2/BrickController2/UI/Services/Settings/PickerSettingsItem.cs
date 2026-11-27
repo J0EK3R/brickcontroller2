@@ -13,6 +13,7 @@ namespace BrickController2.UI.Services.Settings;
 public class PickerSettingsItem : ISettingsItem
 {
     private readonly Func<string> _getValue;
+    private readonly Func<Task>? _onPressed;
 
     /// <summary>
     /// Creates the row.
@@ -24,7 +25,18 @@ public class PickerSettingsItem : ISettingsItem
     {
         Title = title;
         _getValue = getValue;
-        Command = new SafeCommand(onPressed);
+        _onPressed = onPressed;
+        Command = new SafeCommand(OnPressedAsync);
+    }
+
+    /// <summary>
+    /// For derived rows that implement the press action by overriding <see cref="OnPressedAsync"/>.
+    /// </summary>
+    /// <param name="title">Already translated label.</param>
+    /// <param name="getValue">Returns the text for the picker button.</param>
+    protected PickerSettingsItem(string title, Func<string> getValue)
+        : this(title, getValue, null!)
+    {
     }
 
     /// <inheritdoc />
@@ -43,16 +55,24 @@ public class PickerSettingsItem : ISettingsItem
     public ICommand Command { get; }
 
     /// <inheritdoc />
-    public void Attach()
+    public virtual int Order => 100;
+
+    /// <inheritdoc />
+    public virtual void Attach()
     {
         // nothing to subscribe to
     }
 
     /// <inheritdoc />
-    public void Detach()
+    public virtual void Detach()
     {
         // nothing to unsubscribe from
     }
+
+    /// <summary>
+    /// Executed when the button is pressed; the default runs the delegate given to the constructor.
+    /// </summary>
+    protected virtual Task OnPressedAsync() => _onPressed?.Invoke() ?? Task.CompletedTask;
 
     /// <summary>
     /// Tells the UI that the value text changed (call after the underlying setting was changed).
