@@ -1528,6 +1528,195 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Limits port A.
+        /// </summary>
+        internal static string MKH4GroupLimitA {
+            get {
+                return ResourceManager.GetString("MKH4GroupLimitA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limits port B.
+        /// </summary>
+        internal static string MKH4GroupLimitB {
+            get {
+                return ResourceManager.GetString("MKH4GroupLimitB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limits port C.
+        /// </summary>
+        internal static string MKH4GroupLimitC {
+            get {
+                return ResourceManager.GetString("MKH4GroupLimitC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limits port D.
+        /// </summary>
+        internal static string MKH4GroupLimitD {
+            get {
+                return ResourceManager.GetString("MKH4GroupLimitD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor strength.
+        /// </summary>
+        internal static string MKH4GroupMotorStrength {
+            get {
+                return ResourceManager.GetString("MKH4GroupMotorStrength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit positions.
+        /// </summary>
+        internal static string MKH4LimitEnabledA {
+            get {
+                return ResourceManager.GetString("MKH4LimitEnabledA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit positions.
+        /// </summary>
+        internal static string MKH4LimitEnabledB {
+            get {
+                return ResourceManager.GetString("MKH4LimitEnabledB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit positions.
+        /// </summary>
+        internal static string MKH4LimitEnabledC {
+            get {
+                return ResourceManager.GetString("MKH4LimitEnabledC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit positions.
+        /// </summary>
+        internal static string MKH4LimitEnabledD {
+            get {
+                return ResourceManager.GetString("MKH4LimitEnabledD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Positive limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMaxA {
+            get {
+                return ResourceManager.GetString("MKH4LimitMaxA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Positive limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMaxB {
+            get {
+                return ResourceManager.GetString("MKH4LimitMaxB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Positive limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMaxC {
+            get {
+                return ResourceManager.GetString("MKH4LimitMaxC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Positive limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMaxD {
+            get {
+                return ResourceManager.GetString("MKH4LimitMaxD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Negative limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMinA {
+            get {
+                return ResourceManager.GetString("MKH4LimitMinA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Negative limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMinB {
+            get {
+                return ResourceManager.GetString("MKH4LimitMinB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Negative limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMinC {
+            get {
+                return ResourceManager.GetString("MKH4LimitMinC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Negative limit (% of one turn).
+        /// </summary>
+        internal static string MKH4LimitMinD {
+            get {
+                return ResourceManager.GetString("MKH4LimitMinD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor strength (%).
+        /// </summary>
+        internal static string MKH4MotorStrength {
+            get {
+                return ResourceManager.GetString("MKH4MotorStrength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set motor strength.
+        /// </summary>
+        internal static string MKH4MotorStrengthEnabled {
+            get {
+                return ResourceManager.GetString("MKH4MotorStrengthEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Position move speed (%).
+        /// </summary>
+        internal static string MKH4MoveSpeed {
+            get {
+                return ResourceManager.GetString("MKH4MoveSpeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stall protection.
+        /// </summary>
+        internal static string MKH4StallProtection {
+            get {
+                return ResourceManager.GetString("MKH4StallProtection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No.
         /// </summary>
         internal static string No {
