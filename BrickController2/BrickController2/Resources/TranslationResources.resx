@@ -906,4 +906,67 @@
   <data name="ShortMacro" xml:space="preserve">
     <value>M:</value>
   </data>
+  <data name="MKH4StallProtection" xml:space="preserve">
+    <value>Stall protection</value>
+  </data>
+  <data name="MKH4MoveSpeed" xml:space="preserve">
+    <value>Position move speed (%)</value>
+  </data>
+  <data name="MKH4MotorStrengthEnabled" xml:space="preserve">
+    <value>Set motor strength</value>
+  </data>
+  <data name="MKH4MotorStrength" xml:space="preserve">
+    <value>Motor strength (%)</value>
+  </data>
+  <data name="MKH4GroupMotorStrength" xml:space="preserve">
+    <value>Motor strength</value>
+  </data>
+  <data name="MKH4GroupLimitA" xml:space="preserve">
+    <value>Limits port A</value>
+  </data>
+  <data name="MKH4LimitEnabledA" xml:space="preserve">
+    <value>Limit positions</value>
+  </data>
+  <data name="MKH4LimitMaxA" xml:space="preserve">
+    <value>Positive limit (% of one turn)</value>
+  </data>
+  <data name="MKH4LimitMinA" xml:space="preserve">
+    <value>Negative limit (% of one turn)</value>
+  </data>
+  <data name="MKH4GroupLimitB" xml:space="preserve">
+    <value>Limits port B</value>
+  </data>
+  <data name="MKH4LimitEnabledB" xml:space="preserve">
+    <value>Limit positions</value>
+  </data>
+  <data name="MKH4LimitMaxB" xml:space="preserve">
+    <value>Positive limit (% of one turn)</value>
+  </data>
+  <data name="MKH4LimitMinB" xml:space="preserve">
+    <value>Negative limit (% of one turn)</value>
+  </data>
+  <data name="MKH4GroupLimitC" xml:space="preserve">
+    <value>Limits port C</value>
+  </data>
+  <data name="MKH4LimitEnabledC" xml:space="preserve">
+    <value>Limit positions</value>
+  </data>
+  <data name="MKH4LimitMaxC" xml:space="preserve">
+    <value>Positive limit (% of one turn)</value>
+  </data>
+  <data name="MKH4LimitMinC" xml:space="preserve">
+    <value>Negative limit (% of one turn)</value>
+  </data>
+  <data name="MKH4GroupLimitD" xml:space="preserve">
+    <value>Limits port D</value>
+  </data>
+  <data name="MKH4LimitEnabledD" xml:space="preserve">
+    <value>Limit positions</value>
+  </data>
+  <data name="MKH4LimitMaxD" xml:space="preserve">
+    <value>Positive limit (% of one turn)</value>
+  </data>
+  <data name="MKH4LimitMinD" xml:space="preserve">
+    <value>Negative limit (% of one turn)</value>
+  </data>
 </root>

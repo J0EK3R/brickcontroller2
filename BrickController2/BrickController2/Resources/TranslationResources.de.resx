@@ -906,4 +906,67 @@
   <data name="HelpForward" xml:space="preserve">
     <value>Nächste Seite</value>
   </data>
+  <data name="MKH4StallProtection" xml:space="preserve">
+    <value>Blockierschutz</value>
+  </data>
+  <data name="MKH4MoveSpeed" xml:space="preserve">
+    <value>Geschwindigkeit bei Positionsfahrten (%)</value>
+  </data>
+  <data name="MKH4MotorStrengthEnabled" xml:space="preserve">
+    <value>Motorstärke setzen</value>
+  </data>
+  <data name="MKH4MotorStrength" xml:space="preserve">
+    <value>Motorstärke (%)</value>
+  </data>
+  <data name="MKH4GroupMotorStrength" xml:space="preserve">
+    <value>Motorstärke</value>
+  </data>
+  <data name="MKH4GroupLimitA" xml:space="preserve">
+    <value>Limits Port A</value>
+  </data>
+  <data name="MKH4LimitEnabledA" xml:space="preserve">
+    <value>Positionslimits aktiv</value>
+  </data>
+  <data name="MKH4LimitMaxA" xml:space="preserve">
+    <value>Positives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4LimitMinA" xml:space="preserve">
+    <value>Negatives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4GroupLimitB" xml:space="preserve">
+    <value>Limits Port B</value>
+  </data>
+  <data name="MKH4LimitEnabledB" xml:space="preserve">
+    <value>Positionslimits aktiv</value>
+  </data>
+  <data name="MKH4LimitMaxB" xml:space="preserve">
+    <value>Positives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4LimitMinB" xml:space="preserve">
+    <value>Negatives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4GroupLimitC" xml:space="preserve">
+    <value>Limits Port C</value>
+  </data>
+  <data name="MKH4LimitEnabledC" xml:space="preserve">
+    <value>Positionslimits aktiv</value>
+  </data>
+  <data name="MKH4LimitMaxC" xml:space="preserve">
+    <value>Positives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4LimitMinC" xml:space="preserve">
+    <value>Negatives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4GroupLimitD" xml:space="preserve">
+    <value>Limits Port D</value>
+  </data>
+  <data name="MKH4LimitEnabledD" xml:space="preserve">
+    <value>Positionslimits aktiv</value>
+  </data>
+  <data name="MKH4LimitMaxD" xml:space="preserve">
+    <value>Positives Limit (% einer Umdrehung)</value>
+  </data>
+  <data name="MKH4LimitMinD" xml:space="preserve">
+    <value>Negatives Limit (% einer Umdrehung)</value>
+  </data>
 </root>
