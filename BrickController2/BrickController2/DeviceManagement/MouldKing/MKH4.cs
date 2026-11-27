@@ -34,9 +34,27 @@ namespace BrickController2.DeviceManagement.MouldKing;
 internal class MKH4 : BluetoothDevice
 {
     /// <summary>
-    /// number of motor ports (A, B, C, D)
+    /// number of motor ports (A, B, C, D) of the MKH4.0 module
     /// </summary>
-    private const int CHANNEL_COUNT = 4;
+    private const int DEFAULT_CHANNEL_COUNT = 4;
+
+    /// <summary>
+    /// Highest number of channels the protocol helpers can address: the motor mask of a message has
+    /// 2 hex digits, so one bit per channel allows 8 channels.
+    /// </summary>
+    private const int MAX_CHANNEL_COUNT = 8;
+
+    /// <summary>
+    /// Interval of the keep-alive request (T00CW) while connected. The reply (T027CXXW) also reports
+    /// which motor ports have no motor connected.
+    /// </summary>
+    private static readonly TimeSpan HEARTBEAT_INTERVAL = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Firmware edition that is expected at least. The edition is the decimal number in the last four digits
+    /// of the version payload (e.g. 410012 is edition 12). Older modules only cause a log message.
+    /// </summary>
+    private const int MIN_EDITION = 6;
 
     /// <summary>
     /// delay between two iterations of the output loop
@@ -50,7 +68,9 @@ internal class MKH4 : BluetoothDevice
     private static readonly TimeSpan RESEND_DELAY = TimeSpan.FromMilliseconds(1000);
 
     /// <summary>
-    /// max number of characters per BLE write (default ATT MTU of 23 minus 3 bytes header)
+    /// max number of characters per BLE write (default ATT MTU of 23 minus 3 bytes header).
+    /// Longer messages are split into several packets, the module reassembles them up to the closing 'W'.
+    /// A larger MTU would allow a single write, but there is no MTU API in the BLE abstraction.
     /// </summary>
     private const int MAX_PACKET_LENGTH = 20;
 
@@ -87,7 +107,7 @@ internal class MKH4 : BluetoothDevice
     /// Leading hex digit of each channel in the T144 message. '0' is used for all channels.
     /// The meaning of the digit is unknown.
     /// </summary>
-    private static readonly char[] CHANNEL_FLAGS = { '0', '0', '0', '0' };
+    private const char CHANNEL_FLAG = '0';
 
     /// <summary>
     /// Notifications on the AE30 service are not needed for the protocol, so this is off by default.
@@ -116,6 +136,11 @@ internal class MKH4 : BluetoothDevice
     private static readonly Guid MOULD_KING_HUB_NOTIFY_AE3C_UUID = BluetoothLowEnergy.GetGuid(0xae3c);
 
     /// <summary>
+    /// Number of motor channels, all per-channel buffers are sized from it.
+    /// </summary>
+    private readonly int _channelCount;
+
+    /// <summary>
     /// Configuration (output type, base angle, max angle, ...) of each channel.
     /// Filled in ConnectAsync the same way as WirelessProtocolBasedDevice does it,
     /// because the base class BluetoothDevice does not pass the configurations on.
@@ -126,41 +151,41 @@ internal class MKH4 : BluetoothDevice
     /// Buffers the requested speed values of all normal motor channels (range -0x7FFF..0x7FFF).
     /// It detects changes, repeats failed transmissions and remembers what was already applied.
     /// </summary>
-    private readonly OutputValuesGroup<int> _outputValues = new(CHANNEL_COUNT);
+    private readonly OutputValuesGroup<int> _outputValues;
 
     /// <summary>
     /// Buffers the requested target positions (absolute encoder positions) of all servo channels.
     /// </summary>
-    private readonly OutputValuesGroup<int> _servoTargets = new(CHANNEL_COUNT);
+    private readonly OutputValuesGroup<int> _servoTargets;
 
     /// <summary>
     /// Copy of the values fetched from <see cref="_outputValues"/>. A span can not be used across an await,
     /// so the values are copied into this array before they are sent. Only used by the output loop.
     /// </summary>
-    private readonly int[] _snapshot = new int[CHANNEL_COUNT];
+    private readonly int[] _snapshot;
 
     /// <summary>
     /// Copy of the target positions fetched from <see cref="_servoTargets"/>. Only used by the output loop.
     /// </summary>
-    private readonly int[] _servoSnapshot = new int[CHANNEL_COUNT];
+    private readonly int[] _servoSnapshot;
 
     /// <summary>
     /// Values that were sent successfully the last time, used for the periodic resend.
     /// Only used by the output loop.
     /// </summary>
-    private readonly int[] _lastSentValues = new int[CHANNEL_COUNT];
+    private readonly int[] _lastSentValues;
 
     /// <summary>
     /// Position (in counter units) of the center of each servo channel, relative to the current zero of the
     /// volatile module counter (= base angle of the channel configuration converted to position units).
     /// </summary>
-    private readonly int[] _centerPositions = new int[CHANNEL_COUNT];
+    private readonly int[] _centerPositions;
 
     /// <summary>
     /// True if the center position of a servo channel is known, so that targets can be calculated.
     /// Until then SetOutput is ignored for the channel, otherwise the motor could run to a wrong position.
     /// </summary>
-    private readonly bool[] _servoReady = new bool[CHANNEL_COUNT];
+    private readonly bool[] _servoReady;
     private readonly object _servoLock = new object();
 
     /// <summary>
@@ -178,8 +203,9 @@ internal class MKH4 : BluetoothDevice
     private readonly Dictionary<string, string> _lastResponses = new();
     private readonly object _responseLock = new object();
 
-    // bit set = motor port not connected (bit 0 = A ... bit 3 = D), from the T00CW response
-    private int _motorNotConnectedMask = 0x0F;
+    // bit set = motor port not connected (bit 0 = A ... bit 3 = D), from the T00CW response.
+    // Written by the notification thread, read by others, so it is volatile.
+    private volatile int _motorNotConnectedMask;
 
     private IGattCharacteristic? _characteristic_AE01;
     private IGattCharacteristic? _characteristic_AE02;
@@ -191,11 +217,34 @@ internal class MKH4 : BluetoothDevice
     private IGattCharacteristic? _characteristic_AE3C_Notify;
 
     public MKH4(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        : this(name, address, deviceRepository, bleService, DEFAULT_CHANNEL_COUNT)
+    {
+    }
+
+    /// <summary>
+    /// Creates the module with the given number of channels, so that a variant with more ports
+    /// can reuse the implementation.
+    /// </summary>
+    protected MKH4(string name, string address, IDeviceRepository deviceRepository, IBluetoothLEService bleService, int channelCount)
         : base(name, address, deviceRepository, bleService)
     {
+        _channelCount = Math.Clamp(channelCount, 1, MAX_CHANNEL_COUNT);
+
+        // size all per-channel buffers
+        _outputValues = new OutputValuesGroup<int>(_channelCount);
+        _servoTargets = new OutputValuesGroup<int>(_channelCount);
+        _snapshot = new int[_channelCount];
+        _servoSnapshot = new int[_channelCount];
+        _lastSentValues = new int[_channelCount];
+        _centerPositions = new int[_channelCount];
+        _servoReady = new bool[_channelCount];
+
+        // until the module reports its status, no motor is assumed to be connected
+        _motorNotConnectedMask = AllChannelsMask(_channelCount);
+
         // default configuration (normal motors) until a connection delivers the real channel configuration,
         // ChannelConfiguration is a value type, so "default" is used for "no configuration"
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        for (int channel = 0; channel < _channelCount; channel++)
         {
             _channelConfigs.Set(channel, ChannelConfig.From(default));
         }
@@ -203,7 +252,7 @@ internal class MKH4 : BluetoothDevice
 
     public override DeviceType DeviceType => DeviceType.MKH4;
 
-    public override int NumberOfChannels => CHANNEL_COUNT;
+    public override int NumberOfChannels => _channelCount;
 
     protected override bool AutoConnectOnFirstConnect => false;
 
@@ -265,7 +314,7 @@ internal class MKH4 : BluetoothDevice
         }
 
         // store a configuration for every channel (the default for channels without one)
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        for (int channel = 0; channel < _channelCount; channel++)
         {
             configs.TryGetValue(channel, out var config);
             _channelConfigs.Set(channel, ChannelConfig.From(config));
@@ -384,7 +433,7 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private bool HasServoChannels()
     {
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        for (int channel = 0; channel < _channelCount; channel++)
         {
             if (IsServoChannel(channel))
             {
@@ -420,7 +469,7 @@ internal class MKH4 : BluetoothDevice
         _servoTargets.SetOutput(channel, center);
 
         // move there directly, the output loop may not be running (e.g. on the calibration page)
-        var targets = new int?[CHANNEL_COUNT];
+        var targets = new int?[_channelCount];
         targets[channel] = center;
         var payload = BuildPositionPayload(targets, SERVO_SPEED);
 
@@ -559,10 +608,13 @@ internal class MKH4 : BluetoothDevice
             _pendingRequests.TryGetValue(command, out pending);
         }
 
-        if (command == "7C" && payload.Length == 2)
+        if (command == "7C" && TryParseMotorMask(payload, _channelCount, out var motorMask))
         {
-            // motor status: bit set = not connected, e.g. 02 = B not connected
-            _motorNotConnectedMask = Convert.ToInt32(payload, 16);
+            // motor status: bit set = not connected, e.g. 02 = B not connected, log changes only
+            if (Interlocked.Exchange(ref _motorNotConnectedMask, motorMask) != motorMask)
+            {
+                Debug.WriteLine($"MKH4 motor not connected mask: 0x{motorMask:X2}");
+            }
         }
         else if (command == "76")
         {
@@ -668,7 +720,7 @@ internal class MKH4 : BluetoothDevice
             // servo channels: take over the configured base angle as center and move there,
             // like the Technic Move implementation does. The module counter starts at 0 at the
             // current shaft position after a power cycle, so the move is relative to that position.
-            for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+            for (int channel = 0; channel < _channelCount; channel++)
             {
                 if (!IsServoChannel(channel))
                 {
@@ -732,6 +784,12 @@ internal class MKH4 : BluetoothDevice
         var b1 = Convert.ToInt32(payload.Substring(2, 2), 16);
         var b2 = Convert.ToInt32(payload.Substring(4, 2), 16);
 
+        // a module with an old firmware may not support all commands, so only tell it in the log
+        if (TryParseEdition(payload, out var edition) && edition < MIN_EDITION)
+        {
+            Debug.WriteLine($"MKH4 firmware edition {edition} is older than the recommended {MIN_EDITION}");
+        }
+
         HardwareVersion = $"H{b0 >> 4}.{b1}";
         FirmwareVersion = $"V{b0 & 0x0F}.{b2 >> 4}.{b2 & 0x0F}";
     }
@@ -743,13 +801,13 @@ internal class MKH4 : BluetoothDevice
     /// <summary>
     /// Message format: 'T' + payload length (2 hex digits) + command (1 hex digit) + payload + 'W'
     /// </summary>
-    private static string BuildMessage(char command, string payload = "")
+    internal static string BuildMessage(char command, string payload = "")
         => $"T{payload.Length:X2}{command}{payload}W";
 
     /// <summary>
     /// Formats the speed of one channel as one flag digit followed by 4 hex digits.
     /// </summary>
-    private static string FormatSpeed(int value, char flag)
+    internal static string FormatSpeed(int value, char flag)
     {
         // value: -0x7FFF..0x7FFF, the direction bit 0x8000 is set for negative values
         int speed = Math.Min(Math.Abs(value), 0x7FFF);
@@ -763,10 +821,10 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Builds the payload of the position message (T303): for each channel 4 hex digits speed and 8 hex digits
-    /// target position. Channels without a target are idle (speed 0, position 0).
+    /// target position. The number of channels is the length of the targets array. Channels without a target are idle (speed 0, position 0).
     /// Returns null if no channel has a target.
     /// </summary>
-    private static string? BuildPositionPayload(int?[] targets, float speed)
+    internal static string? BuildPositionPayload(int?[] targets, float speed)
     {
         // speed 0..1 scaled to 0..0x7FFF
         var speedValue = (int)(Math.Clamp(Math.Abs(speed), 0f, 1f) * 0x7FFF);
@@ -774,7 +832,7 @@ internal class MKH4 : BluetoothDevice
         var payload = new StringBuilder();
         var hasTarget = false;
 
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        for (int channel = 0; channel < targets.Length; channel++)
         {
             if (targets[channel] is int target)
             {
@@ -798,11 +856,57 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Builds the payload of the simple motor start message (T144):
-    /// for each channel one flag digit and 4 hex digits speed.
+    /// for each channel one flag digit and 4 hex digits speed. The number of channels is the length of the values array.
     /// </summary>
-    private static string BuildSpeedPayload(int[] values)
+    internal static string BuildSpeedPayload(int[] values)
     {
-        return string.Concat(Enumerable.Range(0, CHANNEL_COUNT).Select(channel => FormatSpeed(values[channel], CHANNEL_FLAGS[channel])));
+        return string.Concat(values.Select(value => FormatSpeed(value, CHANNEL_FLAG)));
+    }
+
+    /// <summary>
+    /// Builds the message that announces the end of the session (T002W). The module does not answer it.
+    /// </summary>
+    internal static string BuildDisconnectMessage() => BuildMessage('2');
+
+    /// <summary>
+    /// Bit mask with one bit per channel (bit 0 = A, bit 1 = B, ...). Messages carry the mask as 2 hex digits,
+    /// so up to 8 channels are possible.
+    /// </summary>
+    internal static int AllChannelsMask(int channelCount) => (1 << channelCount) - 1;
+
+    /// <summary>
+    /// Parses the payload of the motor status response (T027CXXW): 2 hex digits, bit set = no motor connected.
+    /// Bits above the channel count are ignored.
+    /// </summary>
+    internal static bool TryParseMotorMask(string payload, int channelCount, out int mask)
+    {
+        mask = 0;
+
+        if (payload.Length != 2 || !payload.All(Uri.IsHexDigit))
+        {
+            return false;
+        }
+
+        mask = Convert.ToInt32(payload, 16) & AllChannelsMask(channelCount);
+        return true;
+    }
+
+    /// <summary>
+    /// Parses the firmware edition from the version payload (T00EW response, e.g. "410012").
+    /// The edition is the decimal number formed by the last four digits ("0012" is edition 12).
+    /// </summary>
+    internal static bool TryParseEdition(string payload, out int edition)
+    {
+        edition = 0;
+
+        // six hex digits are expected, the edition digits themselves must be decimal
+        if (payload.Length != 6 || !payload.All(Uri.IsHexDigit))
+        {
+            return false;
+        }
+
+        var editionDigits = payload.Substring(2, 4);
+        return editionDigits.All(char.IsAsciiDigit) && int.TryParse(editionDigits, out edition);
     }
 
     /// <summary>
@@ -939,7 +1043,7 @@ internal class MKH4 : BluetoothDevice
         var channelIndex = CheckChannel(channelNo);
 
         // only the selected channel gets a target, all others are idle
-        var targets = new int?[CHANNEL_COUNT];
+        var targets = new int?[_channelCount];
         targets[channelIndex] = targetPosition;
 
         return WriteMessageAsync(BuildMessage('3', BuildPositionPayload(targets, speed)!), token);
@@ -995,6 +1099,9 @@ internal class MKH4 : BluetoothDevice
         await base.BeforeDisconnectAsync(token);
 
         await SendStopAsync().ConfigureAwait(false);
+
+        // tell the module that the session ends, it does not answer
+        await SendBestEffortAsync(BuildDisconnectMessage()).ConfigureAwait(false);
     }
 
     protected override void BeforeDisconnectCleanup()
@@ -1027,7 +1134,8 @@ internal class MKH4 : BluetoothDevice
     // ------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Output loop: sends the buffered speed values (T144) and target positions (T303) whenever they changed.
+    /// Output loop: sends the buffered speed values (T144) and target positions (T303) whenever they changed
+    /// and a keep-alive request (T00CW) about every second.
     /// </summary>
     protected override async Task ProcessOutputsAsync(CancellationToken token)
     {
@@ -1040,7 +1148,7 @@ internal class MKH4 : BluetoothDevice
 
             // servo channels: hold the center position, the targets set during the connect setup were cleared above
             _servoTargets.Initialize();
-            for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+            for (int channel = 0; channel < _channelCount; channel++)
             {
                 if (IsServoReady(channel))
                 {
@@ -1050,6 +1158,9 @@ internal class MKH4 : BluetoothDevice
 
             // time since the last successful transmission, used for the periodic resend
             var lastSent = Stopwatch.StartNew();
+
+            // time since the last keep-alive request
+            var heartbeat = Stopwatch.StartNew();
 
             while (!token.IsCancellationRequested)
             {
@@ -1092,6 +1203,13 @@ internal class MKH4 : BluetoothDevice
                     {
                         _servoTargets.Commit();
                     }
+                }
+
+                // ---- keep-alive: fire and forget, the reply only updates the motor status ----
+                if (heartbeat.Elapsed >= HEARTBEAT_INTERVAL)
+                {
+                    heartbeat.Restart();
+                    await WriteMessageAsync(BuildMessage('C'), token).ConfigureAwait(false);
                 }
 
                 // short pause between two iterations
@@ -1163,15 +1281,21 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Sends a stop message for all channels, best effort with a short timeout.
+    /// Sends a stop message (zero speed) for all channels, best effort with a short timeout.
     /// </summary>
-    private async Task SendStopAsync()
+    private Task SendStopAsync()
+        => SendBestEffortAsync(BuildMessage('4', BuildSpeedPayload(new int[_channelCount])));
+
+    /// <summary>
+    /// Writes a message with a short timeout and ignores any failure, used while the connection is closing.
+    /// </summary>
+    private async Task SendBestEffortAsync(string message)
     {
         try
         {
             // the connection may be dying, so do not wait longer than half a second
             using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-            await WriteMessageAsync(BuildMessage('4', BuildSpeedPayload(new int[CHANNEL_COUNT])), cts.Token).ConfigureAwait(false);
+            await WriteMessageAsync(message, cts.Token).ConfigureAwait(false);
         }
         catch
         {
@@ -1194,8 +1318,8 @@ internal class MKH4 : BluetoothDevice
     private Task<bool> SendServoTargetsAsync(int[] targets, CancellationToken token)
     {
         // only servo channels with a known center get a target
-        var positions = new int?[CHANNEL_COUNT];
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        var positions = new int?[_channelCount];
+        for (int channel = 0; channel < _channelCount; channel++)
         {
             positions[channel] = IsServoReady(channel) ? targets[channel] : null;
         }
