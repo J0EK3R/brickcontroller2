@@ -41,16 +41,9 @@ internal class MKH4 : BluetoothDevice
     internal const int CHANNEL_COUNT = 4;
 
     /// <summary>
-    /// Interval of the keep-alive request (T00CW) while connected. The reply (T027CXXW) also reports
-    /// which motor ports have no motor connected.
+    /// Interval of the keep-alive request (T00CW) while connected.
     /// </summary>
     private static readonly TimeSpan HEARTBEAT_INTERVAL = TimeSpan.FromSeconds(1);
-
-    /// <summary>
-    /// Firmware edition that is expected at least. The edition is the decimal number in the last four digits
-    /// of the version payload (e.g. 410012 is edition 12). Older modules only cause a log message.
-    /// </summary>
-    private const int MIN_EDITION = 6;
 
     /// <summary>
     /// Max time to send changed settings to a connected module.
@@ -76,10 +69,15 @@ internal class MKH4 : BluetoothDevice
     private const int MAX_PACKET_LENGTH = 20;
 
     /// <summary>
-    /// The module answers a request with the matching response, so a request is repeated about every 40 ms
-    /// until the response arrives (or the max number of attempts is reached).
+    /// How often a request is (re)sent before it is given up. The module answers a request with the matching
+    /// response, so the request is repeated until that response arrives.
     /// </summary>
     private const int REQUEST_MAX_ATTEMPTS = 20;
+
+    /// <summary>
+    /// Wait time between two attempts of a request (40 ms). Together with <see cref="REQUEST_MAX_ATTEMPTS"/>
+    /// this gives a total timeout of about 20 x 40 ms = 800 ms per request.
+    /// </summary>
     private static readonly TimeSpan REQUEST_RETRY_DELAY = TimeSpan.FromMilliseconds(40);
 
     /// <summary>
@@ -102,6 +100,9 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private static readonly byte[] AckByte = { 0x01 };
 
+    /// <summary>
+    /// Service UUID the module advertises, used to detect it while scanning.
+    /// </summary>
     internal static readonly Guid MOULD_KING_HUB_SCAN_SERVICE_UUID = BluetoothLowEnergy.GetGuid(0xaf30);
 
     // service AE30: not needed for the protocol, kept for reference
@@ -193,10 +194,6 @@ internal class MKH4 : BluetoothDevice
     private readonly Dictionary<string, string> _lastResponses = new();
     private readonly object _responseLock = new object();
 
-    // bit set = motor port not connected (bit 0 = A ... bit 3 = D), from the T00CW response.
-    // Written by the notification thread, read by others, so it is volatile.
-    private volatile int _motorNotConnectedMask;
-
     private IGattCharacteristic? _characteristic_AE01;
     private IGattCharacteristic? _characteristic_AE02;
     private IGattCharacteristic? _characteristic_AE03;
@@ -222,9 +219,6 @@ internal class MKH4 : BluetoothDevice
         _lastSentValues = new int[CHANNEL_COUNT];
         _centerPositions = new int[CHANNEL_COUNT];
         _servoReady = new bool[CHANNEL_COUNT];
-
-        // until the module reports its status, no motor is assumed to be connected
-        _motorNotConnectedMask = ALL_CHANNELS_MASK;
 
         // default configuration (normal motors) until a connection delivers the real channel configuration,
         // ChannelConfiguration is a value type, so "default" is used for "no configuration"
@@ -600,8 +594,6 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private void HandleMessage(string message)
     {
-        Debug.WriteLine($"MKH4 notification: {message}");
-
         // shortest possible message is "T" + 2 digits length + 2 digits command + "W"
         if (message.Length < 6)
         {
@@ -619,54 +611,8 @@ internal class MKH4 : BluetoothDevice
             _pendingRequests.TryGetValue(command, out pending);
         }
 
-        if (command == "7C" && TryParseMotorMask(payload, out var motorMask))
-        {
-            // motor status: bit set = not connected, e.g. 02 = B not connected, log changes only
-            if (Interlocked.Exchange(ref _motorNotConnectedMask, motorMask) != motorMask)
-            {
-                Debug.WriteLine($"MKH4 motor not connected mask: 0x{motorMask:X2}");
-            }
-        }
-        else if (command == "76")
-        {
-            // response to T006W, diagnostic only
-            LogStoredValue(payload);
-        }
-
         // complete the waiting request (if any)
         pending?.TrySetResult(payload);
-    }
-
-    /// <summary>
-    /// Diagnostic logging of the response to T006W. The module keeps this value between connections,
-    /// it can be updated with T155... (new value = old value + position of motor A).
-    /// Unlike the position counter it is not reset to 0 by the module on its own. The meaning is unknown, so the value is only logged.
-    /// Payload: fixed prefix (12 hex digits) + sign + 8 hex digits, e.g. "0B0100030003+0279E999"
-    /// </summary>
-    private static void LogStoredValue(string payload)
-    {
-        try
-        {
-            // expected: 12 digit prefix, sign, 8 hex digits
-            if (payload.Length != 21 || (payload[12] != '+' && payload[12] != '-'))
-            {
-                Debug.WriteLine($"MKH4 stored value (unexpected format): {payload}");
-                return;
-            }
-
-            var prefix = payload.Substring(0, 12);
-            var value = Convert.ToInt64(payload.Substring(13), 16);
-            if (payload[12] == '-')
-            {
-                value = -value;
-            }
-
-            Debug.WriteLine($"MKH4 stored value (T006): prefix={prefix}, value={value} (0x{Math.Abs(value):X8})");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"MKH4 stored value could not be parsed: {payload} ({ex.Message})");
-        }
     }
 
     /// <summary>
@@ -720,7 +666,7 @@ internal class MKH4 : BluetoothDevice
             await RequestAsync('1', "AABB", token).ConfigureAwait(false); // T041AABBW -> T01711W (ready)
             await RequestAsync('E', string.Empty, token).ConfigureAwait(false); // T00EW -> T067E410012W (version info)
             await RequestAsync('C', string.Empty, token).ConfigureAwait(false); // T00CW -> T027C02W (motor status)
-            await RequestAsync('6', string.Empty, token).ConfigureAwait(false); // T006W -> T15760B0100030003+0279E999W (stored value, logged only)
+            await RequestAsync('6', string.Empty, token).ConfigureAwait(false); // T006W -> T15760B0100030003+0279E999W (stored value, answer is not evaluated)
 
             // device settings: stall protection, motor strength and limits
             await ApplyConfigOnConnectAsync(_config, token).ConfigureAwait(false);
@@ -749,9 +695,9 @@ internal class MKH4 : BluetoothDevice
             // the connection attempt was cancelled, let the caller handle it
             throw;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Debug.WriteLine($"MKH4 setup failed: {ex.Message}");
+            // any other setup failure is swallowed on purpose, the connection stays usable
         }
 
         return true;
@@ -759,8 +705,8 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Sends the device settings to the module after connecting, in this order: stall protection (always, with the
-    /// configured value), motor strength (only if enabled), limits of every channel with enabled limits,
-    /// then one read-back of the limits that is only logged. Missing answers are logged and never abort the setup.
+    /// configured value), motor strength (only if enabled), limits of every channel with enabled limits.
+    /// Missing answers never abort the setup.
     /// </summary>
     private async Task ApplyConfigOnConnectAsync(MKH4Config config, CancellationToken token)
     {
@@ -773,55 +719,15 @@ internal class MKH4 : BluetoothDevice
             await RequestAsync(BuildMotorStrengthMessage(config.MotorStrength), token).ConfigureAwait(false);
         }
 
-        var limitsSent = false;
         for (int channel = 0; channel < config.Limits.Length; channel++)
         {
             var limit = config.Limits[channel];
             if (limit.Enabled)
             {
                 await RequestAsync(BuildLimitMessage(channel, limit.MinUnits, limit.MaxUnits), token).ConfigureAwait(false);
-                limitsSent = true;
-            }
-        }
-
-        if (limitsSent)
-        {
-            // read back for diagnostics only
-            var response = await RequestAsync(BuildReadLimitsMessage(), token).ConfigureAwait(false);
-            LogLimits(config, response);
-        }
-    }
-
-    /// <summary>
-    /// Logs the limits read back from the module and any difference to the configured limits of enabled channels.
-    /// Only logs, a parse failure or a mismatch has no further effect.
-    /// </summary>
-    private void LogLimits(MKH4Config config, string? response)
-    {
-        if (response is null || !TryParseLimits(response, out var limits))
-        {
-            Debug.WriteLine($"MKH4 limits could not be read back: {response ?? "no response"}");
-            return;
-        }
-
-        for (int channel = 0; channel < limits.Length && channel < config.Limits.Length; channel++)
-        {
-            var (min, max) = limits[channel];
-            Debug.WriteLine($"MKH4 limits channel {channel}: min={min}, max={max}");
-
-            // the module treats small values as 0, so compare with the normalized configured values
-            var expected = config.Limits[channel];
-            if (expected.Enabled && (min != NormalizeLimit(expected.MinUnits) || max != NormalizeLimit(expected.MaxUnits)))
-            {
-                Debug.WriteLine($"MKH4 limits channel {channel} differ from the settings: min={expected.MinUnits}, max={expected.MaxUnits}");
             }
         }
     }
-
-    /// <summary>
-    /// Limit value as the module stores it: values with a small absolute value become 0.
-    /// </summary>
-    private static int NormalizeLimit(int units) => Math.Abs(units) < MKH4Config.MinLimitUnits ? 0 : units;
 
     /// <summary>
     /// Applies changed device settings to a connected module: only what changed is sent (stall protection,
@@ -867,9 +773,9 @@ internal class MKH4 : BluetoothDevice
                 await WriteMessageAsync(BuildLimitMessage(channel, limit.MinUnits, limit.MaxUnits), cts.Token).ConfigureAwait(false);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Debug.WriteLine($"MKH4 settings could not be sent: {ex.Message}");
+            // best effort, a failed write is ignored and the next connection applies everything
         }
     }
 
@@ -901,8 +807,6 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private void ApplyVersionInfo(string payload)
     {
-        Debug.WriteLine($"MKH4 version payload: {payload}");
-
         // three bytes = six hex digits are expected
         if (payload.Length != 6 || !payload.All(Uri.IsHexDigit))
         {
@@ -912,12 +816,6 @@ internal class MKH4 : BluetoothDevice
         var b0 = Convert.ToInt32(payload.Substring(0, 2), 16);
         var b1 = Convert.ToInt32(payload.Substring(2, 2), 16);
         var b2 = Convert.ToInt32(payload.Substring(4, 2), 16);
-
-        // a module with an old firmware may not support all commands, so only tell it in the log
-        if (TryParseEdition(payload, out var edition) && edition < MIN_EDITION)
-        {
-            Debug.WriteLine($"MKH4 firmware edition {edition} is older than the recommended {MIN_EDITION}");
-        }
 
         HardwareVersion = $"H{b0 >> 4}.{b1}";
         FirmwareVersion = $"V{b0 & 0x0F}.{b2 >> 4}.{b2 & 0x0F}";
@@ -1030,11 +928,6 @@ internal class MKH4 : BluetoothDevice
         => BuildMessage('9', (1 << channel).ToString("X2") + FormatLimit(maxUnits) + FormatLimit(minUnits));
 
     /// <summary>
-    /// Builds the request that reads the limits of all channels (T00BW, answered with command 7B).
-    /// </summary>
-    internal static string BuildReadLimitsMessage() => BuildMessage('B');
-
-    /// <summary>
     /// Formats a limit value as sign and 8 hex digits, small values are sent as +00000000.
     /// </summary>
     private static string FormatLimit(int value)
@@ -1049,53 +942,6 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Parses the answer to the read limits request (T00BW): per channel two values of sign and 8 hex digits.
-    /// The values of the two strings are interleaved (channel p uses the values 2p and 2p+1), the larger one is the
-    /// positive limit and the smaller one the negative limit. The layout is not fully verified, so a payload
-    /// that does not fit is reported as failure.
-    /// </summary>
-    internal static bool TryParseLimits(string payload, out (int Min, int Max)[] limits)
-    {
-        limits = [];
-
-        // two values of 9 characters per channel
-        const int valueLength = 9;
-        if (payload.Length != CHANNEL_COUNT * 2 * valueLength)
-        {
-            return false;
-        }
-
-        var values = new int[CHANNEL_COUNT * 2];
-        for (int i = 0; i < values.Length; i++)
-        {
-            var text = payload.Substring(i * valueLength, valueLength);
-            var digits = text.Substring(1);
-            if ((text[0] != '+' && text[0] != '-') || !digits.All(Uri.IsHexDigit))
-            {
-                return false;
-            }
-
-            var magnitude = Convert.ToInt64(digits, 16);
-            if (magnitude > int.MaxValue)
-            {
-                return false;
-            }
-
-            values[i] = (int)(text[0] == '-' ? -magnitude : magnitude);
-        }
-
-        limits = new (int Min, int Max)[CHANNEL_COUNT];
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
-        {
-            var first = values[2 * channel];
-            var second = values[2 * channel + 1];
-            limits[channel] = (Math.Min(first, second), Math.Max(first, second));
-        }
-
-        return true;
-    }
-
-    /// <summary>
     /// Command of the response to a request: 0x7X for request X (the digit is case-sensitive, e.g. 7b for b).
     /// </summary>
     internal static string GetResponseCommand(char command) => "7" + command;
@@ -1104,46 +950,6 @@ internal class MKH4 : BluetoothDevice
     /// Builds the message that announces the end of the session (T002W). The module does not answer it.
     /// </summary>
     internal static string BuildDisconnectMessage() => BuildMessage('2');
-
-    /// <summary>
-    /// Bit mask with one bit per channel (bit 0 = A ... bit 3 = D).
-    /// </summary>
-    internal const int ALL_CHANNELS_MASK = (1 << CHANNEL_COUNT) - 1;
-
-    /// <summary>
-    /// Parses the payload of the motor status response (T027CXXW): 2 hex digits, bit set = no motor connected.
-    /// Bits above the 4 channels are ignored.
-    /// </summary>
-    internal static bool TryParseMotorMask(string payload, out int mask)
-    {
-        mask = 0;
-
-        if (payload.Length != 2 || !payload.All(Uri.IsHexDigit))
-        {
-            return false;
-        }
-
-        mask = Convert.ToInt32(payload, 16) & ALL_CHANNELS_MASK;
-        return true;
-    }
-
-    /// <summary>
-    /// Parses the firmware edition from the version payload (T00EW response, e.g. "410012").
-    /// The edition is the decimal number formed by the last four digits ("0012" is edition 12).
-    /// </summary>
-    internal static bool TryParseEdition(string payload, out int edition)
-    {
-        edition = 0;
-
-        // six hex digits are expected, the edition digits themselves must be decimal
-        if (payload.Length != 6 || !payload.All(Uri.IsHexDigit))
-        {
-            return false;
-        }
-
-        var editionDigits = payload.Substring(2, 4);
-        return editionDigits.All(char.IsAsciiDigit) && int.TryParse(editionDigits, out edition);
-    }
 
     /// <summary>
     /// Writes a complete message, split into packets of at most 20 characters.
@@ -1254,7 +1060,7 @@ internal class MKH4 : BluetoothDevice
                 }
             }
 
-            Debug.WriteLine($"MKH4 no response for {message}");
+            // no answer after all retries
             return null;
         }
         finally

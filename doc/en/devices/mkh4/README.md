@@ -24,9 +24,8 @@ The module is found by its Bluetooth name (starting with `YX-01` or `YX-05`) or 
 
 ## Connection
 
-- While connected, the module is queried about once per second. The answer tells which ports have no motor attached; changes are written to the debug log only.
+- While connected, the module is queried about once per second to keep the session alive.
 - When the connection is closed, all motors are stopped and the module is told that the session ends.
-- If the module reports an old firmware edition, a message is written to the debug log. Nothing else changes.
 
 ## Servo channels
 
