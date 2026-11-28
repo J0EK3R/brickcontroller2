@@ -16,7 +16,7 @@ public class MKH4ConfigTests
     [Fact]
     public void FromSettings_Empty_UsesDocumentedDefaults()
     {
-        var config = MKH4Config.FromSettings([], 4);
+        var config = MKH4Config.FromSettings([]);
 
         config.StallProtection.Should().BeTrue();
         config.MoveSpeed.Should().Be(0.625f);
@@ -42,7 +42,7 @@ public class MKH4ConfigTests
             Setting(MKH4Config.LimitMinName(1), new Percent(10f)),
         };
 
-        var config = MKH4Config.FromSettings(settings, 4);
+        var config = MKH4Config.FromSettings(settings);
 
         config.StallProtection.Should().BeFalse();
         config.MoveSpeed.Should().Be(0.5f);
@@ -102,7 +102,7 @@ public class MKH4ConfigTests
     [Fact]
     public void FromSettings_Empty_UsesXLForAllChannels()
     {
-        var config = MKH4Config.FromSettings([], 4);
+        var config = MKH4Config.FromSettings([]);
 
         config.MotorTypes.Should().Equal(MKH4MotorType.XL, MKH4MotorType.XL, MKH4MotorType.XL, MKH4MotorType.XL);
         config.Limits.Should().OnlyContain(limit => limit.MinUnits == -100980 && limit.MaxUnits == 100980);
@@ -116,7 +116,7 @@ public class MKH4ConfigTests
             Setting(MKH4Config.MotorTypeName(0), 1L), // port A: L (as stored by JSON)
             Setting(MKH4Config.LimitEnabledName(0), true),
             Setting(MKH4Config.LimitEnabledName(1), true),
-        ], 4);
+        ]);
 
         config.Limits[0].Should().Be(new MKH4ChannelLimit(true, -67150, 67150));
         config.Limits[1].Should().Be(new MKH4ChannelLimit(true, -100980, 100980));
@@ -138,14 +138,14 @@ public class MKH4ConfigTests
     public void GetChanges_MotorType_ListsOnlyAffectedEnabledChannel()
     {
         var enabled = new[] { Setting(MKH4Config.LimitEnabledName(0), true), Setting(MKH4Config.LimitEnabledName(1), true) };
-        var oldConfig = MKH4Config.FromSettings(enabled, 4);
-        var newConfig = MKH4Config.FromSettings([.. enabled, Setting(MKH4Config.MotorTypeName(0), 1)], 4);
+        var oldConfig = MKH4Config.FromSettings(enabled);
+        var newConfig = MKH4Config.FromSettings([.. enabled, Setting(MKH4Config.MotorTypeName(0), 1)]);
 
         MKH4Config.GetChanges(oldConfig, newConfig).LimitChannels.Should().Equal(0);
 
         // limits of the channel not enabled: nothing to send
-        var noLimits = MKH4Config.FromSettings([Setting(MKH4Config.MotorTypeName(0), 1)], 4);
-        MKH4Config.GetChanges(MKH4Config.FromSettings([], 4), noLimits).IsEmpty.Should().BeTrue();
+        var noLimits = MKH4Config.FromSettings([Setting(MKH4Config.MotorTypeName(0), 1)]);
+        MKH4Config.GetChanges(MKH4Config.FromSettings([]), noLimits).IsEmpty.Should().BeTrue();
     }
 
     [Theory]
@@ -160,16 +160,16 @@ public class MKH4ConfigTests
     [Fact]
     public void GetChanges_SameConfig_IsEmpty()
     {
-        var config = MKH4Config.FromSettings([], 4);
+        var config = MKH4Config.FromSettings([]);
 
-        MKH4Config.GetChanges(config, MKH4Config.FromSettings([], 4)).IsEmpty.Should().BeTrue();
+        MKH4Config.GetChanges(config, MKH4Config.FromSettings([])).IsEmpty.Should().BeTrue();
     }
 
     [Fact]
     public void GetChanges_StallProtection()
     {
-        var oldConfig = MKH4Config.FromSettings([], 4);
-        var newConfig = MKH4Config.FromSettings([Setting(MKH4Config.StallProtectionName, false)], 4);
+        var oldConfig = MKH4Config.FromSettings([]);
+        var newConfig = MKH4Config.FromSettings([Setting(MKH4Config.StallProtectionName, false)]);
 
         var changes = MKH4Config.GetChanges(oldConfig, newConfig);
 
@@ -181,8 +181,8 @@ public class MKH4ConfigTests
     [Fact]
     public void GetChanges_MoveSpeedOnly_SendsNothing()
     {
-        var oldConfig = MKH4Config.FromSettings([], 4);
-        var newConfig = MKH4Config.FromSettings([Setting(MKH4Config.MoveSpeedName, 30.0)], 4);
+        var oldConfig = MKH4Config.FromSettings([]);
+        var newConfig = MKH4Config.FromSettings([Setting(MKH4Config.MoveSpeedName, 30.0)]);
 
         MKH4Config.GetChanges(oldConfig, newConfig).IsEmpty.Should().BeTrue();
     }
@@ -190,12 +190,12 @@ public class MKH4ConfigTests
     [Fact]
     public void GetChanges_MotorStrength_OnlyWhenEnabled()
     {
-        var disabled = MKH4Config.FromSettings([Setting(MKH4Config.MotorStrengthName, 20.0)], 4);
-        var enabled = MKH4Config.FromSettings([Setting(MKH4Config.MotorStrengthEnabledName, true), Setting(MKH4Config.MotorStrengthName, 20.0)], 4);
-        var enabledOther = MKH4Config.FromSettings([Setting(MKH4Config.MotorStrengthEnabledName, true), Setting(MKH4Config.MotorStrengthName, 30.0)], 4);
+        var disabled = MKH4Config.FromSettings([Setting(MKH4Config.MotorStrengthName, 20.0)]);
+        var enabled = MKH4Config.FromSettings([Setting(MKH4Config.MotorStrengthEnabledName, true), Setting(MKH4Config.MotorStrengthName, 20.0)]);
+        var enabledOther = MKH4Config.FromSettings([Setting(MKH4Config.MotorStrengthEnabledName, true), Setting(MKH4Config.MotorStrengthName, 30.0)]);
 
         // value changed, but not enabled: nothing to send
-        MKH4Config.GetChanges(MKH4Config.FromSettings([], 4), disabled).MotorStrength.Should().BeFalse();
+        MKH4Config.GetChanges(MKH4Config.FromSettings([]), disabled).MotorStrength.Should().BeFalse();
 
         // switched on and value changed while on: send
         MKH4Config.GetChanges(disabled, enabled).MotorStrength.Should().BeTrue();
@@ -208,18 +208,18 @@ public class MKH4ConfigTests
     [Fact]
     public void GetChanges_Limits_OnlyEnabledChangedChannels()
     {
-        var oldConfig = MKH4Config.FromSettings([Setting(MKH4Config.LimitEnabledName(0), true)], 4);
+        var oldConfig = MKH4Config.FromSettings([Setting(MKH4Config.LimitEnabledName(0), true)]);
         var newConfig = MKH4Config.FromSettings(
         [
             Setting(MKH4Config.LimitEnabledName(0), true),
             Setting(MKH4Config.LimitMaxName(0), 20.0), // channel A changed
             Setting(MKH4Config.LimitMaxName(1), 20.0), // channel B changed but not enabled
             Setting(MKH4Config.LimitEnabledName(2), true), // channel C switched on
-        ], 4);
+        ]);
 
         MKH4Config.GetChanges(oldConfig, newConfig).LimitChannels.Should().Equal(0, 2);
 
         // switching a limit off sends nothing
-        MKH4Config.GetChanges(newConfig, MKH4Config.FromSettings([], 4)).LimitChannels.Should().BeEmpty();
+        MKH4Config.GetChanges(newConfig, MKH4Config.FromSettings([])).LimitChannels.Should().BeEmpty();
     }
 }

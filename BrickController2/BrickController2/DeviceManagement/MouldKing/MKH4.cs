@@ -36,15 +36,9 @@ namespace BrickController2.DeviceManagement.MouldKing;
 internal class MKH4 : BluetoothDevice
 {
     /// <summary>
-    /// number of motor ports (A, B, C, D) of the MKH4.0 module
+    /// Number of motor ports (A, B, C, D) of the MKH4.0 module. All per-channel buffers and masks use it.
     /// </summary>
-    private const int DEFAULT_CHANNEL_COUNT = 4;
-
-    /// <summary>
-    /// Highest number of channels the protocol helpers can address: the motor mask of a message has
-    /// 2 hex digits, so one bit per channel allows 8 channels.
-    /// </summary>
-    private const int MAX_CHANNEL_COUNT = 8;
+    internal const int CHANNEL_COUNT = 4;
 
     /// <summary>
     /// Interval of the keep-alive request (T00CW) while connected. The reply (T027CXXW) also reports
@@ -123,11 +117,6 @@ internal class MKH4 : BluetoothDevice
     private static readonly Guid MOULD_KING_HUB_SERVICE_AE3A_UUID = BluetoothLowEnergy.GetGuid(0xae3a);
     private static readonly Guid MOULD_KING_HUB_WRITE_NO_RESPONSE_AE3B_UUID = BluetoothLowEnergy.GetGuid(0xae3b);
     private static readonly Guid MOULD_KING_HUB_NOTIFY_AE3C_UUID = BluetoothLowEnergy.GetGuid(0xae3c);
-
-    /// <summary>
-    /// Number of motor channels, all per-channel buffers are sized from it.
-    /// </summary>
-    private readonly int _channelCount;
 
     /// <summary>
     /// Current device settings. The snapshot is replaced as a whole when the settings change, so the output loop
@@ -218,39 +207,28 @@ internal class MKH4 : BluetoothDevice
     private IGattCharacteristic? _characteristic_AE3C_Notify;
 
     public MKH4(string name, string address, IEnumerable<NamedSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
-        : this(name, address, settings, deviceRepository, bleService, DEFAULT_CHANNEL_COUNT)
-    {
-    }
-
-    /// <summary>
-    /// Creates the module with the given number of channels, so that a variant with more ports
-    /// can reuse the implementation.
-    /// </summary>
-    protected MKH4(string name, string address, IEnumerable<NamedSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService, int channelCount)
         : base(name, address, deviceRepository, bleService)
     {
-        _channelCount = Math.Clamp(channelCount, 1, MAX_CHANNEL_COUNT);
-
         // register the device settings (stored values are taken over) and take the first snapshot
         RegisterSettings(settings);
-        _config = MKH4Config.FromSettings(CurrentSettings, _channelCount);
+        _config = MKH4Config.FromSettings(CurrentSettings);
         _lastSentFlags = _config.ChannelFlags;
 
         // size all per-channel buffers
-        _outputValues = new OutputValuesGroup<int>(_channelCount);
-        _servoTargets = new OutputValuesGroup<int>(_channelCount);
-        _snapshot = new int[_channelCount];
-        _servoSnapshot = new int[_channelCount];
-        _lastSentValues = new int[_channelCount];
-        _centerPositions = new int[_channelCount];
-        _servoReady = new bool[_channelCount];
+        _outputValues = new OutputValuesGroup<int>(CHANNEL_COUNT);
+        _servoTargets = new OutputValuesGroup<int>(CHANNEL_COUNT);
+        _snapshot = new int[CHANNEL_COUNT];
+        _servoSnapshot = new int[CHANNEL_COUNT];
+        _lastSentValues = new int[CHANNEL_COUNT];
+        _centerPositions = new int[CHANNEL_COUNT];
+        _servoReady = new bool[CHANNEL_COUNT];
 
         // until the module reports its status, no motor is assumed to be connected
-        _motorNotConnectedMask = AllChannelsMask(_channelCount);
+        _motorNotConnectedMask = ALL_CHANNELS_MASK;
 
         // default configuration (normal motors) until a connection delivers the real channel configuration,
         // ChannelConfiguration is a value type, so "default" is used for "no configuration"
-        for (int channel = 0; channel < _channelCount; channel++)
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
             _channelConfigs.Set(channel, ChannelConfig.From(default));
         }
@@ -270,7 +248,7 @@ internal class MKH4 : BluetoothDevice
         SetSettingValue<Percent>(MKH4Config.MotorStrengthName, settings, MKH4Config.MotorStrengthGroupName, MKH4Config.DefaultMotorStrengthPercent);
 
         // limits: one group per channel
-        for (int channel = 0; channel < _channelCount; channel++)
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
             var group = MKH4Config.LimitGroupName(channel);
             SetSettingValue(MKH4Config.MotorTypeName(channel), settings, group, MKH4Config.DefaultMotorType);
@@ -282,7 +260,7 @@ internal class MKH4 : BluetoothDevice
 
     public override DeviceType DeviceType => DeviceType.MKH4;
 
-    public override int NumberOfChannels => _channelCount;
+    public override int NumberOfChannels => CHANNEL_COUNT;
 
     protected override bool AutoConnectOnFirstConnect => false;
 
@@ -344,7 +322,7 @@ internal class MKH4 : BluetoothDevice
         }
 
         // store a configuration for every channel (the default for channels without one)
-        for (int channel = 0; channel < _channelCount; channel++)
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
             configs.TryGetValue(channel, out var config);
             _channelConfigs.Set(channel, ChannelConfig.From(config));
@@ -463,7 +441,7 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private bool HasServoChannels()
     {
-        for (int channel = 0; channel < _channelCount; channel++)
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
             if (IsServoChannel(channel))
             {
@@ -502,7 +480,7 @@ internal class MKH4 : BluetoothDevice
         _servoTargets.SetOutput(channel, center);
 
         // move there directly, the output loop may not be running (e.g. on the calibration page)
-        var targets = new int?[_channelCount];
+        var targets = new int?[CHANNEL_COUNT];
         targets[channel] = center;
         var payload = BuildPositionPayload(targets, _config.MoveSpeed);
 
@@ -641,7 +619,7 @@ internal class MKH4 : BluetoothDevice
             _pendingRequests.TryGetValue(command, out pending);
         }
 
-        if (command == "7C" && TryParseMotorMask(payload, _channelCount, out var motorMask))
+        if (command == "7C" && TryParseMotorMask(payload, out var motorMask))
         {
             // motor status: bit set = not connected, e.g. 02 = B not connected, log changes only
             if (Interlocked.Exchange(ref _motorNotConnectedMask, motorMask) != motorMask)
@@ -755,7 +733,7 @@ internal class MKH4 : BluetoothDevice
             // servo channels: take over the configured base angle as center and move there,
             // like the Technic Move implementation does. The module counter starts at 0 at the
             // current shaft position after a power cycle, so the move is relative to that position.
-            for (int channel = 0; channel < _channelCount; channel++)
+            for (int channel = 0; channel < CHANNEL_COUNT; channel++)
             {
                 if (!IsServoChannel(channel))
                 {
@@ -820,7 +798,7 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     private void LogLimits(MKH4Config config, string? response)
     {
-        if (response is null || !TryParseLimits(response, _channelCount, out var limits))
+        if (response is null || !TryParseLimits(response, out var limits))
         {
             Debug.WriteLine($"MKH4 limits could not be read back: {response ?? "no response"}");
             return;
@@ -854,7 +832,7 @@ internal class MKH4 : BluetoothDevice
     /// </summary>
     protected override async Task OnDeviceSettingsUpdatedAsync()
     {
-        var newConfig = MKH4Config.FromSettings(CurrentSettings, _channelCount);
+        var newConfig = MKH4Config.FromSettings(CurrentSettings);
         var oldConfig = Interlocked.Exchange(ref _config, newConfig);
 
         if (DeviceState != DeviceState.Connected || _bleDevice is null || _characteristic_AE3B_Write_No_Response is null)
@@ -1076,18 +1054,18 @@ internal class MKH4 : BluetoothDevice
     /// positive limit and the smaller one the negative limit. The layout is not fully verified, so a payload
     /// that does not fit is reported as failure.
     /// </summary>
-    internal static bool TryParseLimits(string payload, int channelCount, out (int Min, int Max)[] limits)
+    internal static bool TryParseLimits(string payload, out (int Min, int Max)[] limits)
     {
         limits = [];
 
         // two values of 9 characters per channel
         const int valueLength = 9;
-        if (payload.Length != channelCount * 2 * valueLength)
+        if (payload.Length != CHANNEL_COUNT * 2 * valueLength)
         {
             return false;
         }
 
-        var values = new int[channelCount * 2];
+        var values = new int[CHANNEL_COUNT * 2];
         for (int i = 0; i < values.Length; i++)
         {
             var text = payload.Substring(i * valueLength, valueLength);
@@ -1106,8 +1084,8 @@ internal class MKH4 : BluetoothDevice
             values[i] = (int)(text[0] == '-' ? -magnitude : magnitude);
         }
 
-        limits = new (int Min, int Max)[channelCount];
-        for (int channel = 0; channel < channelCount; channel++)
+        limits = new (int Min, int Max)[CHANNEL_COUNT];
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
             var first = values[2 * channel];
             var second = values[2 * channel + 1];
@@ -1128,16 +1106,15 @@ internal class MKH4 : BluetoothDevice
     internal static string BuildDisconnectMessage() => BuildMessage('2');
 
     /// <summary>
-    /// Bit mask with one bit per channel (bit 0 = A, bit 1 = B, ...). Messages carry the mask as 2 hex digits,
-    /// so up to 8 channels are possible.
+    /// Bit mask with one bit per channel (bit 0 = A ... bit 3 = D).
     /// </summary>
-    internal static int AllChannelsMask(int channelCount) => (1 << channelCount) - 1;
+    internal const int ALL_CHANNELS_MASK = (1 << CHANNEL_COUNT) - 1;
 
     /// <summary>
     /// Parses the payload of the motor status response (T027CXXW): 2 hex digits, bit set = no motor connected.
-    /// Bits above the channel count are ignored.
+    /// Bits above the 4 channels are ignored.
     /// </summary>
-    internal static bool TryParseMotorMask(string payload, int channelCount, out int mask)
+    internal static bool TryParseMotorMask(string payload, out int mask)
     {
         mask = 0;
 
@@ -1146,7 +1123,7 @@ internal class MKH4 : BluetoothDevice
             return false;
         }
 
-        mask = Convert.ToInt32(payload, 16) & AllChannelsMask(channelCount);
+        mask = Convert.ToInt32(payload, 16) & ALL_CHANNELS_MASK;
         return true;
     }
 
@@ -1307,7 +1284,7 @@ internal class MKH4 : BluetoothDevice
         var channelIndex = CheckChannel(channelNo);
 
         // only the selected channel gets a target, all others are idle
-        var targets = new int?[_channelCount];
+        var targets = new int?[CHANNEL_COUNT];
         targets[channelIndex] = targetPosition;
 
         return WriteMessageAsync(BuildMessage('3', BuildPositionPayload(targets, speed)!), token);
@@ -1413,7 +1390,7 @@ internal class MKH4 : BluetoothDevice
 
             // servo channels: hold the center position, the targets set during the connect setup were cleared above
             _servoTargets.Initialize();
-            for (int channel = 0; channel < _channelCount; channel++)
+            for (int channel = 0; channel < CHANNEL_COUNT; channel++)
             {
                 if (IsServoReady(channel))
                 {
@@ -1561,7 +1538,7 @@ internal class MKH4 : BluetoothDevice
     /// Sends a stop message (zero speed) for all channels, best effort with a short timeout.
     /// </summary>
     private Task SendStopAsync()
-        => SendBestEffortAsync(BuildSpeedMessage(new int[_channelCount], _config.ChannelFlags));
+        => SendBestEffortAsync(BuildSpeedMessage(new int[CHANNEL_COUNT], _config.ChannelFlags));
 
     /// <summary>
     /// Writes a message with a short timeout and ignores any failure, used while the connection is closing.
@@ -1601,8 +1578,8 @@ internal class MKH4 : BluetoothDevice
     private Task<bool> SendServoTargetsAsync(int[] targets, CancellationToken token)
     {
         // only servo channels with a known center get a target
-        var positions = new int?[_channelCount];
-        for (int channel = 0; channel < _channelCount; channel++)
+        var positions = new int?[CHANNEL_COUNT];
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
         {
             positions[channel] = IsServoReady(channel) ? targets[channel] : null;
         }

@@ -36,15 +36,13 @@ public class MKH4MessageTests
         MKH4.FormatSpeed(value, '0').Should().Be(expected);
     }
 
-    [Theory]
-    [InlineData(4)]
-    [InlineData(6)]
-    public void BuildSpeedPayload_HasFiveDigitsPerChannel(int channelCount)
+    [Fact]
+    public void BuildSpeedPayload_HasFiveDigitsPerChannel()
     {
-        var payload = MKH4.BuildSpeedPayload(new int[channelCount], new string('0', channelCount));
+        var payload = MKH4.BuildSpeedPayload(new int[MKH4.CHANNEL_COUNT], new string('0', MKH4.CHANNEL_COUNT));
 
-        payload.Should().HaveLength(5 * channelCount);
-        payload.Should().Be(new string('0', 5 * channelCount));
+        payload.Should().HaveLength(5 * MKH4.CHANNEL_COUNT);
+        payload.Should().Be(new string('0', 5 * MKH4.CHANNEL_COUNT));
     }
 
     [Fact]
@@ -138,7 +136,7 @@ public class MKH4MessageTests
         // channel A: 100000 / -100000 (order does not matter), B: 5000 / -6000, C and D: 0
         var payload = BuildLimitsPayload(100000, -100000, -6000, 5000, 0, 0, 0, 0);
         // channel B uses the values 2 and 3
-        MKH4.TryParseLimits(payload, 4, out var limits).Should().BeTrue();
+        MKH4.TryParseLimits(payload, out var limits).Should().BeTrue();
 
         limits.Should().Equal((-100000, 100000), (-6000, 5000), (0, 0), (0, 0));
     }
@@ -148,7 +146,7 @@ public class MKH4MessageTests
     [InlineData("+00000000")]
     public void TryParseLimits_WrongLength_ReturnsFalse(string payload)
     {
-        MKH4.TryParseLimits(payload, 4, out _).Should().BeFalse();
+        MKH4.TryParseLimits(payload, out _).Should().BeFalse();
     }
 
     [Fact]
@@ -156,8 +154,8 @@ public class MKH4MessageTests
     {
         var good = BuildLimitsPayload(1, 2, 3, 4, 5, 6, 7, 8);
 
-        MKH4.TryParseLimits("*" + good.Substring(1), 4, out _).Should().BeFalse();
-        MKH4.TryParseLimits(good.Substring(0, 71) + "G", 4, out _).Should().BeFalse();
+        MKH4.TryParseLimits("*" + good.Substring(1), out _).Should().BeFalse();
+        MKH4.TryParseLimits(good.Substring(0, 71) + "G", out _).Should().BeFalse();
     }
 
     [Fact]
@@ -175,26 +173,23 @@ public class MKH4MessageTests
         payload.Should().Be("CFFF" + "00000064" + "8000" + "00000000" + "4FFF" + "00000100" + "8000" + "00000000");
     }
 
-    [Theory]
-    [InlineData(4)]
-    [InlineData(6)]
-    public void BuildPositionPayload_HasTwelveDigitsPerChannel(int channelCount)
+    [Fact]
+    public void BuildPositionPayload_HasTwelveDigitsPerChannel()
     {
-        var targets = new int?[channelCount];
+        var targets = new int?[MKH4.CHANNEL_COUNT];
         targets[0] = 1;
 
-        MKH4.BuildPositionPayload(targets, 1f)!.Should().HaveLength(12 * channelCount);
+        MKH4.BuildPositionPayload(targets, 1f)!.Should().HaveLength(12 * MKH4.CHANNEL_COUNT);
     }
 
     [Theory]
-    [InlineData("02", 4, 0x02)]
-    [InlineData("0F", 4, 0x0F)]
-    [InlineData("00", 4, 0x00)]
-    [InlineData("FF", 4, 0x0F)] // bits above the channel count are ignored
-    [InlineData("FF", 6, 0x3F)]
-    public void TryParseMotorMask_ValidPayload(string payload, int channelCount, int expected)
+    [InlineData("02", 0x02)]
+    [InlineData("0F", 0x0F)]
+    [InlineData("00", 0x00)]
+    [InlineData("FF", 0x0F)] // bits above the channel count are ignored
+    public void TryParseMotorMask_ValidPayload(string payload, int expected)
     {
-        MKH4.TryParseMotorMask(payload, channelCount, out var mask).Should().BeTrue();
+        MKH4.TryParseMotorMask(payload, out var mask).Should().BeTrue();
         mask.Should().Be(expected);
     }
 
@@ -205,7 +200,7 @@ public class MKH4MessageTests
     [InlineData("002")]
     public void TryParseMotorMask_InvalidPayload_ReturnsFalse(string payload)
     {
-        MKH4.TryParseMotorMask(payload, 4, out _).Should().BeFalse();
+        MKH4.TryParseMotorMask(payload, out _).Should().BeFalse();
     }
 
     [Theory]

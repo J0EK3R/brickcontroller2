@@ -160,7 +160,7 @@ internal sealed class MKH4Config
     /// Builds a snapshot from stored settings. Missing settings get their default value,
     /// stored values of another representation (e.g. double or long from JSON) are converted.
     /// </summary>
-    internal static MKH4Config FromSettings(IEnumerable<NamedSetting> settings, int channelCount)
+    internal static MKH4Config FromSettings(IEnumerable<NamedSetting> settings)
     {
         // evaluate once, the lookups below walk the collection several times
         var list = settings?.ToList() ?? [];
@@ -168,11 +168,11 @@ internal sealed class MKH4Config
         T Read<T>(string name, T defaultValue) => list.FirstOrDefault(s => s.Name == name).GetValue(defaultValue);
 
         // the motor type is read first, because the limit units depend on it
-        var motorTypes = Enumerable.Range(0, channelCount)
+        var motorTypes = Enumerable.Range(0, MKH4.CHANNEL_COUNT)
             .Select(channel => Read(MotorTypeName(channel), DefaultMotorType))
             .ToImmutableArray();
 
-        var limits = Enumerable.Range(0, channelCount)
+        var limits = Enumerable.Range(0, MKH4.CHANNEL_COUNT)
             .Select(channel => new MKH4ChannelLimit(
                 Read(LimitEnabledName(channel), DefaultLimitEnabled),
                 -PercentToUnits(Read<Percent>(LimitMinName(channel), DefaultLimitPercent), motorTypes[channel]),
