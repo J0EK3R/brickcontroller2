@@ -66,21 +66,37 @@ public class MKH4ConfigTests
     }
 
     [Theory]
-    [InlineData(0f, 0)]
-    [InlineData(1f, 3950)]
-    [InlineData(17f, 67150)]
-    [InlineData(100f, 395000)]
-    [InlineData(250f, 395000)]
-    public void PercentToUnits_LM_UsesTurnOf395000(float percent, int expected)
+    [InlineData(MKH4MotorType.L, 0f, 0)]
+    [InlineData(MKH4MotorType.L, 1f, 3950)]
+    [InlineData(MKH4MotorType.L, 17f, 67150)]
+    [InlineData(MKH4MotorType.L, 100f, 395000)]
+    [InlineData(MKH4MotorType.L, 250f, 395000)]
+    [InlineData(MKH4MotorType.M, 0f, 0)]
+    [InlineData(MKH4MotorType.M, 1f, 3950)]
+    [InlineData(MKH4MotorType.M, 17f, 67150)]
+    [InlineData(MKH4MotorType.M, 100f, 395000)]
+    [InlineData(MKH4MotorType.M, 250f, 395000)]
+    public void PercentToUnits_LAndM_UseTurnOf395000(MKH4MotorType type, float percent, int expected)
     {
-        MKH4Config.PercentToUnits(percent, MKH4MotorType.LM).Should().Be(expected);
+        MKH4Config.PercentToUnits(percent, type).Should().Be(expected);
+    }
+
+    [Fact]
+    public void MotorParameters_AreSeparatePerType()
+    {
+        MKH4MotorParameters.For(MKH4MotorType.XL).UnitsPerTurn.Should().Be(594000);
+        MKH4MotorParameters.For(MKH4MotorType.L).UnitsPerTurn.Should().Be(395000);
+        MKH4MotorParameters.For(MKH4MotorType.M).UnitsPerTurn.Should().Be(395000);
+        MKH4MotorParameters.For(MKH4MotorType.XL).UnitsPerPercent.Should().Be(5940.0);
+        MKH4MotorParameters.For((MKH4MotorType)99).Should().Be(MKH4MotorParameters.XL);
     }
 
     [Fact]
     public void UnitsPerDegree_DependsOnMotorType()
     {
         MKH4Config.UnitsPerDegree(MKH4MotorType.XL).Should().Be(1650.0);
-        MKH4Config.UnitsPerDegree(MKH4MotorType.LM).Should().BeApproximately(1097.22, 0.01);
+        MKH4Config.UnitsPerDegree(MKH4MotorType.L).Should().BeApproximately(1097.22, 0.01);
+        MKH4Config.UnitsPerDegree(MKH4MotorType.M).Should().BeApproximately(1097.22, 0.01);
     }
 
     [Fact]
@@ -97,7 +113,7 @@ public class MKH4ConfigTests
     {
         var config = MKH4Config.FromSettings(
         [
-            Setting(MKH4Config.MotorTypeName(0), 1L), // port A: LM (as stored by JSON)
+            Setting(MKH4Config.MotorTypeName(0), 1L), // port A: L (as stored by JSON)
             Setting(MKH4Config.LimitEnabledName(0), true),
             Setting(MKH4Config.LimitEnabledName(1), true),
         ], 4);
@@ -111,8 +127,10 @@ public class MKH4ConfigTests
     [Fact]
     public void GetValue_MotorType_ConvertsStoredNumbers()
     {
-        Setting("x", 1).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.LM);
-        Setting("x", 1L).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.LM);
+        Setting("x", 1).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.L);
+        Setting("x", 1L).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.L);
+        Setting("x", 2).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.M);
+        Setting("x", 2L).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.M);
         Setting("x", 7).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.XL);
     }
 

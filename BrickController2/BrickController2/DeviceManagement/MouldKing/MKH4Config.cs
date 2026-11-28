@@ -49,21 +49,6 @@ internal sealed class MKH4Config
     internal const char LimitDisabledFlag = '0';
 
     /// <summary>
-    /// Encoder units per degree of an XL motor (594000 units per revolution, measured).
-    /// </summary>
-    internal const double UnitsPerDegreeXL = 1650.0;
-
-    /// <summary>
-    /// Encoder units of one revolution of an L or M motor.
-    /// </summary>
-    internal const int UnitsPerTurnLM = 395000;
-
-    /// <summary>
-    /// Encoder units per degree of an L or M motor.
-    /// </summary>
-    internal const double UnitsPerDegreeLM = UnitsPerTurnLM / 360.0;
-
-    /// <summary>
     /// Limits with a smaller absolute value are treated as 0 by the module.
     /// </summary>
     internal const int MinLimitUnits = 1000;
@@ -204,22 +189,14 @@ internal sealed class MKH4Config
     }
 
     /// <summary>
-    /// Encoder units per degree of a motor type.
+    /// Encoder units per degree of a motor type (see <see cref="MKH4MotorParameters"/>).
     /// </summary>
-    internal static double UnitsPerDegree(MKH4MotorType type) => type switch
-    {
-        MKH4MotorType.LM => UnitsPerDegreeLM,
-        _ => UnitsPerDegreeXL,
-    };
+    internal static double UnitsPerDegree(MKH4MotorType type) => MKH4MotorParameters.For(type).UnitsPerDegree;
 
     /// <summary>
-    /// Encoder units of one percent of a revolution (XL: 5940, L/M: 3950, both exact).
+    /// Encoder units of one percent of a revolution of a motor type (XL: 5940, L/M: 3950, both exact).
     /// </summary>
-    internal static double UnitsPerPercent(MKH4MotorType type) => type switch
-    {
-        MKH4MotorType.LM => UnitsPerTurnLM / 100.0,
-        _ => 5940.0,
-    };
+    internal static double UnitsPerPercent(MKH4MotorType type) => MKH4MotorParameters.For(type).UnitsPerPercent;
 
     /// <summary>
     /// Converts a percentage of a revolution to encoder units (XL: 0..594000, L/M: 0..395000),

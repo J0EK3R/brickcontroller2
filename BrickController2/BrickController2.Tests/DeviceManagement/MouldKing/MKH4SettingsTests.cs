@@ -72,9 +72,9 @@ public class MKH4SettingsTests
 
         device.AngleToPosition(0, 180).Should().Be(297000);
 
-        // port A becomes an L/M motor, port B stays XL
+        // port A becomes an L motor, port B stays XL
         await device.UpdateDeviceSettingsAsync(
-            [new NamedSetting { Name = MKH4Config.MotorTypeName(0), Value = MKH4MotorType.LM }]);
+            [new NamedSetting { Name = MKH4Config.MotorTypeName(0), Value = MKH4MotorType.L }]);
 
         device.AngleToPosition(0, 180).Should().Be(197500);
         device.AngleToPosition(1, 180).Should().Be(297000);
