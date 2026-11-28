@@ -136,18 +136,6 @@ internal class MKH4 : BluetoothDevice
     private readonly OutputValuesGroup<int> _servoTargets;
 
     /// <summary>
-    /// Copy of the values fetched from <see cref="_outputValues"/> (or of its committed values for a resend).
-    /// A span can not be used across an await, so the values are copied into this array before they are sent.
-    /// Only used by the output loop.
-    /// </summary>
-    private readonly int[] _snapshot;
-
-    /// <summary>
-    /// Copy of the target positions fetched from <see cref="_servoTargets"/>. Only used by the output loop.
-    /// </summary>
-    private readonly int[] _servoSnapshot;
-
-    /// <summary>
     /// Position (in counter units) of the center of each servo channel, relative to the current zero of the
     /// volatile module counter (= base angle of the channel configuration converted to position units).
     /// </summary>
@@ -181,7 +169,7 @@ internal class MKH4 : BluetoothDevice
     public MKH4(string name, string address, IEnumerable<NamedSetting> settings, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
         : base(name, address, deviceRepository, bleService)
     {
-        // register the device settings (stored values are taken over) and take the first snapshot
+        // register the device settings (stored values are taken over) and take the first settings snapshot
         RegisterSettings(settings);
         _config = MKH4Config.FromSettings(CurrentSettings);
         _lastSentFlags = _config.ChannelFlags;
@@ -189,8 +177,6 @@ internal class MKH4 : BluetoothDevice
         // size all per-channel buffers
         _outputValues = new OutputValuesGroup<int>(CHANNEL_COUNT);
         _servoTargets = new OutputValuesGroup<int>(CHANNEL_COUNT);
-        _snapshot = new int[CHANNEL_COUNT];
-        _servoSnapshot = new int[CHANNEL_COUNT];
         _centerPositions = new int[CHANNEL_COUNT];
         _servoReady = new bool[CHANNEL_COUNT];
 
@@ -831,7 +817,7 @@ internal class MKH4 : BluetoothDevice
     /// for each channel one flag digit and 4 hex digits speed. The number of channels is the length of the values array,
     /// the flags array holds the flag digit of each channel (a missing entry means "limits not enabled").
     /// </summary>
-    internal static string BuildSpeedPayload(int[] values, ReadOnlySpan<char> flags)
+    internal static string BuildSpeedPayload(ReadOnlySpan<int> values, ReadOnlySpan<char> flags)
     {
         var payload = new StringBuilder(values.Length * 5);
         for (int channel = 0; channel < values.Length; channel++)
@@ -844,9 +830,9 @@ internal class MKH4 : BluetoothDevice
 
     /// <summary>
     /// Builds the speed message (T144) of all channels with the given flag digits.
-    /// Separate synchronous method, because a span can not be used in an async method.
+    /// Takes a span, so it can be called directly with the values returned by the output group.
     /// </summary>
-    private static string BuildSpeedMessage(int[] values, ImmutableArray<char> flags)
+    private static string BuildSpeedMessage(ReadOnlySpan<int> values, ImmutableArray<char> flags)
         => BuildMessage('4', BuildSpeedPayload(values, flags.AsSpan()));
 
     /// <summary>
@@ -1153,11 +1139,14 @@ internal class MKH4 : BluetoothDevice
                 // one settings snapshot per iteration
                 var flags = _config.ChannelFlags;
 
+                // The messages are built synchronously BEFORE the await: the spans of the output groups can not
+                // live across an await, so only the finished message string is handed to the async write.
+
                 // ---- normal motors: speed values ----
-                if (TryGetOutputSnapshot())
+                if (TryBuildSpeedMessage(flags, out var speedMessage))
                 {
                     // the values changed (or a previous attempt failed), so send them
-                    if (await SendOutputValuesAsync(_snapshot, flags, token).ConfigureAwait(false))
+                    if (await SendSpeedMessageAsync(speedMessage, flags, token).ConfigureAwait(false))
                     {
                         // tell the group that these values were applied, so they are not sent again
                         _outputValues.Commit();
@@ -1167,8 +1156,9 @@ internal class MKH4 : BluetoothDevice
                 else if (!flags.AsSpan().SequenceEqual(_lastSentFlags.AsSpan()))
                 {
                     // the channel flags changed (limit enabled/disabled): send the last values once with the new flags
-                    LoadCommittedValues();
-                    if (!ShouldResendOutputValues() || await SendOutputValuesAsync(_snapshot, flags, token).ConfigureAwait(false))
+                    // (null = nothing to resend, so the new flags are just taken over)
+                    var resendMessage = BuildResendMessage(flags);
+                    if (resendMessage is null || await SendSpeedMessageAsync(resendMessage, flags, token).ConfigureAwait(false))
                     {
                         _lastSentFlags = flags;
                         lastSent.Restart();
@@ -1178,25 +1168,23 @@ internal class MKH4 : BluetoothDevice
                 {
                     // nothing changed for a while: send the last values again as a safety net,
                     // the group does not offer a periodic resend, so its committed values are sent
-                    LoadCommittedValues();
-                    if (ShouldResendOutputValues())
-                    {
-                        if (await SendOutputValuesAsync(_snapshot, flags, token).ConfigureAwait(false))
-                        {
-                            lastSent.Restart();
-                        }
-                    }
-                    else
+                    var resendMessage = BuildResendMessage(flags);
+                    if (resendMessage is null)
                     {
                         // nothing to resend, check again after the delay
+                        lastSent.Restart();
+                    }
+                    else if (await SendSpeedMessageAsync(resendMessage, flags, token).ConfigureAwait(false))
+                    {
                         lastSent.Restart();
                     }
                 }
 
                 // ---- servo channels: target positions ----
-                if (TryGetServoSnapshot())
+                if (TryBuildServoMessage(out var servoMessage))
                 {
-                    if (await SendServoTargetsAsync(_servoSnapshot, token).ConfigureAwait(false))
+                    // null = no servo channel is ready, nothing to move (counts as sent)
+                    if (servoMessage is null || await WriteMessageAsync(servoMessage, token).ConfigureAwait(false))
                     {
                         _servoTargets.Commit();
                     }
@@ -1221,27 +1209,6 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Copies the last committed (successfully sent) speed values into <see cref="_snapshot"/>.
-    /// They are all zero after <c>Initialize</c> of the group, so a new output loop starts with an all-zero message.
-    /// </summary>
-    private void LoadCommittedValues() => _outputValues.CopyCommittedValues(_snapshot);
-
-    /// <summary>
-    /// Decides whether the periodic resend of the last speed values (loaded by <see cref="LoadCommittedValues"/>) is allowed.
-    /// Without servo channels the values (also zeros) are always resent as a safety net for a lost "stop".
-    /// With servo channels only running motors are refreshed, because a T144 message could cancel a position move.
-    /// </summary>
-    private bool ShouldResendOutputValues()
-    {
-        if (!HasServoChannels())
-        {
-            return true;
-        }
-
-        return _snapshot.Any(value => value != 0);
-    }
-
-    /// <summary>
     /// True if the center position of the servo channel is known.
     /// </summary>
     private bool IsServoReady(int channel)
@@ -1253,33 +1220,68 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Fetches the speed values from the buffer into <see cref="_snapshot"/>.
-    /// Returns true if there is anything to send (changed values or a failed previous attempt).
-    /// This is a separate synchronous method, because the span returned by the group can not be used in an async method.
+    /// Builds the speed message (T144) from the values buffered in the group.
+    /// Returns false if there is nothing to send (no changed values and no failed previous attempt).
+    /// This is a synchronous method, because the span returned by the group can not be used in an async method.
     /// </summary>
-    private bool TryGetOutputSnapshot()
+    private bool TryBuildSpeedMessage(ImmutableArray<char> flags, out string message)
     {
         if (!_outputValues.TryGetValues(out var values))
         {
+            message = string.Empty;
             return false;
         }
 
-        values.CopyTo(_snapshot);
+        message = BuildSpeedMessage(values, flags);
         return true;
     }
 
     /// <summary>
-    /// Fetches the target positions from the buffer into <see cref="_servoSnapshot"/>.
-    /// Returns true if there is anything to send.
+    /// Builds the speed message (T144) for the periodic resend (or the resend after a flag change) from the
+    /// last committed (successfully sent) values of the group. They are all zero after <c>Initialize</c>
+    /// of the group, so a new output loop starts with an all-zero message.
+    /// Without servo channels the values (also zeros) are always resent as a safety net for a lost "stop".
+    /// With servo channels only running motors are refreshed (at least one value is not 0),
+    /// because a T144 message could cancel a position move.
+    /// Returns null if nothing is to be resent.
     /// </summary>
-    private bool TryGetServoSnapshot()
+    private string? BuildResendMessage(ImmutableArray<char> flags)
     {
-        if (!_servoTargets.TryGetValues(out var values))
+        // small fixed-size buffer on the stack, so no array is needed
+        Span<int> values = stackalloc int[CHANNEL_COUNT];
+        _outputValues.CopyCommittedValues(values);
+
+        if (HasServoChannels() && !values.ContainsAnyExcept(0))
+        {
+            return null;
+        }
+
+        return BuildSpeedMessage(values, flags);
+    }
+
+    /// <summary>
+    /// Builds the position message (T303) from the target positions buffered in the group.
+    /// Returns false if there is nothing to send. If it returns true with a null message, the targets changed,
+    /// but no servo channel is ready, so there is nothing to move and the targets count as sent.
+    /// This is a synchronous method, because the span returned by the group can not be used in an async method.
+    /// </summary>
+    private bool TryBuildServoMessage(out string? message)
+    {
+        message = null;
+        if (!_servoTargets.TryGetValues(out var targets))
         {
             return false;
         }
 
-        values.CopyTo(_servoSnapshot);
+        // only servo channels with a known center get a target
+        var positions = new int?[CHANNEL_COUNT];
+        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
+        {
+            positions[channel] = IsServoReady(channel) ? targets[channel] : null;
+        }
+
+        var payload = BuildPositionPayload(positions, _config.MoveSpeed);
+        message = payload is null ? null : BuildMessage('3', payload);
         return true;
     }
 
@@ -1307,39 +1309,17 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Sends the speed values of all channels with one message (T144, simple motor start).
-    /// Servo channels always have the value 0 here. On success the flags are remembered as last sent.
+    /// Writes a finished speed message (T144, simple motor start) of all channels.
+    /// Servo channels always have the value 0 in it. On success the flags are remembered as last sent.
     /// </summary>
-    private async Task<bool> SendOutputValuesAsync(int[] values, ImmutableArray<char> flags, CancellationToken token)
+    private async Task<bool> SendSpeedMessageAsync(string message, ImmutableArray<char> flags, CancellationToken token)
     {
-        if (!await WriteMessageAsync(BuildSpeedMessage(values, flags), token).ConfigureAwait(false))
+        if (!await WriteMessageAsync(message, token).ConfigureAwait(false))
         {
             return false;
         }
 
         _lastSentFlags = flags;
         return true;
-    }
-
-    /// <summary>
-    /// Sends the target positions of all servo channels that have a known center with one message (T303).
-    /// </summary>
-    private Task<bool> SendServoTargetsAsync(int[] targets, CancellationToken token)
-    {
-        // only servo channels with a known center get a target
-        var positions = new int?[CHANNEL_COUNT];
-        for (int channel = 0; channel < CHANNEL_COUNT; channel++)
-        {
-            positions[channel] = IsServoReady(channel) ? targets[channel] : null;
-        }
-
-        var payload = BuildPositionPayload(positions, _config.MoveSpeed);
-        if (payload is null)
-        {
-            // no servo channel is ready, nothing to move
-            return Task.FromResult(true);
-        }
-
-        return WriteMessageAsync(BuildMessage('3', payload), token);
     }
 }
