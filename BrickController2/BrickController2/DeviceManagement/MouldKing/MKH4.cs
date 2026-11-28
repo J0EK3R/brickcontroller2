@@ -136,8 +136,9 @@ internal class MKH4 : BluetoothDevice
     private readonly OutputValuesGroup<int> _servoTargets;
 
     /// <summary>
-    /// Copy of the values fetched from <see cref="_outputValues"/>. A span can not be used across an await,
-    /// so the values are copied into this array before they are sent. Only used by the output loop.
+    /// Copy of the values fetched from <see cref="_outputValues"/> (or of its committed values for a resend).
+    /// A span can not be used across an await, so the values are copied into this array before they are sent.
+    /// Only used by the output loop.
     /// </summary>
     private readonly int[] _snapshot;
 
@@ -145,12 +146,6 @@ internal class MKH4 : BluetoothDevice
     /// Copy of the target positions fetched from <see cref="_servoTargets"/>. Only used by the output loop.
     /// </summary>
     private readonly int[] _servoSnapshot;
-
-    /// <summary>
-    /// Values that were sent successfully the last time, used for the periodic resend.
-    /// Only used by the output loop.
-    /// </summary>
-    private readonly int[] _lastSentValues;
 
     /// <summary>
     /// Position (in counter units) of the center of each servo channel, relative to the current zero of the
@@ -196,7 +191,6 @@ internal class MKH4 : BluetoothDevice
         _servoTargets = new OutputValuesGroup<int>(CHANNEL_COUNT);
         _snapshot = new int[CHANNEL_COUNT];
         _servoSnapshot = new int[CHANNEL_COUNT];
-        _lastSentValues = new int[CHANNEL_COUNT];
         _centerPositions = new int[CHANNEL_COUNT];
         _servoReady = new bool[CHANNEL_COUNT];
 
@@ -1136,7 +1130,6 @@ internal class MKH4 : BluetoothDevice
             // reset all values to 0 and force an initial transmission,
             // start with an all-zero message
             _outputValues.Initialize();
-            Array.Clear(_lastSentValues);
             _lastSentFlags = _config.ChannelFlags;
 
             // servo channels: hold the center position, the targets set during the connect setup were cleared above
@@ -1168,16 +1161,14 @@ internal class MKH4 : BluetoothDevice
                     {
                         // tell the group that these values were applied, so they are not sent again
                         _outputValues.Commit();
-
-                        // remember the sent values for the periodic resend
-                        _snapshot.CopyTo(_lastSentValues, 0);
                         lastSent.Restart();
                     }
                 }
                 else if (!flags.AsSpan().SequenceEqual(_lastSentFlags.AsSpan()))
                 {
                     // the channel flags changed (limit enabled/disabled): send the last values once with the new flags
-                    if (!ShouldResendOutputValues() || await SendOutputValuesAsync(_lastSentValues, flags, token).ConfigureAwait(false))
+                    LoadCommittedValues();
+                    if (!ShouldResendOutputValues() || await SendOutputValuesAsync(_snapshot, flags, token).ConfigureAwait(false))
                     {
                         _lastSentFlags = flags;
                         lastSent.Restart();
@@ -1186,10 +1177,11 @@ internal class MKH4 : BluetoothDevice
                 else if (lastSent.Elapsed > RESEND_DELAY)
                 {
                     // nothing changed for a while: send the last values again as a safety net,
-                    // the group does not offer a periodic resend, so the own copy is used
+                    // the group does not offer a periodic resend, so its committed values are sent
+                    LoadCommittedValues();
                     if (ShouldResendOutputValues())
                     {
-                        if (await SendOutputValuesAsync(_lastSentValues, flags, token).ConfigureAwait(false))
+                        if (await SendOutputValuesAsync(_snapshot, flags, token).ConfigureAwait(false))
                         {
                             lastSent.Restart();
                         }
@@ -1229,7 +1221,13 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Decides whether the periodic resend of the last speed values is allowed.
+    /// Copies the last committed (successfully sent) speed values into <see cref="_snapshot"/>.
+    /// They are all zero after <c>Initialize</c> of the group, so a new output loop starts with an all-zero message.
+    /// </summary>
+    private void LoadCommittedValues() => _outputValues.CopyCommittedValues(_snapshot);
+
+    /// <summary>
+    /// Decides whether the periodic resend of the last speed values (loaded by <see cref="LoadCommittedValues"/>) is allowed.
     /// Without servo channels the values (also zeros) are always resent as a safety net for a lost "stop".
     /// With servo channels only running motors are refreshed, because a T144 message could cancel a position move.
     /// </summary>
@@ -1240,7 +1238,7 @@ internal class MKH4 : BluetoothDevice
             return true;
         }
 
-        return _lastSentValues.Any(value => value != 0);
+        return _snapshot.Any(value => value != 0);
     }
 
     /// <summary>
