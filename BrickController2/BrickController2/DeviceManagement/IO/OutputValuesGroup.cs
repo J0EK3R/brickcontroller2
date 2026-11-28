@@ -122,6 +122,26 @@ public class OutputValuesGroup<TValue> where TValue : struct, IEquatable<TValue>
         }
     }
 
+    /// <summary>
+    /// Copy the last committed (successfully sent and applied) values.
+    /// All values are zero until the first <see cref="Commit"/> and again after <see cref="Initialize"/> or <see cref="Clear"/>.
+    /// </summary>
+    /// <param name="destination">Span receiving the values, must have at least as many elements as there are channels</param>
+    /// <exception cref="ArgumentException">The destination is too short</exception>
+    public void CopyCommittedValues(Span<TValue> destination)
+    {
+        if (destination.Length < _commitedOutputValues.Length)
+        {
+            throw new ArgumentException("Destination is too short", nameof(destination));
+        }
+
+        // copy under lock so a concurrent Commit/Reset cannot produce a torn snapshot
+        lock (_outputLock)
+        {
+            _commitedOutputValues.CopyTo(destination);
+        }
+    }
+
     private bool TryGetValues(out ReadOnlySpan<TValue> values, out bool hasCommitted)
     {
         bool sendAttemptsLeft;

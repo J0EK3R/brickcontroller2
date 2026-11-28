@@ -229,4 +229,111 @@ public class OutputValuesGroupTests
         result.Should().BeTrue();
         changes.Should().BeEquivalentTo([new KeyValuePair<int, int>(int.MaxValue, 1)]);
     }
+
+    [Fact]
+    public void CopyCommittedValues_NoCommitYet_ReturnsZeros()
+    {
+        // Arrange
+        var group = new OutputValuesGroup<int>(3);
+        group.Initialize();
+        group.SetOutput(0, 5);
+        var destination = new int[] { 9, 9, 9 };
+
+        // Act
+        group.CopyCommittedValues(destination);
+
+        // Assert
+        destination.Should().Equal(0, 0, 0);
+    }
+
+    [Fact]
+    public void CopyCommittedValues_AfterCommit_ReturnsCommittedValues()
+    {
+        // Arrange
+        var group = new OutputValuesGroup<int>(3);
+        group.Initialize();
+        group.SetOutput(0, 5);
+        group.SetOutput(2, -7);
+        group.TryGetValues(out _);
+        group.Commit();
+        var destination = new int[3];
+
+        // Act
+        group.CopyCommittedValues(destination);
+
+        // Assert
+        destination.Should().Equal(5, 0, -7);
+    }
+
+    [Fact]
+    public void CopyCommittedValues_SetOutputWithoutCommit_ReturnsPreviousCommittedValues()
+    {
+        // Arrange
+        var group = new OutputValuesGroup<int>(2);
+        group.Initialize();
+        group.SetOutput(0, 1);
+        group.TryGetValues(out _);
+        group.Commit();
+
+        // Act
+        group.SetOutput(0, 2);
+        group.TryGetValues(out _); // fetched but never committed
+        var destination = new int[2];
+        group.CopyCommittedValues(destination);
+
+        // Assert
+        destination.Should().Equal(1, 0);
+    }
+
+    [Fact]
+    public void CopyCommittedValues_AfterInitialize_ReturnsZeros()
+    {
+        // Arrange
+        var group = new OutputValuesGroup<int>(2);
+        group.Initialize();
+        group.SetOutput(1, 4);
+        group.TryGetValues(out _);
+        group.Commit();
+
+        // Act
+        group.Initialize();
+        var destination = new int[2];
+        group.CopyCommittedValues(destination);
+
+        // Assert
+        destination.Should().Equal(0, 0);
+    }
+
+    [Fact]
+    public void CopyCommittedValues_AfterClear_ReturnsZeros()
+    {
+        // Arrange
+        var group = new OutputValuesGroup<int>(2);
+        group.Initialize();
+        group.SetOutput(1, 4);
+        group.TryGetValues(out _);
+        group.Commit();
+
+        // Act
+        group.Clear();
+        var destination = new int[2];
+        group.CopyCommittedValues(destination);
+
+        // Assert
+        destination.Should().Equal(0, 0);
+    }
+
+    [Fact]
+    public void CopyCommittedValues_DestinationTooShort_Throws()
+    {
+        // Arrange
+        var group = new OutputValuesGroup<int>(3);
+        var destination = new int[2];
+
+        // Act
+        var act = () => group.CopyCommittedValues(destination);
+
+        // Assert
+        act.Should().Throw<ArgumentException>();
+    }
 }
