@@ -91,11 +91,6 @@ internal class MKH4 : BluetoothDevice
     private static readonly TimeSpan CONNECT_POSITION_TIMEOUT = TimeSpan.FromSeconds(3);
 
     /// <summary>
-    /// Notifications on the AE30 service are not needed for the protocol, so this is off by default.
-    /// </summary>
-    private const bool ENABLE_AE30_NOTIFICATIONS = false;
-
-    /// <summary>
     /// Every notification is acknowledged with a single 0x01 byte.
     /// </summary>
     private static readonly byte[] AckByte = { 0x01 };
@@ -104,15 +99,6 @@ internal class MKH4 : BluetoothDevice
     /// Service UUID the module advertises, used to detect it while scanning.
     /// </summary>
     internal static readonly Guid MOULD_KING_HUB_SCAN_SERVICE_UUID = BluetoothLowEnergy.GetGuid(0xaf30);
-
-    // service AE30: not needed for the protocol, kept for reference
-    private static readonly Guid MOULD_KING_HUB_SERVICE_AE30_UUID = BluetoothLowEnergy.GetGuid(0xae30);
-    private static readonly Guid MOULD_KING_HUB_AE01_UUID = BluetoothLowEnergy.GetGuid(0xae01);
-    private static readonly Guid MOULD_KING_HUB_AE02_UUID = BluetoothLowEnergy.GetGuid(0xae02);
-    private static readonly Guid MOULD_KING_HUB_AE03_UUID = BluetoothLowEnergy.GetGuid(0xae03);
-    private static readonly Guid MOULD_KING_HUB_AE04_UUID = BluetoothLowEnergy.GetGuid(0xae04);
-    private static readonly Guid MOULD_KING_HUB_AE05_UUID = BluetoothLowEnergy.GetGuid(0xae05);
-    private static readonly Guid MOULD_KING_HUB_AE10_UUID = BluetoothLowEnergy.GetGuid(0xae10);
 
     // service AE3A: the actual control service
     private static readonly Guid MOULD_KING_HUB_SERVICE_AE3A_UUID = BluetoothLowEnergy.GetGuid(0xae3a);
@@ -194,12 +180,6 @@ internal class MKH4 : BluetoothDevice
     private readonly Dictionary<string, string> _lastResponses = new();
     private readonly object _responseLock = new object();
 
-    private IGattCharacteristic? _characteristic_AE01;
-    private IGattCharacteristic? _characteristic_AE02;
-    private IGattCharacteristic? _characteristic_AE03;
-    private IGattCharacteristic? _characteristic_AE04;
-    private IGattCharacteristic? _characteristic_AE05;
-    private IGattCharacteristic? _characteristic_AE10;
     private IGattCharacteristic? _characteristic_AE3B_Write_No_Response;
     private IGattCharacteristic? _characteristic_AE3C_Notify;
 
@@ -487,35 +467,6 @@ internal class MKH4 : BluetoothDevice
 
     protected override async Task<bool> ValidateServicesAsync(IEnumerable<IGattService>? services, CancellationToken token)
     {
-        // ---- service AE30: looked up for completeness, not needed ----
-        var service_AE30 = services?.FirstOrDefault(s => s.Uuid == MOULD_KING_HUB_SERVICE_AE30_UUID);
-
-        // CanNotify = false
-        _characteristic_AE01 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE01_UUID);
-
-        // CanNotify = true
-        _characteristic_AE02 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE02_UUID);
-        if (ENABLE_AE30_NOTIFICATIONS && _characteristic_AE02 is not null)
-        {
-            await _bleDevice!.EnableNotificationAsync(_characteristic_AE02, token);
-        }
-
-        // CanNotify = false
-        _characteristic_AE03 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE03_UUID);
-
-        // CanNotify = true
-        _characteristic_AE04 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE04_UUID);
-        if (ENABLE_AE30_NOTIFICATIONS && _characteristic_AE04 is not null)
-        {
-            await _bleDevice!.EnableNotificationAsync(_characteristic_AE04, token);
-        }
-
-        // CanNotify = false
-        _characteristic_AE05 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE05_UUID);
-
-        // CanNotify = false
-        _characteristic_AE10 = service_AE30?.Characteristics?.FirstOrDefault(c => c.Uuid == MOULD_KING_HUB_AE10_UUID);
-
         // ---- service AE3A: write characteristic (commands) and notify characteristic (responses) ----
         var service_AE3A = services?.FirstOrDefault(s => s.Uuid == MOULD_KING_HUB_SERVICE_AE3A_UUID);
 
@@ -780,7 +731,7 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// The AE30 characteristics are not read, the device info is part of the T...W protocol.
+    /// The device info is read via the T...W protocol.
     /// </summary>
     private async Task ReadDeviceInfo(CancellationToken token)
     {
@@ -1166,12 +1117,6 @@ internal class MKH4 : BluetoothDevice
         }
 
         // the characteristics are invalid after the disconnect
-        _characteristic_AE01 = null;
-        _characteristic_AE02 = null;
-        _characteristic_AE03 = null;
-        _characteristic_AE04 = null;
-        _characteristic_AE05 = null;
-        _characteristic_AE10 = null;
         _characteristic_AE3B_Write_No_Response = null;
         _characteristic_AE3C_Notify = null;
     }
