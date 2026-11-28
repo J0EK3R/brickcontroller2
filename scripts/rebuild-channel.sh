@@ -32,7 +32,7 @@ done
 # is skipped, a conflict fully resolved by rerere is committed.
 pick() {
   local wt="$1" sha="$2"
-  git -C "$wt" cherry-pick -x "$sha" >/dev/null 2>&1 && return 0
+  git -C "$wt" cherry-pick "$sha" >/dev/null 2>&1 && return 0
   git_dir_has "$wt" CHERRY_PICK_HEAD || return 1
   if has_unmerged "$wt" || ! git -C "$wt" diff --quiet; then return 1; fi
   if git -C "$wt" diff --cached --quiet; then
