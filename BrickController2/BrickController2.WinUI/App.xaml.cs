@@ -51,6 +51,7 @@ public partial class App : MauiWinUIApplication
             .ConfigureContainer(new AutofacServiceProviderFactory(), autofacBuilder =>
             {
                 autofacBuilder.RegisterModule<PlatformServicesModule>();
+                autofacBuilder.RegisterModule<UsbStickModule>();
                 autofacBuilder.RegisterModule<BusinessLogicModule>();
                 autofacBuilder.RegisterModule<DatabaseModule>();
                 autofacBuilder.RegisterModule<CreationManagementModule>();

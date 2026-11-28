@@ -17,5 +17,20 @@
     <ProjectReference Include="..\BrickController2.Tools\BrickController2.Tools.csproj" />
     <ProjectReference Include="..\BrickController2\BrickController2.csproj" />
   </ItemGroup>
-	
+
+  <ItemGroup>
+    <!-- The real Android and WinUI platform services are compiled into the tests (they only depend on shared code)
+         to verify that the USB stick payload normalisation turns the WinUI layout into the Android layout. -->
+    <Compile Include="..\BrickController2.Android\PlatformServices\DeviceManagement\**\*PlatformService.cs" Link="UsbStickLinked\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\BrickController2.WinUI\PlatformServices\DeviceManagement\**\*PlatformService.cs" Link="UsbStickLinked\WinUI\%(Filename)%(Extension)" />
+    <!-- USB stick: the platform neutral sources live in the WinUI project (not referenceable from net10.0) and are compiled
+         into the tests. Nothing Windows specific may be placed in the UsbStick folder except the three excluded files. -->
+    <Compile Include="..\BrickController2.WinUI\PlatformServices\BluetoothLE\UsbStick\**\*.cs"
+             Exclude="..\BrickController2.WinUI\PlatformServices\BluetoothLE\UsbStick\RegistryStickLocator.cs;..\BrickController2.WinUI\PlatformServices\BluetoothLE\UsbStick\SerialStickTransport.cs;..\BrickController2.WinUI\PlatformServices\BluetoothLE\UsbStick\WinRtUsbArrivalWatcher.cs"
+             Link="UsbStickLinked\Core\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\BrickController2.WinUI\Diagnostics\UsbStickTrace.cs" Link="UsbStickLinked\Diagnostics\UsbStickTrace.cs" />
+    <!-- String resources of the USB stick rows (parity test reads them from disk). -->
+    <None Include="..\BrickController2.WinUI\Resources\UsbStickStrings*.resx" Link="UsbStickLinked\Resources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
