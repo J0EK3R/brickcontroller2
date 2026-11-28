@@ -8,6 +8,7 @@ using Moq;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace BrickController2.Tests.DeviceManagement.MouldKing;
@@ -28,7 +29,7 @@ public class MKH4SettingsTests
         device.HasSettings.Should().BeTrue();
 
         var byName = device.CurrentSettings.ToDictionary(s => s.Name);
-        byName.Should().HaveCount(4 + 4 * 3);
+        byName.Should().HaveCount(4 + 4 * 4);
 
         byName[MKH4Config.StallProtectionName].Value.Should().Be(true);
         byName[MKH4Config.MoveSpeedName].Value.Should().Be(new Percent(62.5f));
@@ -43,11 +44,40 @@ public class MKH4SettingsTests
     }
 
     [Fact]
-    public void Settings_OnlyBoolAndPercent_SoThePageCanRenderThem()
+    public void Settings_OnlyBoolPercentAndEnum_SoThePageCanRenderThem()
     {
         var device = CreateDevice();
 
-        device.CurrentSettings.Should().OnlyContain(s => s.IsBoolType || s.IsPercentType);
+        device.CurrentSettings.Should().OnlyContain(s => s.IsBoolType || s.IsPercentType || s.IsEnumType);
+    }
+
+    [Fact]
+    public void Settings_MotorTypePerPort_DefaultsToXLInPortGroup()
+    {
+        var byName = CreateDevice().CurrentSettings.ToDictionary(s => s.Name);
+
+        foreach (var channel in Enumerable.Range(0, 4))
+        {
+            var setting = byName[MKH4Config.MotorTypeName(channel)];
+            setting.Type.Should().Be(typeof(MKH4MotorType));
+            setting.Value.Should().Be(MKH4MotorType.XL);
+            setting.Group.Should().Be(MKH4Config.LimitGroupName(channel));
+        }
+    }
+
+    [Fact]
+    public async Task AngleToPosition_UsesMotorTypeOfTheChannel_AndFollowsSettingChanges()
+    {
+        var device = CreateDevice();
+
+        device.AngleToPosition(0, 180).Should().Be(297000);
+
+        // port A becomes an L/M motor, port B stays XL
+        await device.UpdateDeviceSettingsAsync(
+            [new NamedSetting { Name = MKH4Config.MotorTypeName(0), Value = MKH4MotorType.LM }]);
+
+        device.AngleToPosition(0, 180).Should().Be(197500);
+        device.AngleToPosition(1, 180).Should().Be(297000);
     }
 
     [Fact]

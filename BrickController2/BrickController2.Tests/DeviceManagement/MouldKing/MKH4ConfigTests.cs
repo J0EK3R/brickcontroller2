@@ -59,9 +59,75 @@ public class MKH4ConfigTests
     [InlineData(100f, 594000)]
     [InlineData(-5f, 0)]
     [InlineData(250f, 594000)]
+    [InlineData(1f, 5940)]
     public void PercentToUnits_ClampsAndScales(float percent, int expected)
     {
-        MKH4Config.PercentToUnits(percent).Should().Be(expected);
+        MKH4Config.PercentToUnits(percent, MKH4MotorType.XL).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(0f, 0)]
+    [InlineData(1f, 3950)]
+    [InlineData(17f, 67150)]
+    [InlineData(100f, 395000)]
+    [InlineData(250f, 395000)]
+    public void PercentToUnits_LM_UsesTurnOf395000(float percent, int expected)
+    {
+        MKH4Config.PercentToUnits(percent, MKH4MotorType.LM).Should().Be(expected);
+    }
+
+    [Fact]
+    public void UnitsPerDegree_DependsOnMotorType()
+    {
+        MKH4Config.UnitsPerDegree(MKH4MotorType.XL).Should().Be(1650.0);
+        MKH4Config.UnitsPerDegree(MKH4MotorType.LM).Should().BeApproximately(1097.22, 0.01);
+    }
+
+    [Fact]
+    public void FromSettings_Empty_UsesXLForAllChannels()
+    {
+        var config = MKH4Config.FromSettings([], 4);
+
+        config.MotorTypes.Should().Equal(MKH4MotorType.XL, MKH4MotorType.XL, MKH4MotorType.XL, MKH4MotorType.XL);
+        config.Limits.Should().OnlyContain(limit => limit.MinUnits == -100980 && limit.MaxUnits == 100980);
+    }
+
+    [Fact]
+    public void FromSettings_MotorTypePerChannel_ScalesLimits()
+    {
+        var config = MKH4Config.FromSettings(
+        [
+            Setting(MKH4Config.MotorTypeName(0), 1L), // port A: LM (as stored by JSON)
+            Setting(MKH4Config.LimitEnabledName(0), true),
+            Setting(MKH4Config.LimitEnabledName(1), true),
+        ], 4);
+
+        config.Limits[0].Should().Be(new MKH4ChannelLimit(true, -67150, 67150));
+        config.Limits[1].Should().Be(new MKH4ChannelLimit(true, -100980, 100980));
+        config.UnitsPerDegree(0).Should().BeApproximately(1097.22, 0.01);
+        config.UnitsPerDegree(1).Should().Be(1650.0);
+    }
+
+    [Fact]
+    public void GetValue_MotorType_ConvertsStoredNumbers()
+    {
+        Setting("x", 1).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.LM);
+        Setting("x", 1L).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.LM);
+        Setting("x", 7).GetValue(MKH4MotorType.XL).Should().Be(MKH4MotorType.XL);
+    }
+
+    [Fact]
+    public void GetChanges_MotorType_ListsOnlyAffectedEnabledChannel()
+    {
+        var enabled = new[] { Setting(MKH4Config.LimitEnabledName(0), true), Setting(MKH4Config.LimitEnabledName(1), true) };
+        var oldConfig = MKH4Config.FromSettings(enabled, 4);
+        var newConfig = MKH4Config.FromSettings([.. enabled, Setting(MKH4Config.MotorTypeName(0), 1)], 4);
+
+        MKH4Config.GetChanges(oldConfig, newConfig).LimitChannels.Should().Equal(0);
+
+        // limits of the channel not enabled: nothing to send
+        var noLimits = MKH4Config.FromSettings([Setting(MKH4Config.MotorTypeName(0), 1)], 4);
+        MKH4Config.GetChanges(MKH4Config.FromSettings([], 4), noLimits).IsEmpty.Should().BeTrue();
     }
 
     [Theory]

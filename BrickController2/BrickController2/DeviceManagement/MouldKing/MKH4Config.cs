@@ -49,9 +49,19 @@ internal sealed class MKH4Config
     internal const char LimitDisabledFlag = '0';
 
     /// <summary>
-    /// Encoder units of one percent of a motor shaft revolution (594000 units per revolution).
+    /// Encoder units per degree of an XL motor (594000 units per revolution, measured).
     /// </summary>
-    internal const int UnitsPerPercent = 5940;
+    internal const double UnitsPerDegreeXL = 1650.0;
+
+    /// <summary>
+    /// Encoder units of one revolution of an L or M motor.
+    /// </summary>
+    internal const int UnitsPerTurnLM = 395000;
+
+    /// <summary>
+    /// Encoder units per degree of an L or M motor.
+    /// </summary>
+    internal const double UnitsPerDegreeLM = UnitsPerTurnLM / 360.0;
 
     /// <summary>
     /// Limits with a smaller absolute value are treated as 0 by the module.
@@ -72,6 +82,7 @@ internal sealed class MKH4Config
     internal const float DefaultMotorStrengthPercent = 100f;
     internal const bool DefaultLimitEnabled = false;
     internal const float DefaultLimitPercent = 17f;
+    internal const MKH4MotorType DefaultMotorType = MKH4MotorType.XL;
 
     /// <summary>
     /// Name of the "limits enabled" setting of a channel (e.g. MKH4LimitEnabledA).
@@ -89,6 +100,11 @@ internal sealed class MKH4Config
     internal static string LimitMinName(int channel) => $"MKH4LimitMin{ChannelLetter(channel)}";
 
     /// <summary>
+    /// Name of the motor type setting of a channel (e.g. MKH4MotorTypeA).
+    /// </summary>
+    internal static string MotorTypeName(int channel) => $"MKH4MotorType{ChannelLetter(channel)}";
+
+    /// <summary>
     /// Name of the settings group of a channel (e.g. MKH4GroupLimitA).
     /// </summary>
     internal static string LimitGroupName(int channel) => $"MKH4GroupLimit{ChannelLetter(channel)}";
@@ -103,13 +119,15 @@ internal sealed class MKH4Config
         float moveSpeed,
         bool motorStrengthEnabled,
         int motorStrength,
-        ImmutableArray<MKH4ChannelLimit> limits)
+        ImmutableArray<MKH4ChannelLimit> limits,
+        ImmutableArray<MKH4MotorType> motorTypes)
     {
         StallProtection = stallProtection;
         MoveSpeed = moveSpeed;
         MotorStrengthEnabled = motorStrengthEnabled;
         MotorStrength = motorStrength;
         Limits = limits;
+        MotorTypes = motorTypes;
         ChannelFlags = limits.Select(limit => limit.Enabled ? LimitEnabledFlag : LimitDisabledFlag).ToImmutableArray();
     }
 
@@ -139,6 +157,16 @@ internal sealed class MKH4Config
     public ImmutableArray<MKH4ChannelLimit> Limits { get; }
 
     /// <summary>
+    /// Motor type of each channel.
+    /// </summary>
+    public ImmutableArray<MKH4MotorType> MotorTypes { get; }
+
+    /// <summary>
+    /// Encoder units per degree of the motor connected to a channel.
+    /// </summary>
+    public double UnitsPerDegree(int channel) => UnitsPerDegree(MotorTypes[channel]);
+
+    /// <summary>
     /// Leading digit of each channel in the speed message (T144), derived from the limit settings.
     /// </summary>
     public ImmutableArray<char> ChannelFlags { get; }
@@ -154,11 +182,16 @@ internal sealed class MKH4Config
 
         T Read<T>(string name, T defaultValue) => list.FirstOrDefault(s => s.Name == name).GetValue(defaultValue);
 
+        // the motor type is read first, because the limit units depend on it
+        var motorTypes = Enumerable.Range(0, channelCount)
+            .Select(channel => Read(MotorTypeName(channel), DefaultMotorType))
+            .ToImmutableArray();
+
         var limits = Enumerable.Range(0, channelCount)
             .Select(channel => new MKH4ChannelLimit(
                 Read(LimitEnabledName(channel), DefaultLimitEnabled),
-                -PercentToUnits(Read<Percent>(LimitMinName(channel), DefaultLimitPercent)),
-                PercentToUnits(Read<Percent>(LimitMaxName(channel), DefaultLimitPercent))))
+                -PercentToUnits(Read<Percent>(LimitMinName(channel), DefaultLimitPercent), motorTypes[channel]),
+                PercentToUnits(Read<Percent>(LimitMaxName(channel), DefaultLimitPercent), motorTypes[channel])))
             .ToImmutableArray();
 
         return new MKH4Config(
@@ -166,14 +199,34 @@ internal sealed class MKH4Config
             PercentToMoveSpeed(Read<Percent>(MoveSpeedName, DefaultMoveSpeedPercent)),
             Read(MotorStrengthEnabledName, DefaultMotorStrengthEnabled),
             (int)Math.Round(Read<Percent>(MotorStrengthName, DefaultMotorStrengthPercent).Value),
-            limits);
+            limits,
+            motorTypes);
     }
 
     /// <summary>
-    /// Converts a percentage of a revolution to encoder units (0..594000), values outside 0..100 are clamped.
+    /// Encoder units per degree of a motor type.
     /// </summary>
-    internal static int PercentToUnits(float percent)
-        => (int)Math.Round(Math.Clamp(percent, 0f, 100f) * UnitsPerPercent);
+    internal static double UnitsPerDegree(MKH4MotorType type) => type switch
+    {
+        MKH4MotorType.LM => UnitsPerDegreeLM,
+        _ => UnitsPerDegreeXL,
+    };
+
+    /// <summary>
+    /// Encoder units of one percent of a revolution (XL: 5940, L/M: 3950, both exact).
+    /// </summary>
+    internal static double UnitsPerPercent(MKH4MotorType type) => type switch
+    {
+        MKH4MotorType.LM => UnitsPerTurnLM / 100.0,
+        _ => 5940.0,
+    };
+
+    /// <summary>
+    /// Converts a percentage of a revolution to encoder units (XL: 0..594000, L/M: 0..395000),
+    /// values outside 0..100 are clamped.
+    /// </summary>
+    internal static int PercentToUnits(float percent, MKH4MotorType type)
+        => (int)Math.Round(Math.Clamp(percent, 0f, 100f) * UnitsPerPercent(type));
 
     /// <summary>
     /// Converts the move speed setting (percent) to the range 0..1, the minimum is 1 %.
@@ -198,6 +251,7 @@ internal sealed class MKH4Config
             var oldLimit = channel < oldConfig.Limits.Length ? oldConfig.Limits[channel] : default;
             var newLimit = newConfig.Limits[channel];
 
+            // a changed motor type changes the units of the limits, so it is detected here as well
             if (newLimit.Enabled && oldLimit != newLimit)
             {
                 limitChannels.Add(channel);

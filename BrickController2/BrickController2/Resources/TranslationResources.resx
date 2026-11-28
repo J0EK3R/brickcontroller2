@@ -970,7 +970,10 @@
     <value>Motor strength</value>
   </data>
   <data name="MKH4GroupLimitA" xml:space="preserve">
-    <value>Limits port A</value>
+    <value>Port A</value>
+  </data>
+  <data name="MKH4MotorTypeA" xml:space="preserve">
+    <value>Motor type</value>
   </data>
   <data name="MKH4LimitEnabledA" xml:space="preserve">
     <value>Limit positions</value>
@@ -982,7 +985,10 @@
     <value>Negative limit (% of one turn)</value>
   </data>
   <data name="MKH4GroupLimitB" xml:space="preserve">
-    <value>Limits port B</value>
+    <value>Port B</value>
+  </data>
+  <data name="MKH4MotorTypeB" xml:space="preserve">
+    <value>Motor type</value>
   </data>
   <data name="MKH4LimitEnabledB" xml:space="preserve">
     <value>Limit positions</value>
@@ -994,7 +1000,10 @@
     <value>Negative limit (% of one turn)</value>
   </data>
   <data name="MKH4GroupLimitC" xml:space="preserve">
-    <value>Limits port C</value>
+    <value>Port C</value>
+  </data>
+  <data name="MKH4MotorTypeC" xml:space="preserve">
+    <value>Motor type</value>
   </data>
   <data name="MKH4LimitEnabledC" xml:space="preserve">
     <value>Limit positions</value>
@@ -1006,7 +1015,10 @@
     <value>Negative limit (% of one turn)</value>
   </data>
   <data name="MKH4GroupLimitD" xml:space="preserve">
-    <value>Limits port D</value>
+    <value>Port D</value>
+  </data>
+  <data name="MKH4MotorTypeD" xml:space="preserve">
+    <value>Motor type</value>
   </data>
   <data name="MKH4LimitEnabledD" xml:space="preserve">
     <value>Limit positions</value>

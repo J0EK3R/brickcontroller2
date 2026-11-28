@@ -1528,7 +1528,7 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Limits port A.
+        ///   Looks up a localized string similar to Port A.
         /// </summary>
         internal static string MKH4GroupLimitA {
             get {
@@ -1537,7 +1537,7 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Limits port B.
+        ///   Looks up a localized string similar to Port B.
         /// </summary>
         internal static string MKH4GroupLimitB {
             get {
@@ -1546,7 +1546,7 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Limits port C.
+        ///   Looks up a localized string similar to Port C.
         /// </summary>
         internal static string MKH4GroupLimitC {
             get {
@@ -1555,7 +1555,7 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Limits port D.
+        ///   Looks up a localized string similar to Port D.
         /// </summary>
         internal static string MKH4GroupLimitD {
             get {
@@ -1573,11 +1573,29 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Motor type.
+        /// </summary>
+        internal static string MKH4MotorTypeA {
+            get {
+                return ResourceManager.GetString("MKH4MotorTypeA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Limit positions.
         /// </summary>
         internal static string MKH4LimitEnabledA {
             get {
                 return ResourceManager.GetString("MKH4LimitEnabledA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor type.
+        /// </summary>
+        internal static string MKH4MotorTypeB {
+            get {
+                return ResourceManager.GetString("MKH4MotorTypeB", resourceCulture);
             }
         }
         
@@ -1591,11 +1609,29 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Motor type.
+        /// </summary>
+        internal static string MKH4MotorTypeC {
+            get {
+                return ResourceManager.GetString("MKH4MotorTypeC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Limit positions.
         /// </summary>
         internal static string MKH4LimitEnabledC {
             get {
                 return ResourceManager.GetString("MKH4LimitEnabledC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motor type.
+        /// </summary>
+        internal static string MKH4MotorTypeD {
+            get {
+                return ResourceManager.GetString("MKH4MotorTypeD", resourceCulture);
             }
         }
         

@@ -89,13 +89,6 @@ internal class MKH4 : BluetoothDevice
     private static readonly TimeSpan REQUEST_RETRY_DELAY = TimeSpan.FromMilliseconds(40);
 
     /// <summary>
-    /// Number of encoder position units per degree of the motor shaft (594000 units per revolution).
-    /// This value was measured with an encoder motor: set the base angle to 180 degrees, observe the real rotation
-    /// and scale the value (new value = old value * 180 / observed angle). Other motor types may differ.
-    /// </summary>
-    private const double POSITION_UNITS_PER_DEGREE = 1650.0;
-
-    /// <summary>
     /// Max time to wait for the "position reached" message (T027300W) during calibration.
     /// </summary>
     private static readonly TimeSpan POSITION_REACHED_TIMEOUT = TimeSpan.FromSeconds(5);
@@ -264,8 +257,8 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Registers all device settings with their defaults. All values are bool or <see cref="Percent"/>,
-    /// because the settings page can render nothing else for the needed ranges. The names are also the keys
+    /// Registers all device settings with their defaults. Values are bool, <see cref="Percent"/> or
+    /// the <see cref="MKH4MotorType"/> enum (the settings page lists the enum member names). The names are also the keys
     /// of the translations (the limits of channels beyond D need additional translations).
     /// </summary>
     private void RegisterSettings(IEnumerable<NamedSetting> settings)
@@ -280,6 +273,7 @@ internal class MKH4 : BluetoothDevice
         for (int channel = 0; channel < _channelCount; channel++)
         {
             var group = MKH4Config.LimitGroupName(channel);
+            SetSettingValue(MKH4Config.MotorTypeName(channel), settings, group, MKH4Config.DefaultMotorType);
             SetSettingValue(MKH4Config.LimitEnabledName(channel), settings, group, MKH4Config.DefaultLimitEnabled);
             SetSettingValue<Percent>(MKH4Config.LimitMaxName(channel), settings, group, MKH4Config.DefaultLimitPercent);
             SetSettingValue<Percent>(MKH4Config.LimitMinName(channel), settings, group, MKH4Config.DefaultLimitPercent);
@@ -443,7 +437,7 @@ internal class MKH4 : BluetoothDevice
 
         // angle relative to the center, never larger than the configured max servo angle
         var angle = value * GetMaxServoAngle(channel);
-        var target = _centerPositions[channel] + AngleToPosition(angle);
+        var target = _centerPositions[channel] + AngleToPosition(channel, angle);
 
         // the group detects whether the target changed and schedules the transmission
         _servoTargets.SetOutput(channel, target);
@@ -481,9 +475,12 @@ internal class MKH4 : BluetoothDevice
     }
 
     /// <summary>
-    /// Converts an angle in degrees to encoder position units.
+    /// Converts an angle in degrees to encoder position units of the motor type set for the channel.
+    /// Known limitation: if the motor type is changed while a servo channel is already centred, its center
+    /// position stays in the old units until the next calibration or base angle move.
     /// </summary>
-    private static int AngleToPosition(double angle) => (int)Math.Round(angle * POSITION_UNITS_PER_DEGREE);
+    internal int AngleToPosition(int channel, double angle)
+        => (int)Math.Round(angle * _config.UnitsPerDegree(channel));
 
     /// <summary>
     /// Makes the given base angle the center of a servo channel and moves the motor there.
@@ -493,7 +490,7 @@ internal class MKH4 : BluetoothDevice
     private async Task<bool> MoveServoToBaseAngleAsync(int channel, int baseAngle, TimeSpan timeout, CancellationToken token)
     {
         // the center is the base angle relative to the zero of the module counter
-        var center = AngleToPosition(baseAngle);
+        var center = AngleToPosition(channel, baseAngle);
 
         _centerPositions[channel] = center;
         lock (_servoLock)

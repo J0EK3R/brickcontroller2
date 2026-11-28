@@ -42,6 +42,7 @@ Open the settings of the device in the device list (swipe the device to the left
 | Position move speed (%) | 62.5 % | Speed of position moves, 1 % to 100 %. The slider works in steps of 1 %, so the default is shown rounded. |
 | Set motor strength | off | While off, no motor strength is sent and the module keeps what it has. |
 | Motor strength (%) | 100 % | Sent after connecting and when changed, only if *Set motor strength* is on. |
+| Motor type (per port A - D) | XL | XL = 1650 units per degree (594000 per turn), LM = L and M motors, about 1097 units per degree (395000 per turn). Used for servo angles and the limit percentages. |
 | Limit positions (per port A - D) | off | Enables the position limits of the port. |
 | Positive limit / Negative limit (% of one turn) | 17 % each | Limits of the port as percent of one revolution of the motor shaft (1 % is 3.6 degrees). Used only if *Limit positions* is on. |
 
